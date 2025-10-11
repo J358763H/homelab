@@ -1,0 +1,324 @@
+# =====================================================
+# 🚫 Homelab-SHV Git Ignore Rules
+# =====================================================
+# Prevent sensitive files from being committed to git
+# Last Updated: 2025-10-11
+# =====================================================
+
+# =================
+# Environment & Secrets
+# =================
+# Never commit actual environment files
+*.env
+.env
+.env.*
+!.env.example
+
+# VPN configuration files
+wg0.conf
+*.conf
+!*.conf.example
+
+# API keys and tokens
+*.key
+*.token
+*.secret
+
+# =================
+# Data Directories
+# =================
+# Local data should never be in git
+/data/
+data/
+/logs/
+logs/
+/cache/
+cache/
+/tmp/
+tmp/
+
+# Backup files and archives
+*.backup
+*.bak
+*.dump
+*.sql
+*.tar.gz
+*.zip
+*.7z
+*.rar
+
+# =================
+# Docker & Container Data
+# =================
+# Docker-related files that shouldn't be versioned
+docker-compose.override.yml
+.dockerignore
+
+# Container volumes and data
+volumes/
+docker-data/
+
+# =================
+# Application Logs
+# =================
+# Log files
+*.log
+*.log.*
+logs/
+log/
+/var/log/
+
+# Application-specific logs
+jellyfin.log
+sonarr.log
+radarr.log
+prowlarr.log
+qbittorrent.log
+
+# =================
+# Temporary Files
+# =================
+# Temporary downloads and processing
+*.tmp
+*.temp
+/temp/
+/temporary/
+.tmp/
+
+# System temporary files
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =================
+# Development Files
+# =================
+# IDE and editor files
+.vscode/
+.idea/
+*.sublime-*
+.atom/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+.env/
+
+# =================
+# Backup & Archive Files
+# =================
+# Bundle and archive files
+/bundles/
+bundles/
+/input_files/
+input_files/
+
+# Compressed archives
+*.tar
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.tgz
+*.zip
+*.rar
+*.7z
+*.gz
+*.bz2
+*.xz
+
+# GPG encrypted files (keep examples)
+*.gpg
+!*.gpg.example
+
+# =================
+# System Files
+# =================
+# OS-specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.msp
+*.lnk
+
+# =================
+# Configuration Overrides
+# =================
+# Local configuration overrides
+config.local.*
+settings.local.*
+local-config.*
+override.*
+custom.*
+
+# Personal notes and documentation
+NOTES.md
+TODO.md
+PERSONAL.md
+.personal/
+
+# =================
+# Media Files
+# =================
+# Large media files that shouldn't be in git
+*.mkv
+*.mp4
+*.avi
+*.wmv
+*.mov
+*.flv
+*.webm
+*.m4v
+*.3gp
+
+# Audio files
+*.mp3
+*.flac
+*.wav
+*.aac
+*.ogg
+*.wma
+*.m4a
+
+# Image files (keep small documentation images)
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+*.svg
+!docs/**/*.png
+!docs/**/*.jpg
+!docs/**/*.svg
+
+# =================
+# Runtime Files
+# =================
+# Process IDs and lock files
+*.pid
+*.lock
+.lock
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# =================
+# Monitoring & Analytics
+# =================
+# Monitoring data
+/monitoring/
+monitoring-data/
+metrics/
+stats/
+
+# Analytics and reporting
+reports/
+analytics/
+statistics/
+
+# =================
+# Security Files
+# =================
+# SSH keys and certificates
+*.pem
+*.key
+*.crt
+*.csr
+*.p12
+*.pfx
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
+known_hosts
+authorized_keys
+
+# =================
+# Custom Additions
+# =================
+# Add any project-specific ignores below this line
+
+# Local testing and development
+test-data/
+dev-data/
+local-test/
+
+# Performance and benchmarking
+*.prof
+*.benchmark
+
+# Documentation builds (if using generators)
+_site/
+_build/
+.jekyll-cache/
+
+# =================
+# Keep These Examples
+# =================
+# Explicitly keep example and template files
+!*.example
+!*.template
+!*.sample
+!*-template.*
+!example-*
+!template-*
+!sample-*
+
+# Keep documentation
+!README*
+!CHANGELOG*
+!LICENSE*
+!CONTRIBUTING*
+!docs/**
+!*.md

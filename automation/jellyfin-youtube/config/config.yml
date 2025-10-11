@@ -1,0 +1,88 @@
+configuration:
+  working_directory: "/data/youtube"
+  log_level: "INFO"
+  max_download_speed: "10M"
+  file_name_max_bytes: 255
+
+presets:
+  # YouTube Music Preset
+  music_preset:
+    output_options:
+      output_directory: "/data/youtube/music/{uploader}"
+      file_name: "{upload_date} - {title}.{ext}"
+      thumbnail_name: "{upload_date} - {title}.{thumbnail_ext}"
+    ytdl_options:
+      format: "bestaudio/best"
+      writesubtitles: False
+      writeautomaticsub: False
+      subtitleslangs: 
+        - "en"
+      ignoreerrors: True
+      extract_flat: False
+    
+  # Channel Content Preset  
+  channel_preset:
+    output_options:
+      output_directory: "/data/youtube/channels/{uploader}"
+      file_name: "{upload_date} - {title}.{ext}"
+      thumbnail_name: "{upload_date} - {title}.{thumbnail_ext}"
+    ytdl_options:
+      format: "best[height<=1080]/bestvideo[height<=1080]+bestaudio/best"
+      writesubtitles: True
+      writeautomaticsub: True
+      subtitleslangs:
+        - "en"
+      ignoreerrors: True
+      extract_flat: False
+      
+  # Playlist Preset
+  playlist_preset:
+    output_options:
+      output_directory: "/data/youtube/playlists/{playlist_title}"
+      file_name: "{playlist_index:0>3d} - {title}.{ext}"
+      thumbnail_name: "{playlist_index:0>3d} - {title}.{thumbnail_ext}"
+    ytdl_options:
+      format: "best[height<=1080]/bestvideo[height<=1080]+bestaudio/best"
+      writesubtitles: True
+      writeautomaticsub: True
+      subtitleslangs:
+        - "en"
+      ignoreerrors: True
+      extract_flat: False
+
+subscriptions:
+  # Example subscriptions - customize these
+  tech_channels:
+    preset: "channel_preset"
+    urls:
+      - "https://www.youtube.com/@TechLinked"
+      - "https://www.youtube.com/@LinusTechTips"
+    overrides:
+      ytdl_options:
+        dateafter: "today-30days"
+        
+  music_channels:
+    preset: "music_preset"
+    urls:
+      - "https://www.youtube.com/@lofi"
+    overrides:
+      ytdl_options:
+        dateafter: "today-7days"
+        
+  documentary_playlists:
+    preset: "playlist_preset"
+    urls:
+      - "https://www.youtube.com/playlist?list=PLexample123"
+    overrides:
+      ytdl_options:
+        playlistend: 10
+
+# Optional: NFO file generation for Jellyfin
+nfo_tags:
+  tags:
+    - "YouTube"
+    - "Internet Content"
+  genres:
+    - "Web Series"
+    - "Educational"
+  network: "YouTube"

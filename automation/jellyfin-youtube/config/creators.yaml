@@ -1,0 +1,87 @@
+# YouTube Creators Configuration
+# Add your favorite YouTube channels and creators here
+
+creators:
+  # Technology Channels
+  - name: "Linus Tech Tips"
+    channel_id: "UCXuqSBlHAE6Xw-yeJA0Tunw"
+    url: "https://www.youtube.com/@LinusTechTips"
+    category: "Technology"
+    quality: "1080p"
+    download_recent: 30  # days
+    
+  - name: "TechLinked"
+    channel_id: "UCeeFfhMcJa1kjtfZAGskOCA"
+    url: "https://www.youtube.com/@TechLinked"
+    category: "Technology"
+    quality: "1080p"
+    download_recent: 14
+    
+  # Educational Content
+  - name: "Kurzgesagt"
+    channel_id: "UCsXVk37bltHxD1rDPwtNM8Q"
+    url: "https://www.youtube.com/@kurzgesagt"
+    category: "Educational"
+    quality: "1080p"
+    download_recent: 90
+    
+  - name: "Veritasium"
+    channel_id: "UCHnyfMqiRRG1u-2MsSQLbXA"
+    url: "https://www.youtube.com/@veritasium"
+    category: "Educational"
+    quality: "1080p"
+    download_recent: 60
+    
+  # Entertainment
+  - name: "MrBeast"
+    channel_id: "UCX6OQ3DkcsbYNE6H8uQQuVA"
+    url: "https://www.youtube.com/@MrBeast"
+    category: "Entertainment"
+    quality: "1080p"
+    download_recent: 30
+    
+  # Music & Relaxation
+  - name: "Lofi Girl"
+    channel_id: "UCSJ4gkVC6NrvII8umztf0Ow"
+    url: "https://www.youtube.com/@lofi"
+    category: "Music"
+    quality: "audio_only"
+    download_recent: 7
+    
+# Playlists to download
+playlists:
+  - name: "Best of Tech 2024"
+    url: "https://www.youtube.com/playlist?list=PLexample123"
+    category: "Technology"
+    max_videos: 20
+    
+  - name: "Educational Documentaries"
+    url: "https://www.youtube.com/playlist?list=PLexample456"
+    category: "Educational"
+    max_videos: 50
+
+# Download preferences
+preferences:
+  default_quality: "1080p"
+  audio_only_channels: ["Lofi Girl", "Music Channels"]
+  subtitle_languages: ["en", "en-US"]
+  download_thumbnails: true
+  download_metadata: true
+  
+# Jellyfin integration settings
+jellyfin:
+  organize_by: "channel"  # Options: channel, category, date
+  create_collections: true
+  update_library: true
+  server_url: "http://jellyfin:8096"
+  
+# Quality settings
+quality_profiles:
+  "4k":
+    format: "bestvideo[height<=2160]+bestaudio/best[height<=2160]"
+  "1080p":
+    format: "bestvideo[height<=1080]+bestaudio/best[height<=1080]"
+  "720p":
+    format: "bestvideo[height<=720]+bestaudio/best[height<=720]"
+  "audio_only":
+    format: "bestaudio/best[abr<=128]"

@@ -1,0 +1,4 @@
+requests==2.31.0
+PyYAML==6.0.1
+yt-dlp==2023.10.13
+pathlib2==2.3.7

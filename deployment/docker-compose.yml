@@ -1,0 +1,344 @@
+version: "3.8"
+
+# =====================================================
+# 🐳 Homelab-SHV — Docker Compose File
+# =====================================================
+# Maintainer: J35867U
+# Email: mrnash404@protonmail.com
+# Last Updated: 2025-10-11
+# 
+# Complete Servarr + Jellyfin + Automation Stack
+# =====================================================
+
+networks:
+  homelab:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+services:
+  # =================
+  # VPN & Network
+  # =================
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - "8080:8080"   # qBittorrent WebUI
+      - "6881:6881"   # qBittorrent
+      - "6881:6881/udp"
+    volumes:
+      - ./wg0.conf:/gluetun/wireguard/wg0.conf:ro
+    environment:
+      - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}
+      - VPN_TYPE=${VPN_TYPE}
+      - WIREGUARD_PUBLIC_KEY=${WIREGUARD_PUBLIC_KEY}
+      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
+      - SERVER_COUNTRIES=${SERVER_COUNTRIES}
+      - SERVER_CITIES=${SERVER_CITIES}
+      - HEALTH_VPN_DURATION_INITIAL=${HEALTH_VPN_DURATION_INITIAL}
+      - TZ=${TZ}
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.2
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # =================
+  # Download Clients
+  # =================
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - WEBUI_PORT=8080
+    volumes:
+      - /data/docker/qbittorrent:/config
+      - /data/media:/data/media
+    network_mode: "service:gluetun"
+    depends_on:
+      - gluetun
+    restart: unless-stopped
+
+  nzbget:
+    image: lscr.io/linuxserver/nzbget:latest
+    container_name: nzbget
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /data/docker/nzbget:/config
+      - /data/media:/data/media
+    ports:
+      - "6789:6789"
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.4
+    restart: unless-stopped
+
+  # =================
+  # Servarr Stack
+  # =================
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /data/docker/sonarr:/config
+      - /data/media:/data/media
+    ports:
+      - "8989:8989"
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.5
+    restart: unless-stopped
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /data/docker/radarr:/config
+      - /data/media:/data/media
+    ports:
+      - "7878:7878"
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.6
+    restart: unless-stopped
+
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /data/docker/bazarr:/config
+      - /data/media:/data/media
+    ports:
+      - "6767:6767"
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.7
+    restart: unless-stopped
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /data/docker/prowlarr:/config
+    ports:
+      - "9696:9696"
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.8
+    restart: unless-stopped
+
+  # =================
+  # Servarr Management Tools
+  # =================
+  recyclarr:
+    image: ghcr.io/recyclarr/recyclarr:latest
+    container_name: recyclarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /data/docker/recyclarr:/config
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.9
+    restart: unless-stopped
+
+  # =================
+  # Media Server
+  # =================
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /data/docker/jellyfin:/config
+      - /data/media:/data/media
+      - /dev/shm:/data/transcode
+    ports:
+      - "8096:8096"
+    devices:
+      - /dev/dri:/dev/dri
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.10
+    restart: unless-stopped
+
+  jellyseerr:
+    image: fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
+    environment:
+      - LOG_LEVEL=debug
+      - TZ=${TZ}
+    volumes:
+      - /data/docker/jellyseerr:/app/config
+    ports:
+      - "5055:5055"
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.11
+    restart: unless-stopped
+
+  # =================
+  # Jellyfin Analytics
+  # =================
+  jellystat:
+    image: cyfershepard/jellystat:latest
+    container_name: jellystat
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_IP=jellystat-db
+      - POSTGRES_PORT=5432
+      - JWT_SECRET=${JWT_SECRET}
+      - TZ=${TZ}
+    ports:
+      - "3000:3000"
+    volumes:
+      - /data/docker/jellystat/backup-data:/app/backend/backup-data
+    depends_on:
+      - jellystat-db
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.12
+    restart: unless-stopped
+
+  jellystat-db:
+    image: postgres:15
+    container_name: jellystat-db
+    environment:
+      - POSTGRES_DB=jfstat
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+    volumes:
+      - /data/docker/jellystat-db:/var/lib/postgresql/data
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.13
+    restart: unless-stopped
+
+  # =================
+  # YouTube Automation
+  # =================
+  ytdl-sub:
+    image: jmbannon/ytdl-sub:latest
+    container_name: ytdl-sub
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /data/docker/ytdl-sub:/config
+      - /data/media/youtube:/media
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.14
+    restart: unless-stopped
+
+  jellyfin-youtube-automation:
+    image: python:3.11-slim
+    container_name: jellyfin-youtube-automation
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - ./automation/jellyfin-youtube:/app
+      - /data/media/youtube:/data/youtube
+    working_dir: /app
+    command: ["python", "-u", "smart_incremental_updater.py"]
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.15
+    restart: unless-stopped
+    depends_on:
+      - jellyfin
+
+  # =================
+  # Utilities
+  # =================
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=info
+      - TZ=${TZ}
+    ports:
+      - "8191:8191"
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.16
+    restart: unless-stopped
+
+  # =================
+  # Channel Management
+  # =================
+  tunarr:
+    image: chrisbenincasa/tunarr:latest
+    container_name: tunarr
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - /data/docker/tunarr:/config/tunarr
+      - /data/media:/media
+    ports:
+      - "${TUNARR_SERVER_PORT}:8000"
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.17
+    restart: unless-stopped
+
+  # =================
+  # Request Management
+  # =================
+  suggestarr:
+    image: ghcr.io/l3uddz/suggestarr:latest
+    container_name: suggestarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - RADARR_API_KEY=${RADARR_API_KEY}
+      - SONARR_API_KEY=${SONARR_API_KEY}
+    volumes:
+      - /data/docker/suggestarr:/config
+    ports:
+      - "${SUGGESTARR_PORT}:5000"
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.18
+    restart: unless-stopped

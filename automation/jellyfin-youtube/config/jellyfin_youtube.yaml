@@ -1,0 +1,91 @@
+# Jellyfin YouTube Integration Configuration
+
+jellyfin:
+  server_url: "http://jellyfin:8096"
+  api_key: "${JELLYFIN_API_KEY}"  # Set in environment or .env file
+  library_path: "/data/media/youtube"
+  
+  # Library organization
+  libraries:
+    youtube_videos:
+      name: "YouTube Videos"
+      path: "/data/media/youtube/channels"
+      content_type: "movies"  # Treat videos as movies for better metadata
+      
+    youtube_music:
+      name: "YouTube Music"
+      path: "/data/media/youtube/music"
+      content_type: "music"
+      
+    youtube_playlists:
+      name: "YouTube Playlists"
+      path: "/data/media/youtube/playlists"
+      content_type: "tvshows"  # Treat playlists as TV series
+      
+  # Metadata settings
+  metadata:
+    generate_nfo: true
+    include_thumbnails: true
+    include_descriptions: true
+    include_upload_date: true
+    include_view_count: false
+    include_like_count: false
+    
+  # Collection management
+  collections:
+    create_channel_collections: true
+    create_category_collections: true
+    create_date_collections: false
+    
+# Integration settings
+integration:
+  auto_scan_interval: 3600  # seconds (1 hour)
+  batch_size: 10
+  concurrent_downloads: 2
+  retry_attempts: 3
+  retry_delay: 30  # seconds
+  
+  # File naming
+  naming:
+    videos: "{upload_date} - {title}"
+    music: "{uploader} - {title}"
+    playlists: "{playlist_index:0>3d} - {title}"
+    
+  # Quality preferences per content type
+  quality:
+    videos: "1080p"
+    music: "audio_only"
+    live_streams: "720p"
+    
+# Notification settings
+notifications:
+  enabled: true
+  events:
+    - "download_complete"
+    - "library_updated" 
+    - "error_occurred"
+    
+  ntfy:
+    server: "${NTFY_SERVER}"
+    topic: "${NTFY_TOPIC_SUMMARY}"
+    
+# Cleanup settings
+cleanup:
+  old_files:
+    enabled: true
+    retention_days: 180  # Keep files for 6 months
+    
+  failed_downloads:
+    enabled: true
+    cleanup_after_days: 7
+    
+  temp_files:
+    enabled: true
+    cleanup_after_hours: 24
+    
+# Logging
+logging:
+  level: "INFO"
+  file: "/var/log/homelab-shv/jellyfin-youtube.log"
+  max_size_mb: 50
+  backup_count: 5
