@@ -42,7 +42,7 @@ Web Port: 80 (HTTP)
 - **192.168.1.201** - Nginx Proxy Manager (reverse proxy)
 - **192.168.1.202** - Tailscale (VPN subnet router)
 - **192.168.1.203** - Ntfy (notifications)
-- **192.168.1.204** - Samba (file sharing)
+- **192.168.1.204** - Media File Share (media sharing)
 - **192.168.1.205** - **Pi-hole (DNS/ad blocking)**
 
 ### 🌐 **DNS Resolution Chain**
@@ -52,7 +52,7 @@ Client Device → Pi-hole (192.168.1.205) → Upstream DNS (1.1.1.1/8.8.8.8)
                Local Services
                npm.local → 192.168.1.201
                ntfy.local → 192.168.1.203
-               samba.local → 192.168.1.204
+               media.local → 192.168.1.204
 ```
 
 ## 🚀 Quick Start
@@ -97,7 +97,7 @@ Pre-configured homelab service resolution:
 192.168.1.201  npm.local proxy.local
 192.168.1.202  tailscale.local
 192.168.1.203  ntfy.local
-192.168.1.204  samba.local
+192.168.1.204  media.local
 192.168.1.205  pihole.local dns.local
 ```
 

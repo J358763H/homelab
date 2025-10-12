@@ -30,7 +30,7 @@ This directory contains LXC container configurations and setup scripts for self-
 - **Integration**: Replaces public ntfy.sh for privacy and reliability
 - **Features**: Web UI, authentication, rate limiting, API access
 
-### 📁 Media Share Server (`samba/`)
+### 📁 Media File Share Server (`samba/`)
 - **Purpose**: Network file sharing for media collection
 - **Resources**: 1GB RAM, 8GB storage, 2 CPU cores
 - **Integration**: Direct access to Docker media stack storage
@@ -52,10 +52,10 @@ lxc/
 │   ├── server.yml.example           # Configuration template
 │   ├── configure_homelab.sh         # Homelab integration script  
 │   └── README.md                     # Ntfy-specific documentation
-└── samba/                            # Media Share file server
+└── samba/                            # Media File Share server
     ├── setup_samba_lxc.sh           # Automated setup script
-    ├── smb.conf.example         # Media Share configuration template
-    └── README.md                # Media Share documentation
+    ├── smb.conf.example         # Media File Share configuration template
+    └── README.md                # Media File Share documentation
 ```
 
 ## Prerequisites

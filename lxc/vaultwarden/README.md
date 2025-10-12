@@ -46,7 +46,7 @@ WebSocket Port: 3012 (for real-time notifications)
 - **192.168.1.201** - Nginx Proxy Manager (SSL termination)
 - **192.168.1.202** - Tailscale (secure remote access)
 - **192.168.1.203** - Ntfy (backup notifications)
-- **192.168.1.204** - Samba (backup storage)
+- **192.168.1.204** - Media File Share (backup storage)
 - **192.168.1.205** - Pi-hole (local DNS resolution)
 - **192.168.1.206** - **Vaultwarden (password management)** ✨
 
@@ -310,7 +310,7 @@ pct exec 206 -- systemctl start vaultwarden
 ```bash
 # Copy backups to external storage
 pct exec 206 -- bash -c "
-# Mount external storage (Samba share)
+# Mount external storage (Media share)
 mkdir -p /mnt/backup
 mount -t cifs //192.168.1.204/backups /mnt/backup -o username=backup,password=your-password
 

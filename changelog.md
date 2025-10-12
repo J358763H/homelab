@@ -13,6 +13,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced security hardening options
 - Mobile app integration for remote management
 
+## [1.5.0] - 2025-10-12
+
+### Changed
+- **Renamed Service**: "Samba File Share" → "Media File Share" for better clarity
+- **Updated Documentation**: All references updated across scripts and documentation
+- **Local DNS Records**: Changed samba.local → media.local for consistency
+
+### Added
+- **LXC Configuration Guide**: Comprehensive guide for customizing container deployments
+- **Configuration Checklist**: Complete list of values requiring customization
+- **Timezone Reference**: Common timezone values for global deployments
+- **Security Recommendations**: Best practices for passwords and SMTP configuration
+
+### Enhanced
+- **Documentation Clarity**: Improved naming consistency across all homelab components
+- **User Experience**: Clear identification of required vs optional configuration values
+- **Setup Process**: Streamlined configuration workflow with detailed guidance
+
 ## [1.4.0] - 2025-10-12
 
 ### Added

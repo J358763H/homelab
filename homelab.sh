@@ -7,7 +7,7 @@
 #   ./homelab.sh teardown  # Run teardown_homelab.sh
 #   ./homelab.sh reset     # Run reset_homelab.sh
 #   ./homelab.sh status    # Run status_homelab.sh
-#   ./homelab.sh lxc       # Deploy LXC containers (NPM, Tailscale, Ntfy, Samba, Pi-hole)
+#   ./homelab.sh lxc       # Deploy LXC containers (NPM, Tailscale, Ntfy, Media, Pi-hole)
 # =====================================================
 # Maintainer: J35867U
 # Email: mrnash404@protonmail.com
@@ -53,7 +53,7 @@ case "$ACTION" in
     echo "  1. Nginx Proxy Manager (192.168.1.201)"
     echo "  2. Tailscale Router (192.168.1.202)" 
     echo "  3. Ntfy Notifications (192.168.1.203)"
-    echo "  4. Samba File Share (192.168.1.204)"
+    echo "  4. Media File Share (192.168.1.204)"
     echo "  5. Pi-hole DNS/Ad Blocker (192.168.1.205)"
     echo "  6. Vaultwarden Password Manager (192.168.1.206)"
     echo ""
@@ -76,7 +76,7 @@ case "$ACTION" in
         ./lxc/ntfy/setup_ntfy_lxc.sh
         ;;
       4)
-        echo "📁 Deploying Samba File Share..."
+        echo "📁 Deploying Media File Share..."
         chmod +x lxc/samba/setup_samba_lxc.sh
         ./lxc/samba/setup_samba_lxc.sh
         ;;
@@ -92,7 +92,7 @@ case "$ACTION" in
         ;;
       all)
         echo "🚀 Deploying all LXC containers..."
-        echo "This will deploy NPM, Tailscale, Ntfy, Samba, Pi-hole, and Vaultwarden..."
+        echo "This will deploy NPM, Tailscale, Ntfy, Media, Pi-hole, and Vaultwarden..."
         read -p "Continue? (y/N): " confirm
         if [[ $confirm =~ ^[Yy]$ ]]; then
           chmod +x lxc/nginx-proxy-manager/setup_npm_lxc.sh
@@ -111,7 +111,7 @@ case "$ACTION" in
           echo "3/6 📢 Deploying Ntfy Notifications..."
           ./lxc/ntfy/setup_ntfy_lxc.sh
           
-          echo "4/6 📁 Deploying Samba File Share..."
+          echo "4/6 📁 Deploying Media File Share..."
           ./lxc/samba/setup_samba_lxc.sh
           
           echo "5/6 🕳️ Deploying Pi-hole DNS/Ad Blocker..."
