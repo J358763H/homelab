@@ -4,6 +4,8 @@
 
 This LXC container provides a dedicated Tailscale node that acts as a subnet router, enabling secure access to your entire homelab network from anywhere.
 
+> 🛡️ **Privacy-Focused Setup**: See [PRIVACY_SETUP_GUIDE.md](./PRIVACY_SETUP_GUIDE.md) for enhanced privacy configuration options.
+
 ## Container Specifications
 
 - **OS**: Ubuntu 22.04 LTS

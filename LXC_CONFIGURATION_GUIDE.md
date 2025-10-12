@@ -29,13 +29,33 @@ This guide identifies all configuration values that need to be customized before
 Enter your Tailscale auth key: [REQUIRED]
 ```
 
-### 📝 How to Get Auth Key:
+### 📝 How to Get Privacy-Focused Auth Key:
+
+#### **Step 1: Create Privacy-Focused Account**
+- **Email**: Use ProtonMail or dedicated privacy email
+- **Example**: `homelab-tailscale-2025@proton.me`
+- **2FA**: Enable immediately after signup
+
+#### **Step 2: Generate Auth Key**
 1. Visit https://login.tailscale.com/admin/settings/keys
-2. Generate a new auth key with these settings:
-   - ✅ Reusable
-   - ✅ Ephemeral (optional)
-   - ✅ Allow subnet routes
-3. Copy the key for use during deployment
+2. Generate a new auth key with these **privacy-focused** settings:
+   ```
+   ✅ Reusable: Yes (one key for all homelab devices)
+   ✅ Preauthorized: Yes (no manual approvals)
+   ✅ Ephemeral: No (devices persist after restart)
+   ⏰ Expires in: 90 days (balance security/convenience)
+   🏷️ Tags: homelab (optional organization)
+   ```
+3. Copy the key: `tskey-auth-xxxxxxxxxxxxxxxxxxxxx`
+
+### 🛡️ **Enhanced Privacy Features:**
+Our setup includes privacy-focused configurations:
+- **DNS Privacy**: Uses Pi-hole (192.168.1.205) instead of Tailscale DNS
+- **Network Isolation**: `--shields-up` for extra firewall protection  
+- **Minimal Routes**: Only accepts explicitly configured routes
+- **No Telemetry**: Reduces data sharing with Tailscale servers
+
+> 📋 **Full Privacy Guide**: See `lxc/tailscale/PRIVACY_SETUP_GUIDE.md` for complete privacy setup instructions.
 
 ---
 

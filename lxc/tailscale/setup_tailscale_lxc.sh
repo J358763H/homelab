@@ -126,12 +126,20 @@ pct exec $CTID -- bash -c "
     systemctl enable tailscaled
     systemctl start tailscaled
     
-    # Connect to Tailscale with subnet routing
+    # Connect to Tailscale with enhanced privacy settings
     tailscale up --authkey=$AUTH_KEY \
         --advertise-routes=$SUBNET_ROUTE \
         --ssh \
-        --accept-dns=true \
+        --accept-dns=false \
+        --accept-routes=false \
+        --shields-up \
+        --netfilter-mode=on \
         --hostname=$HOSTNAME
+    
+    # Additional privacy configurations
+    sleep 5
+    tailscale set --accept-dns=false
+    tailscale set --shields-up=true
         
     # Wait for connection
     sleep 10
