@@ -13,6 +13,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced security hardening options
 - Mobile app integration for remote management
 
+## [1.4.0] - 2025-10-12
+
+### Added
+- **Vaultwarden LXC Container**: Self-hosted Bitwarden-compatible password manager (192.168.1.206)
+- **Enterprise Security**: End-to-end encrypted password management with zero-knowledge architecture
+- **Multi-Platform Support**: Browser extensions, mobile apps, desktop applications, and CLI
+- **Automated Backups**: Daily encrypted backups with disaster recovery procedures
+- **SSL Integration**: HTTPS setup with Nginx Proxy Manager and Let's Encrypt support
+- **Security Hardening**: Firewall configuration, rate limiting, and admin token management
+
+### Enhanced
+- **LXC Orchestration**: Added Vaultwarden to interactive deployment menu (option 6)
+- **Complete Architecture**: Six-container LXC infrastructure for full homelab coverage
+- **Pre-deployment Planning**: Updated checklist with Vaultwarden network allocation
+- **Security Best Practices**: Comprehensive password management integration guide
+
 ## [1.3.0] - 2025-10-12
 
 ### Added

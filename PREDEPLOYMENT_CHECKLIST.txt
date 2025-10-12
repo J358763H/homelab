@@ -141,6 +141,7 @@ LXC Network Planning (192.168.1.0/24):
 □ 192.168.1.203 - Ntfy (notification server)
 □ 192.168.1.204 - Samba (file sharing)
 □ 192.168.1.205 - Pi-hole (DNS + ad blocking)
+□ 192.168.1.206 - Vaultwarden (password manager)
 
 Deploy LXC services:
 # After cloning repository on Proxmox host
@@ -152,6 +153,7 @@ Individual LXC deployments:
 □ Ntfy Notifications: ./lxc/ntfy/setup_ntfy_lxc.sh
 □ Samba File Share: ./lxc/samba/setup_samba_lxc.sh
 □ Pi-hole DNS/Ad Blocker: ./lxc/pihole/setup_pihole_lxc.sh
+□ Vaultwarden Password Manager: ./lxc/vaultwarden/setup_vaultwarden_lxc.sh
 
 LXC Benefits:
 - Better resource isolation than Docker

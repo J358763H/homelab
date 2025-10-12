@@ -55,8 +55,9 @@ case "$ACTION" in
     echo "  3. Ntfy Notifications (192.168.1.203)"
     echo "  4. Samba File Share (192.168.1.204)"
     echo "  5. Pi-hole DNS/Ad Blocker (192.168.1.205)"
+    echo "  6. Vaultwarden Password Manager (192.168.1.206)"
     echo ""
-    read -p "Enter container number to deploy (1-5) or 'all' for everything: " choice
+    read -p "Enter container number to deploy (1-6) or 'all' for everything: " choice
     
     case "$choice" in
       1)
@@ -84,9 +85,14 @@ case "$ACTION" in
         chmod +x lxc/pihole/setup_pihole_lxc.sh
         ./lxc/pihole/setup_pihole_lxc.sh
         ;;
+      6)
+        echo "🔐 Deploying Vaultwarden Password Manager..."
+        chmod +x lxc/vaultwarden/setup_vaultwarden_lxc.sh
+        ./lxc/vaultwarden/setup_vaultwarden_lxc.sh
+        ;;
       all)
         echo "🚀 Deploying all LXC containers..."
-        echo "This will deploy NPM, Tailscale, Ntfy, Samba, and Pi-hole..."
+        echo "This will deploy NPM, Tailscale, Ntfy, Samba, Pi-hole, and Vaultwarden..."
         read -p "Continue? (y/N): " confirm
         if [[ $confirm =~ ^[Yy]$ ]]; then
           chmod +x lxc/nginx-proxy-manager/setup_npm_lxc.sh
@@ -94,21 +100,25 @@ case "$ACTION" in
           chmod +x lxc/ntfy/setup_ntfy_lxc.sh
           chmod +x lxc/samba/setup_samba_lxc.sh
           chmod +x lxc/pihole/setup_pihole_lxc.sh
+          chmod +x lxc/vaultwarden/setup_vaultwarden_lxc.sh
           
-          echo "1/5 🔗 Deploying Nginx Proxy Manager..."
+          echo "1/6 🔗 Deploying Nginx Proxy Manager..."
           ./lxc/nginx-proxy-manager/setup_npm_lxc.sh
           
-          echo "2/5 🔒 Deploying Tailscale Router..."
+          echo "2/6 🔒 Deploying Tailscale Router..."
           ./lxc/tailscale/setup_tailscale_lxc.sh
           
-          echo "3/5 📢 Deploying Ntfy Notifications..."
+          echo "3/6 📢 Deploying Ntfy Notifications..."
           ./lxc/ntfy/setup_ntfy_lxc.sh
           
-          echo "4/5 📁 Deploying Samba File Share..."
+          echo "4/6 📁 Deploying Samba File Share..."
           ./lxc/samba/setup_samba_lxc.sh
           
-          echo "5/5 🕳️ Deploying Pi-hole DNS/Ad Blocker..."
+          echo "5/6 🕳️ Deploying Pi-hole DNS/Ad Blocker..."
           ./lxc/pihole/setup_pihole_lxc.sh
+          
+          echo "6/6 🔐 Deploying Vaultwarden Password Manager..."
+          ./lxc/vaultwarden/setup_vaultwarden_lxc.sh
           
           echo "🎉 All LXC containers deployed successfully!"
         else
@@ -116,7 +126,7 @@ case "$ACTION" in
         fi
         ;;
       *)
-        echo "Invalid choice. Please select 1-5 or 'all'"
+        echo "Invalid choice. Please select 1-6 or 'all'"
         exit 1
         ;;
     esac
