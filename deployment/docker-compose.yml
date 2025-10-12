@@ -67,7 +67,7 @@ services:
       - WEBUI_PORT=8080
     volumes:
       - /data/docker/qbittorrent:/config
-      - /data/media:/data/media
+      - /data/downloads:/downloads
     network_mode: "service:gluetun"
     depends_on:
       - gluetun
@@ -103,6 +103,8 @@ services:
     volumes:
       - /data/docker/sonarr:/config
       - /data/media:/data/media
+      - /data/downloads:/downloads
+      - /data/media/shows:/shows
     ports:
       - "8989:8989"
     networks:
@@ -120,6 +122,8 @@ services:
     volumes:
       - /data/docker/radarr:/config
       - /data/media:/data/media
+      - /data/media/movies:/movies
+      - /data/media/downloads:/downloads
     ports:
       - "7878:7878"
     networks:
@@ -137,6 +141,8 @@ services:
     volumes:
       - /data/docker/bazarr:/config
       - /data/media:/data/media
+      - /data/media/movies:/movies
+      - /data/media/shows:/shows
     ports:
       - "6767:6767"
     networks:
@@ -187,14 +193,20 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
+      - JELLYFIN_PublishedServerUrl=${JELLYFIN_PUBLISHED_SERVER_URL:-http://localhost:8096}
     volumes:
       - /data/docker/jellyfin:/config
       - /data/media:/data/media
-      - /dev/shm:/data/transcode
+      - /dev/shm:/data/transcode  # RAM disk for transcoding
     ports:
       - "8096:8096"
+      - "8920:8920"  # HTTPS
+      - "7359:7359/udp"  # Auto-discovery
+      - "1900:1900/udp"  # Service discovery
     devices:
-      - /dev/dri:/dev/dri
+      - /dev/dri:/dev/dri  # Hardware acceleration
+    group_add:
+      - "105"  # render group for hardware acceleration
     networks:
       homelab:
         ipv4_address: 172.20.0.10

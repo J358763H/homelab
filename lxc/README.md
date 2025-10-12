@@ -18,16 +18,26 @@ This directory contains LXC container configurations and setup scripts for self-
 - **Integration**: Replaces public ntfy.sh for privacy and reliability
 - **Features**: Web UI, authentication, rate limiting, API access
 
+### 📁 Media Share Server (`samba/`)
+- **Purpose**: Network file sharing for media collection
+- **Resources**: 1GB RAM, 8GB storage, 2 CPU cores
+- **Integration**: Direct access to Docker media stack storage
+- **Features**: SMB/CIFS shares, user management, performance optimized
+
 ## Directory Structure
 
 ```
 lxc/
 ├── README.md                    # This file
-└── ntfy/                        # Ntfy notification server
-    ├── setup_ntfy_lxc.sh        # Automated setup script
-    ├── server.yml.example       # Configuration template
-    ├── configure_homelab.sh     # Homelab integration script
-    └── README.md                # Ntfy-specific documentation
+├── ntfy/                        # Ntfy notification server
+│   ├── setup_ntfy_lxc.sh        # Automated setup script
+│   ├── server.yml.example       # Configuration template
+│   ├── configure_homelab.sh     # Homelab integration script  
+│   └── README.md                # Ntfy-specific documentation
+└── samba/                       # Media Share file server
+    ├── setup_samba_lxc.sh       # Automated setup script
+    ├── smb.conf.example         # Media Share configuration template
+    └── README.md                # Media Share documentation
 ```
 
 ## Prerequisites
@@ -83,14 +93,15 @@ lxc/
 
 ```bash
 # Infrastructure Services
-192.168.1.200    # Ntfy notifications
-192.168.1.201    # Future: Monitoring (Prometheus)
-192.168.1.202    # Future: Logging (Loki)
-192.168.1.203    # Future: Secrets (Vault)
-192.168.1.204    # Future: DNS (Pi-hole)
+192.168.1.101    # Ntfy notifications
+192.168.1.102    # Media Share server
+192.168.1.103    # Future: Monitoring (Prometheus)
+192.168.1.104    # Future: Logging (Loki)
+192.168.1.105    # Future: Secrets (Vault)
+192.168.1.106    # Future: DNS (Pi-hole)
 
 # Application Services  
-192.168.1.210+   # Additional app containers
+192.168.1.110+   # Additional app containers
 ```
 
 ### Firewall Considerations
@@ -218,12 +229,12 @@ pct exec 200 -- cat /proc/loadavg
 
 Planned container additions:
 
-- **Prometheus**: Metrics collection and alerting
-- **Grafana**: Visualization and dashboards  
-- **Loki**: Log aggregation and analysis
-- **Vault**: Secret management
-- **Pi-hole**: DNS filtering and ad blocking
-- **Wireguard**: VPN server for remote access
+- **Prometheus**: Metrics collection and alerting (Container 103)
+- **Grafana**: Visualization and dashboards (Container 104)
+- **Loki**: Log aggregation and analysis (Container 105)
+- **Vault**: Secret management (Container 106)
+- **Pi-hole**: DNS filtering and ad blocking (Container 107)
+- **Backup Server**: Dedicated backup storage (Container 108)
 
 ## Documentation Links
 

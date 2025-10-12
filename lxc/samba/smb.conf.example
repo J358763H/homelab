@@ -1,0 +1,221 @@
+# Samba Media Server Configuration
+# Production-ready SMB/CIFS configuration
+# Optimized for media streaming and large file transfers
+
+[global]
+   # Basic server settings
+   workgroup = WORKGROUP
+   server string = Homelab Media Server
+   netbios name = HOMELAB-MEDIA
+   security = user
+   map to guest = bad user
+   dns proxy = no
+
+   # Performance optimization
+   socket options = TCP_NODELAY IPTOS_LOWDELAY SO_RCVBUF=524288 SO_SNDBUF=524288
+   deadtime = 30
+   use sendfile = yes
+   write cache size = 262144
+   min receivefile size = 16384
+   aio read size = 16384
+   aio write size = 16384
+   server multi channel support = yes
+
+   # Logging configuration
+   log file = /var/log/samba/log.%m
+   max log size = 1000
+   log level = 1
+
+   # Advanced performance
+   strict allocate = yes
+   allocation roundup size = 1048576
+
+   # Protocol versions (modern SMB only)
+   server min protocol = SMB2_10
+   server max protocol = SMB3_11
+   
+   # Security enhancements
+   client ipc min protocol = SMB2_10
+   client min protocol = SMB2_10
+
+   # Large file support
+   max xmit = 65536
+   getwd cache = yes
+
+# =================
+# Media Shares
+# =================
+
+[media]
+   comment = All Media Files
+   path = /media
+   browseable = yes
+   writable = yes
+   guest ok = no
+   valid users = mediauser, admin
+   create mask = 0664
+   directory mask = 0775
+   force group = mediagroup
+   # Optimization for large files
+   vfs objects = streams_xattr
+   
+[movies]
+   comment = Movie Collection
+   path = /media/movies
+   browseable = yes
+   writable = yes
+   guest ok = no
+   valid users = mediauser, admin
+   create mask = 0664
+   directory mask = 0775
+   force group = mediagroup
+   # Movie-specific optimizations
+   read only = no
+   strict sync = no
+   sync always = no
+
+[shows]
+   comment = TV Show Collection
+   path = /media/shows
+   browseable = yes
+   writable = yes
+   guest ok = no
+   valid users = mediauser, admin
+   create mask = 0664
+   directory mask = 0775
+   force group = mediagroup
+
+[music]
+   comment = Music Collection
+   path = /media/music
+   browseable = yes
+   writable = yes
+   guest ok = no
+   valid users = mediauser, admin
+   create mask = 0664
+   directory mask = 0775
+   force group = mediagroup
+   # Music library optimizations
+   hide dot files = yes
+
+[youtube]
+   comment = YouTube Downloads
+   path = /media/youtube
+   browseable = yes
+   writable = yes
+   guest ok = no
+   valid users = mediauser, admin
+   create mask = 0664
+   directory mask = 0775
+   force group = mediagroup
+
+# =================
+# Download Areas
+# =================
+
+[downloads]
+   comment = Download Staging Area
+   path = /media/downloads
+   browseable = yes
+   writable = yes
+   guest ok = no
+   valid users = mediauser, admin
+   create mask = 0664
+   directory mask = 0775
+   force group = mediagroup
+   # Download optimizations
+   strict sync = no
+   sync always = no
+
+[incomplete]
+   comment = Incomplete Downloads
+   path = /media/downloads/incomplete
+   browseable = yes
+   writable = yes
+   guest ok = no
+   valid users = mediauser, admin
+   create mask = 0664
+   directory mask = 0775
+   force group = mediagroup
+   # Hide from most browsing
+   hide dot files = yes
+
+# =================
+# Administrative Shares
+# =================
+
+[docker-admin]
+   comment = Docker Data Administration
+   path = /docker-data
+   browseable = yes
+   writable = yes
+   guest ok = no
+   valid users = admin
+   create mask = 0644
+   directory mask = 0755
+   admin users = admin
+   # Admin-only restrictions
+   write list = admin
+
+[backups]
+   comment = Backup Storage
+   path = /media/backups
+   browseable = yes
+   writable = yes
+   guest ok = no
+   valid users = admin
+   create mask = 0600
+   directory mask = 0700
+   admin users = admin
+
+# =================
+# Optional Shares (uncomment as needed)
+# =================
+
+# [public]
+#    comment = Public File Exchange
+#    path = /media/public
+#    browseable = yes
+#    writable = yes
+#    guest ok = yes
+#    create mask = 0666
+#    directory mask = 0777
+
+# [software]
+#    comment = Software and ISOs
+#    path = /media/software
+#    browseable = yes
+#    writable = yes
+#    guest ok = no
+#    valid users = mediauser, admin
+#    create mask = 0664
+#    directory mask = 0775
+
+# [photos]
+#    comment = Photo Collection
+#    path = /media/photos
+#    browseable = yes
+#    writable = yes
+#    guest ok = no
+#    valid users = mediauser, admin
+#    create mask = 0664
+#    directory mask = 0775
+
+# =================
+# Printer Sharing (if needed)
+# =================
+
+# [printers]
+#    comment = All Printers
+#    path = /var/spool/samba
+#    browseable = no
+#    guest ok = no
+#    writable = no
+#    printable = yes
+
+# [print$]
+#    comment = Printer Drivers
+#    path = /var/lib/samba/printers
+#    browseable = yes
+#    read only = yes
+#    guest ok = no
