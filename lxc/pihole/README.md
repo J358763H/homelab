@@ -53,6 +53,7 @@ Client Device → Pi-hole (192.168.1.205) → Upstream DNS (1.1.1.1/8.8.8.8)
                npm.local → 192.168.1.201
                ntfy.local → 192.168.1.203
                media.local → 192.168.1.204
+               homelab-vault.local → 192.168.1.206
 ```
 
 ## 🚀 Quick Start
@@ -98,6 +99,7 @@ Pre-configured homelab service resolution:
 192.168.1.202  tailscale.local
 192.168.1.203  ntfy.local
 192.168.1.204  media.local
+192.168.1.206  homelab-vault.local
 192.168.1.205  pihole.local dns.local
 ```
 

@@ -23,7 +23,7 @@ CONTAINER_IP="192.168.1.205"
 GATEWAY_IP="192.168.1.1"
 DNS_UPSTREAM_1="1.1.1.1"
 DNS_UPSTREAM_2="8.8.8.8"
-WEBPASSWORD="admin123"  # Change this to a secure password
+WEBPASSWORD="X#zunVV!kDWdYUt0zAAg"  # Change this to a secure password
 TIMEZONE="America/Phoenix"  # Change to your timezone
 STORAGE_POOL="local-lvm"
 MEMORY="1024"
@@ -240,9 +240,10 @@ configure_pihole() {
 192.168.1.201 proxy.local
 192.168.1.202 tailscale.local
 192.168.1.203 ntfy.local
-192.168.1.204 samba.local
+192.168.1.204 media.local
 192.168.1.205 pihole.local
 192.168.1.205 dns.local
+192.168.1.206 homelab-vault.local
 EOF"
     
     # Restart DNS service to apply changes

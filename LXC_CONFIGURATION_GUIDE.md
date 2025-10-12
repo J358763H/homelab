@@ -73,10 +73,10 @@ Enter your Tailscale auth key: [REQUIRED]
 #### **1. Web Admin Password**
 ```bash
 # Line 26 - Current setting:
-WEBPASSWORD="admin123"  # Change this to a secure password
+WEBPASSWORD="X#zunVV!kDWdYUt0zAAg"  # Secure password configured
 
-# Recommended change:
-WEBPASSWORD="YourSecurePassword123!"
+# Change if desired:
+WEBPASSWORD="YourOwnSecurePassword123!"
 ```
 
 #### **2. Timezone**
@@ -117,9 +117,9 @@ DNS_UPSTREAM_2="8.8.8.8"     # Google (reliable)
 #### **1. Domain Name**
 ```bash
 # Line 25 - Current setting:
-DOMAIN_NAME="vault.local"  # Change to your domain
+DOMAIN_NAME="homelab-vault.local"  # Configured domain name
 
-# Options:
+# Alternative options:
 DOMAIN_NAME="vault.yourdomain.com"    # If you have a domain
 DOMAIN_NAME="vaultwarden.local"       # Alternative local name
 DOMAIN_NAME="passwords.local"         # Descriptive local name
