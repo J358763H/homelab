@@ -5,22 +5,37 @@ jellyfin:
   api_key: "${JELLYFIN_API_KEY}"  # Set in environment or .env file
   library_path: "/data/media/youtube"
   
-  # Library organization
+  # Multi-User Library organization
   libraries:
-    youtube_videos:
-      name: "YouTube Videos"
-      path: "/data/media/youtube/channels"
-      content_type: "movies"  # Treat videos as movies for better metadata
+    # Admin/Parent Content
+    admin_youtube:
+      name: "Admin YouTube"
+      path: "/data/media/youtube/admin"
+      content_type: "movies"
       
+    # Family Shared Content  
+    family_youtube:
+      name: "Family YouTube"
+      path: "/data/media/youtube/family"
+      content_type: "movies"
+      
+    # Kids Content
+    kids_youtube:
+      name: "Kids YouTube"
+      path: "/data/media/youtube/kids"
+      content_type: "movies"
+      
+    # Teen Content
+    teen_youtube:
+      name: "Teen YouTube"
+      path: "/data/media/youtube/teen"
+      content_type: "movies"
+      
+    # Shared Music
     youtube_music:
       name: "YouTube Music"
       path: "/data/media/youtube/music"
       content_type: "music"
-      
-    youtube_playlists:
-      name: "YouTube Playlists"
-      path: "/data/media/youtube/playlists"
-      content_type: "tvshows"  # Treat playlists as TV series
       
   # Metadata settings
   metadata:

@@ -1,0 +1,48 @@
+# Shared Music YouTube Creators Configuration
+# Music content for all family members
+
+creators:
+  # Relaxing Music
+  - name: "Lofi Girl"
+    channel_id: "UCSJ4gkVC6NrvII8umztf0Ow"
+    url: "https://www.youtube.com/@lofi"
+    category: "Music"
+    quality: "audio_only"
+    download_recent: 7
+    target_library: "music"
+    
+  # Classical Music
+  - name: "Classic FM"
+    channel_id: "UCKRz-qlHXlN5fqwY5dOXpCg"
+    url: "https://www.youtube.com/@ClassicFM"
+    category: "Classical"
+    quality: "audio_only"
+    download_recent: 14
+    target_library: "music"
+    
+  # Nature Sounds
+  - name: "Nature Sounds"
+    channel_id: "UCjzHeW8NWWBLSEtvOItLcRw"
+    url: "https://www.youtube.com/@NatureSoundsRelaxingMusic"
+    category: "Ambient"
+    quality: "audio_only"
+    download_recent: 30
+    target_library: "music"
+
+# Music playlists  
+playlists:
+  - name: "Study Music"
+    url: "https://www.youtube.com/playlist?list=PLexample202"
+    category: "Study Music"
+    max_videos: 40
+    target_library: "music"
+
+# Download preferences for music content
+preferences:
+  default_quality: "audio_only"
+  audio_format: "mp3"
+  audio_quality: "192k"
+  subtitle_languages: []  # No subtitles for music
+  download_thumbnails: true
+  download_metadata: true
+  content_rating: "all_ages"

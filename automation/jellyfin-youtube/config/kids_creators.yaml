@@ -1,0 +1,47 @@
+# Kids YouTube Creators Configuration  
+# Content specifically curated for children
+
+creators:
+  # Educational Kids Content
+  - name: "Blippi"
+    channel_id: "UC5PYHgAzJ1QI1O2gHnAImDw"
+    url: "https://www.youtube.com/@Blippi"
+    category: "Kids Educational"
+    quality: "720p"
+    download_recent: 14
+    target_library: "kids"
+    
+  - name: "Sesame Street"
+    channel_id: "UCoNdW_MJjk_ouF9EJKOGluw"
+    url: "https://www.youtube.com/@SesameStreet"
+    category: "Kids Educational"
+    quality: "720p"
+    download_recent: 30
+    target_library: "kids"
+    
+  # Kids Science
+  - name: "SciShow Kids"
+    channel_id: "UCqYPhGiB9tkShZorfgcL2lA"
+    url: "https://www.youtube.com/@SciShowKids"
+    category: "Kids Science"
+    quality: "720p"
+    download_recent: 30
+    target_library: "kids"
+
+# Kids-specific playlists
+playlists:
+  - name: "Learning Songs for Kids"
+    url: "https://www.youtube.com/playlist?list=PLexample789"
+    category: "Kids Educational"
+    max_videos: 30
+    target_library: "kids"
+
+# Download preferences for kids content
+preferences:
+  default_quality: "720p"  # Lower quality for kids content
+  subtitle_languages: ["en", "en-US"]
+  download_thumbnails: true
+  download_metadata: true
+  content_rating: "kids_only"
+  filter_explicit: true
+  max_duration: 600  # 10 minutes max for kids videos

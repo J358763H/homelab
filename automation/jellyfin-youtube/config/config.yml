@@ -50,32 +50,39 @@ presets:
       ignoreerrors: True
       extract_flat: False
 
+# Multi-User Subscriptions Configuration
+# Separate configs for different family members
+
 subscriptions:
-  # Example subscriptions - customize these
-  tech_channels:
+  # Admin/Parent content
+  admin_content:
     preset: "channel_preset"
-    urls:
-      - "https://www.youtube.com/@TechLinked"
-      - "https://www.youtube.com/@LinusTechTips"
-    overrides:
-      ytdl_options:
-        dateafter: "today-30days"
-        
-  music_channels:
+    config_file: "admin_creators.yaml" 
+    output_directory: "/data/youtube/admin"
+    
+  # Family shared content
+  family_content:
+    preset: "channel_preset"
+    config_file: "family_creators.yaml"
+    output_directory: "/data/youtube/family"
+    
+  # Kids content
+  kids_content:
+    preset: "channel_preset" 
+    config_file: "kids_creators.yaml"
+    output_directory: "/data/youtube/kids"
+    
+  # Teen content
+  teen_content:
+    preset: "channel_preset"
+    config_file: "teen_creators.yaml"
+    output_directory: "/data/youtube/teen"
+    
+  # Shared music
+  music_content:
     preset: "music_preset"
-    urls:
-      - "https://www.youtube.com/@lofi"
-    overrides:
-      ytdl_options:
-        dateafter: "today-7days"
-        
-  documentary_playlists:
-    preset: "playlist_preset"
-    urls:
-      - "https://www.youtube.com/playlist?list=PLexample123"
-    overrides:
-      ytdl_options:
-        playlistend: 10
+    config_file: "music_creators.yaml"
+    output_directory: "/data/youtube/music"
 
 # Optional: NFO file generation for Jellyfin
 nfo_tags:

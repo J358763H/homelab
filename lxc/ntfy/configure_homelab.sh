@@ -59,7 +59,7 @@ prompt() {
 echo -e "${GREEN}=== Homelab Ntfy Configuration Update ===${NC}"
 echo ""
 
-prompt "Enter your Ntfy server URL (e.g., http://192.168.1.200):"
+prompt "Enter your Ntfy server URL (e.g., http://192.168.1.101):"
 read -r NTFY_SERVER
 
 if [[ -z "$NTFY_SERVER" ]]; then

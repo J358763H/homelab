@@ -1,0 +1,280 @@
+# Admin/Parent YouTube Creators Configuration
+# Content for adults - unrestricted access
+
+creators:
+  # Tech Reviews & Hardware
+  - name: "DankPods"
+    channel_id: "UC7Jwj9fkrf1adN4fMmTkpug"
+    url: "https://www.youtube.com/@DankPods"
+    category: "Tech Reviews"
+    quality: "1080p"
+    download_recent: 30
+    target_library: "admin"
+    
+  - name: "Gamers Nexus"
+    channel_id: "UChIs72whgZI9w6d6FhwGGHA"
+    url: "https://www.youtube.com/@GamersNexus"
+    category: "Tech Reviews"
+    quality: "1080p" 
+    download_recent: 21
+    target_library: "admin"
+    
+  - name: "Linus Tech Tips"
+    channel_id: "UCXuqSBlHAE6Xw-yeJA0Tunw"
+    url: "https://www.youtube.com/@LinusTechTips"
+    category: "Tech Reviews"
+    quality: "1080p"
+    download_recent: 30
+    target_library: "admin"
+    
+  - name: "MetraByte"
+    channel_id: "UCB4E9CwLz6xQUPxR6HdOufw"
+    url: "https://www.youtube.com/@MetraByte"
+    category: "Tech Reviews"
+    quality: "1080p"
+    download_recent: 30
+    target_library: "admin"
+    
+  - name: "JerryRigEverything"
+    channel_id: "UCWFKCr40YwOZQx8FHU_tOww"
+    url: "https://www.youtube.com/@JerryRigEverything"
+    category: "Tech Reviews"
+    quality: "1080p"
+    download_recent: 30
+    target_library: "admin"
+    
+  - name: "Uwos Lab"
+    channel_id: "UCjTCFFq605uuq4YN4VmhkBA"
+    url: "https://www.youtube.com/@UwosLab"
+    category: "Tech Reviews"
+    quality: "1080p"
+    download_recent: 30
+    target_library: "admin"
+
+  # Entertainment & Reactions
+  - name: "CoryxKenshin"
+    channel_id: "UCE1jXbVAGJQEORz9nZqb5bQ"
+    url: "https://www.youtube.com/@CoryxKenshin"
+    category: "Entertainment"
+    quality: "1080p"
+    download_recent: 14
+    target_library: "admin"
+    
+  - name: "AfroSenju XL"
+    channel_id: "UCDrWDrBn28CqH5gJCu_L2kw"
+    url: "https://www.youtube.com/@AfroSenjuXL"
+    category: "Entertainment"
+    quality: "1080p"
+    download_recent: 14
+    target_library: "admin"
+    
+  - name: "slorgs"
+    channel_id: "UCjmNlPsb8RGBZmOBMvWCcrQ"
+    url: "https://www.youtube.com/@slorgs"
+    category: "Entertainment"
+    quality: "1080p"
+    download_recent: 14
+    target_library: "admin"
+    
+  - name: "GLITCH"
+    channel_id: "UC4YUKOBld2PoOLzk0YZ80lw"
+    url: "https://www.youtube.com/@GLITCH"
+    category: "Entertainment"
+    quality: "1080p"
+    download_recent: 7
+    target_library: "admin"
+    
+  - name: "fairTX"
+    channel_id: "UCJ1yz44_mK8pBZ6hhNGGYyg"
+    url: "https://www.youtube.com/@fairTX"
+    category: "Entertainment"
+    quality: "1080p"
+    download_recent: 14
+    target_library: "admin"
+    
+  - name: "Danny Duncan"
+    channel_id: "UC38IQsAvIsxxjztdMZQtwHA"
+    url: "https://www.youtube.com/@DannyDuncan69"
+    category: "Entertainment"
+    quality: "1080p"
+    download_recent: 30
+    target_library: "admin"
+
+  # Gaming Content
+  - name: "Bay Area Buggs"
+    channel_id: "UCwNjmj4A-wP3rqUtpP1VBAw"
+    url: "https://www.youtube.com/@BayAreaBuggs"
+    category: "Gaming"
+    quality: "1080p"
+    download_recent: 14
+    target_library: "admin"
+
+
+    
+  - name: "Let's Game It Out"
+    channel_id: "UCto7D1L-MiRoOziCXK9uT5Q"
+    url: "https://www.youtube.com/@LetsGameItOut"
+    category: "Gaming"
+    quality: "1080p"
+    download_recent: 30
+    target_library: "admin"
+    
+  - name: "Nano"
+    channel_id: "UC2-aOx0AqJSJ3KAuFfS8upw"
+    url: "https://www.youtube.com/@Nano"
+    category: "Gaming"
+    quality: "1080p"
+    download_recent: 14
+    target_library: "admin"
+    
+  - name: "theRadBrad"
+    channel_id: "UCpqXJOEqGS-TCnazcHCo0rA"
+    url: "https://www.youtube.com/@theRadBrad"
+    category: "Gaming"
+    quality: "1080p"
+    download_recent: 14
+    target_library: "admin"
+    
+  - name: "MoiDawg"
+    channel_id: "UC0hTKwZnzJMh1XkXU7h4lSg"
+    url: "https://www.youtube.com/@MoiDawg"
+    category: "Gaming"
+    quality: "1080p"
+    download_recent: 14
+    target_library: "admin"
+    
+  - name: "Joe Bart Games"
+    channel_id: "UCCKwf1MXjhxhHK71FTI6-bg"
+    url: "https://www.youtube.com/@JoeBartGames"
+    category: "Gaming"
+    quality: "1080p"
+    download_recent: 14
+    target_library: "admin"
+    
+  - name: "CivRyan"
+    channel_id: "UCBpYJOWFgEdVLO1Lru6Qdow"
+    url: "https://www.youtube.com/@CivRyan"
+    category: "Gaming"
+    quality: "1080p"
+    download_recent: 14
+    target_library: "admin"
+    
+  - name: "Jeff Favignano"
+    channel_id: "UCUkjGRNqfVWF_Dk2v2C5tMw"
+    url: "https://www.youtube.com/@JeffFavignano"
+    category: "Gaming"
+    quality: "1080p"
+    download_recent: 14
+    target_library: "admin"
+  # VODs & Live Stream Content
+  - name: "ElasticDroid"
+    channel_id: "UCM1Io6lm5L9iQfnqUfPO1bg"
+    url: "https://www.youtube.com/@ElasticDroid"
+    category: "VODs"
+    quality: "1080p"
+    download_recent: 7
+    target_library: "admin"
+    
+  - name: "Grizzy"
+    channel_id: "UCQlSltyy5nJbyU6FkGaFzCQ"
+    url: "https://www.youtube.com/@Grizzy"
+    category: "VODs"
+    quality: "1080p"
+    download_recent: 7
+    target_library: "admin"
+    
+  - name: "Kryoz"
+    channel_id: "UCjdQaSJCTbxr-2wG1n5237Q"
+    url: "https://www.youtube.com/@Kryoz"
+    category: "VODs"
+    quality: "1080p"
+    download_recent: 7
+    target_library: "admin"
+    
+  - name: "Fitz"
+    channel_id: "UCu2yP4ymbQvPaWNyFbT-VaQ"
+    url: "https://www.youtube.com/@Fitz"
+    category: "VODs"
+    quality: "1080p"
+    download_recent: 7
+    target_library: "admin"
+    
+  - name: "loltyler1"
+    channel_id: "UCQ-DyUdH5iTu_vLLYKVklTQ"
+    url: "https://www.youtube.com/@loltyler1"
+    category: "VODs"
+    quality: "1080p"
+    download_recent: 3
+    target_library: "admin"
+
+  # Podcasts
+  - name: "Dope As Usual Podcast"
+    channel_id: "UC6KVspYlgXE6KrAoU-D1XAg"
+    url: "https://www.youtube.com/@DopeAsUsualPodcast"
+    category: "Podcasts"
+    quality: "audio_only"
+    download_recent: 30
+    target_library: "admin"
+
+  # Lifestyle Content
+  - name: "Erick Khan"
+    channel_id: "UCjpXmBvGvKlxhfBfFbFgvzg"
+    url: "https://www.youtube.com/@ErickKhan"
+    category: "Lifestyle"
+    quality: "1080p"
+    download_recent: 21
+    target_library: "admin"
+    
+  - name: "Dope As Yola"
+    channel_id: "UCtqxG9IrHFU_ID1khGvx9sA"
+    url: "https://www.youtube.com/@DopeAsYola"
+    category: "Lifestyle"
+    quality: "1080p"
+    download_recent: 21
+    target_library: "admin"
+
+# Admin-specific playlists (customize these later)
+playlists:
+  - name: "Gaming Highlights 2024"
+    url: "https://www.youtube.com/playlist?list=PLexample123"
+    category: "Gaming"
+    max_videos: 30
+    target_library: "admin"
+    
+  - name: "Tech Deep Dives"
+    url: "https://www.youtube.com/playlist?list=PLexample456"
+    category: "Tech Reviews"
+    max_videos: 25
+    target_library: "admin"
+
+# Download preferences for admin content
+preferences:
+  default_quality: "1080p"
+  audio_only_channels: ["Dope As Usual Podcast"]  # Podcast as audio only
+  subtitle_languages: ["en", "en-US"]
+  download_thumbnails: true
+  download_metadata: true
+  content_rating: "unrestricted"
+  
+# Category-specific settings
+category_settings:
+  "Tech Reviews": 
+    download_recent: 30  # Keep more tech content
+    quality: "1080p"
+  "Gaming":
+    download_recent: 14  # Gaming content changes fast
+    quality: "1080p"
+  "Entertainment":
+    download_recent: 14
+    quality: "1080p"
+  "VODs":
+    download_recent: 7   # VODs are frequent, shorter retention
+    quality: "1080p"
+    max_duration: 14400  # 4 hours max for VODs
+    min_duration: 1800   # 30 minutes minimum (filter out clips)
+  "Podcasts":
+    quality: "audio_only"
+    download_recent: 30
+  "Lifestyle":
+    download_recent: 21
+    quality: "1080p"

@@ -25,7 +25,7 @@ SWAP=512
 DISK_SIZE=2
 CORES=1
 BRIDGE="vmbr0"
-IP_ADDRESS="192.168.1.200/24"  # Adjust to your network
+IP_ADDRESS="192.168.1.101/24"  # Adjust to your network
 GATEWAY="192.168.1.1"          # Adjust to your gateway
 NAMESERVER="1.1.1.1"
 

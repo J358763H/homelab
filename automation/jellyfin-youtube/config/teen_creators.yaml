@@ -1,0 +1,56 @@
+# Teen YouTube Creators Configuration
+# Content appropriate for teenagers
+
+creators:
+  # Gaming Content (Teen-appropriate)
+  - name: "MrBeast Gaming"
+    channel_id: "UCIPPMRA040LQr5QPyJEbmXA"
+    url: "https://www.youtube.com/@MrBeastGaming"
+    category: "Gaming"
+    quality: "1080p"
+    download_recent: 14
+    target_library: "teen"
+    
+  # Educational (Teen level)
+  - name: "Crash Course"
+    channel_id: "UCX6b17PVsYBQ0ip5gyeme-Q"
+    url: "https://www.youtube.com/@crashcourse"
+    category: "Educational"
+    quality: "1080p"
+    download_recent: 30
+    target_library: "teen"
+    
+  # Clean Entertainment
+  - name: "MrBeast"
+    channel_id: "UCX6OQ3DkcsbYNE6H8uQQuVA"
+    url: "https://www.youtube.com/@MrBeast"
+    category: "Entertainment"
+    quality: "1080p"
+    download_recent: 30
+    target_library: "teen"
+    
+  # Science & Tech (Teen appropriate)
+  - name: "Mark Rober"
+    channel_id: "UCY1kMZp36IQSyNx_9h4mpCg"
+    url: "https://www.youtube.com/@MarkRober"
+    category: "Science"
+    quality: "1080p"
+    download_recent: 60
+    target_library: "teen"
+
+# Teen-friendly playlists
+playlists:
+  - name: "Science Experiments"
+    url: "https://www.youtube.com/playlist?list=PLexample101"
+    category: "Science"
+    max_videos: 25
+    target_library: "teen"
+
+# Download preferences for teen content
+preferences:
+  default_quality: "1080p"
+  subtitle_languages: ["en", "en-US"]
+  download_thumbnails: true
+  download_metadata: true
+  content_rating: "teen_appropriate"
+  filter_explicit: true

@@ -1,0 +1,55 @@
+# Family Shared YouTube Creators Configuration
+# Content appropriate for all family members
+
+creators:
+  # Educational Content (Family-friendly)
+  - name: "Kurzgesagt"
+    channel_id: "UCsXVk37bltHxD1rDPwtNM8Q"
+    url: "https://www.youtube.com/@kurzgesagt"
+    category: "Educational"
+    quality: "1080p"
+    download_recent: 90
+    target_library: "family"
+    
+  - name: "TED-Ed"
+    channel_id: "UCsooa4yRKGN_zEE8iknghZA"
+    url: "https://www.youtube.com/@TEDEd"
+    category: "Educational"
+    quality: "1080p"
+    download_recent: 30
+    target_library: "family"
+    
+  # Science & Nature
+  - name: "National Geographic"
+    channel_id: "UCpVm7bg6pXKo1Pr6k5kxG9A"
+    url: "https://www.youtube.com/@NatGeo"
+    category: "Documentary"
+    quality: "1080p"
+    download_recent: 30
+    target_library: "family"
+    
+  # Clean Entertainment
+  - name: "Dude Perfect"
+    channel_id: "UCRijo3ddMTht_IHyNSNXpNQ"
+    url: "https://www.youtube.com/@DudePerfect"
+    category: "Entertainment"
+    quality: "1080p"
+    download_recent: 30
+    target_library: "family"
+
+# Family-friendly playlists
+playlists:
+  - name: "Educational Documentaries"
+    url: "https://www.youtube.com/playlist?list=PLexample456"
+    category: "Educational"
+    max_videos: 50
+    target_library: "family"
+
+# Download preferences for family content
+preferences:
+  default_quality: "1080p"
+  subtitle_languages: ["en", "en-US"]
+  download_thumbnails: true
+  download_metadata: true
+  content_rating: "family_friendly"
+  filter_explicit: true
