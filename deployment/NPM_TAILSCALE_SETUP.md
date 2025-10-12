@@ -69,7 +69,7 @@ docker compose ps
    
    **Example: Jellyfin Proxy**
    ```
-   Domain Names: jellyfin.your-tailnet-name
+   Domain Names: jellyfin.tail2bd275.ts.net
    Scheme: http
    Forward Hostname/IP: 172.20.0.10
    Forward Port: 8096
@@ -81,7 +81,7 @@ docker compose ps
 
    **Example: Jellyseerr Proxy**
    ```
-   Domain Names: requests.your-tailnet-name
+   Domain Names: requests.tail2bd275.ts.net
    Scheme: http  
    Forward Hostname/IP: 172.20.0.11
    Forward Port: 5055
@@ -148,10 +148,10 @@ Control access with Tailscale ACLs:
 - Jellyseerr: `http://homelab-shv-docker:5055`
 
 ### Via NPM Proxy (Configure as needed):
-- Jellyfin: `http://jellyfin.your-tailnet-name`
-- Requests: `http://requests.your-tailnet-name`
-- Movies: `http://movies.your-tailnet-name`
-- Shows: `http://shows.your-tailnet-name`
+- Jellyfin: `http://jellyfin.tail2bd275.ts.net`
+- Requests: `http://requests.tail2bd275.ts.net`
+- Movies: `http://movies.tail2bd275.ts.net`
+- Shows: `http://shows.tail2bd275.ts.net`
 
 ## 🛠️ Troubleshooting
 
