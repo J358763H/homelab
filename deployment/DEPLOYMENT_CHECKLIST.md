@@ -31,7 +31,6 @@ Complete this checklist before deploying your homelab to ensure a smooth setup.
 - [ ] Database passwords set in `.env`
 - [ ] API keys prepared (will be generated during first run)
 - [ ] `wg0.conf` created from template with VPN details
-- [ ] **Tailscale auth key** configured in `.env` (TAILSCALE_AUTH_KEY)
 
 ### Reverse Proxy & Security Setup
 - [ ] **NPM directories** created (`/data/docker/nginx-proxy-manager/`)

@@ -1,6 +1,9 @@
-# 🌐 Nginx Proxy Manager + Tailscale Setup Guide
+# 🌐 Nginx Proxy Manager + Tailscale Setup Guide (Docker-Based - Legacy)
 
-This guide will help you set up secure remote access to your homelab using Nginx Proxy Manager (NPM) for reverse proxy functionality and Tailscale for secure networking.
+⚠️ **DEPRECATED**: This guide is for Docker-based NPM+Tailscale setup. 
+**RECOMMENDED**: Use the LXC-based approach in `/lxc/nginx-proxy-manager/` and `/lxc/tailscale/` instead.
+
+This guide will help you set up secure remote access to your homelab using Nginx Proxy Manager (NPM) for reverse proxy functionality and Tailscale for secure networking running in Docker containers.
 
 ## 🎯 What This Setup Provides
 

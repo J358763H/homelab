@@ -13,6 +13,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced security hardening options
 - Mobile app integration for remote management
 
+## [1.1.0] - 2025-10-11
+
+### Added
+- **LXC Architecture**: Nginx Proxy Manager and Tailscale in dedicated LXC containers
+- **Automated Setup Scripts**: One-command LXC deployment for NPM and Tailscale
+- **Environment Variable Infrastructure**: System configuration variables in .env files
+- **Comprehensive Documentation**: Setup guides for LXC-based reverse proxy and VPN
+
+### Removed
+- **Docker-based NPM/Tailscale**: Moved to dedicated LXC containers for better isolation
+
+### Changed
+- **Network Architecture**: Tailscale now acts as subnet router for entire homelab (192.168.1.0/24)
+- **Documentation Updates**: Reflect LXC-based approach throughout guides
+
 ## [1.0.0] - 2025-10-11
 
 ### Added
