@@ -181,6 +181,22 @@ See [changelog.md](changelog.md) for detailed version history.
 - **Discussions**: GitHub Discussions for questions and community support
 - **Maintainer**: J35867U (mrnash404@protonmail.com)
 
+## 🎮 Related Projects
+
+### Game Server Repository
+For gaming and emulation needs, check out our dedicated game server project:
+
+**[🔗 homelab-game-server](https://github.com/J35867U/game-server)**
+
+**Features:**
+- **Moonlight/Sunshine**: Stream games to any device with CPU-optimized encoding
+- **CoinOps Emulation**: RetroArch-based retro gaming platform with web interface  
+- **Docker Game Servers**: Templates for Minecraft, Valheim, Factorio, and more
+- **Automated Monitoring**: Integration with homelab Ntfy notification system
+- **Hands-Off Operation**: Automated backups, health checks, and maintenance
+
+The game server repository follows the same operational standards as this homelab deployment, providing seamless integration with your existing infrastructure while maintaining project separation for focused development.
+
 ## ⚖️ License
 
 This project is open source. See individual components for their respective licenses.
