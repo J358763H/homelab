@@ -35,24 +35,16 @@ services:
     volumes:
       - ./wg0.conf:/gluetun/wireguard/wg0.conf:ro
     environment:
-      - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}
-      - VPN_TYPE=${VPN_TYPE}
-      - WIREGUARD_PUBLIC_KEY=${WIREGUARD_PUBLIC_KEY}
-      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
-      - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
-      - SERVER_COUNTRIES=${SERVER_COUNTRIES}
-      - SERVER_CITIES=${SERVER_CITIES}
-      - HEALTH_VPN_DURATION_INITIAL=${HEALTH_VPN_DURATION_INITIAL}
-      - TZ=${TZ}
+     .env 
     networks:
       homelab:
         ipv4_address: 172.20.0.2
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      interval: ${HEALTH_CHECK_INTERVAL}
+      timeout: ${HEALTH_CHECK_TIMEOUT}
+      retries: ${HEALTH_CHECK_RETRIES}
 
   # =================
   # Download Clients
@@ -206,7 +198,7 @@ services:
     devices:
       - /dev/dri:/dev/dri  # Hardware acceleration
     group_add:
-      - "105"  # render group for hardware acceleration
+      - "${RENDER_GROUP_ID}"  # render group for hardware acceleration
     networks:
       homelab:
         ipv4_address: 172.20.0.10
@@ -216,7 +208,7 @@ services:
     image: fallenbagel/jellyseerr:latest
     container_name: jellyseerr
     environment:
-      - LOG_LEVEL=debug
+      - LOG_LEVEL=${LOG_LEVEL_JELLYSEERR}
       - TZ=${TZ}
     volumes:
       - /data/docker/jellyseerr:/app/config
@@ -307,7 +299,7 @@ services:
     image: ghcr.io/flaresolverr/flaresolverr:latest
     container_name: flaresolverr
     environment:
-      - LOG_LEVEL=info
+      - LOG_LEVEL=${LOG_LEVEL_FLARESOLVERR}
       - TZ=${TZ}
     ports:
       - "8191:8191"
@@ -353,4 +345,52 @@ services:
     networks:
       homelab:
         ipv4_address: 172.20.0.18
+    restart: unless-stopped
+
+  # =================
+  # Reverse Proxy & Security
+  # =================
+  nginx-proxy-manager:
+    image: jc21/nginx-proxy-manager:latest
+    container_name: nginx-proxy-manager
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /data/docker/nginx-proxy-manager/data:/data
+      - /data/docker/nginx-proxy-manager/letsencrypt:/etc/letsencrypt
+    ports:
+      - "80:80"     # HTTP
+      - "443:443"   # HTTPS
+      - "81:81"     # Admin Web UI
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.19
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:81/api/nginx/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  tailscale:
+    image: tailscale/tailscale:latest
+    container_name: tailscale
+    hostname: ${SERVER_NAME}-docker
+    environment:
+      - TS_AUTHKEY=${TAILSCALE_AUTH_KEY}
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+      - TS_ACCEPT_DNS=true
+      - TS_EXTRA_ARGS=--advertise-routes=${DOCKER_NETWORK_SUBNET} --ssh
+    volumes:
+      - /var/lib/tailscale:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.20
     restart: unless-stopped

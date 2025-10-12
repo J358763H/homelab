@@ -31,6 +31,7 @@ Welcome to Homelab-SHV! This directory contains everything you need to deploy yo
 
 Once deployed, access your services at:
 
+### Core Media Services
 - **Jellyfin** (Media Server): `http://your-server-ip:8096`
 - **Sonarr** (TV Shows): `http://your-server-ip:8989`
 - **Radarr** (Movies): `http://your-server-ip:7878`
@@ -38,6 +39,12 @@ Once deployed, access your services at:
 - **Jellyseerr** (Requests): `http://your-server-ip:5055`
 - **Jellystat** (Analytics): `http://your-server-ip:3000`
 - **qBittorrent** (Downloads): `http://your-server-ip:8080`
+
+### Reverse Proxy & Security
+- **Nginx Proxy Manager** (Web UI): `http://your-server-ip:81`
+  - Default credentials: `admin@example.com` / `changeme` (change immediately!)
+- **Tailscale**: Provides secure remote access to all services
+  - Access services using Tailscale hostname from anywhere
 
 ## 📁 Key Files
 
@@ -52,6 +59,22 @@ Once deployed, access your services at:
 
 ### VPN Setup
 The stack uses Gluetun for VPN connectivity. Your download traffic (qBittorrent) will be routed through the VPN automatically. Make sure to configure your WireGuard details in `wg0.conf`.
+
+### Tailscale Setup (Secure Remote Access)
+1. **Create Tailscale Auth Key:**
+   - Visit [Tailscale Admin Console](https://login.tailscale.com/admin/settings/keys)
+   - Generate a reusable auth key
+   - Add the key to your `.env` file as `TAILSCALE_AUTH_KEY`
+
+2. **Configure Routes:**
+   - Tailscale will advertise your Docker subnet (`172.20.0.0/16`) to your tailnet
+   - Access services using your server's Tailscale hostname from anywhere
+   - Example: `http://homelab-shv-docker:8096` for Jellyfin
+
+3. **Security Benefits:**
+   - Encrypted WireGuard tunnel to your homelab
+   - No need to open firewall ports
+   - Access control via Tailscale ACLs
 
 ### Storage Layout
 ```
