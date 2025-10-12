@@ -17,7 +17,7 @@ set -euo pipefail
 # =================
 # Configuration
 # =================
-CONTAINER_ID=${1:-102}
+CONTAINER_ID=${1:-204}
 CONTAINER_NAME="media-share"
 TEMPLATE="ubuntu-22.04-standard_22.04-1_amd64.tar.xz"
 STORAGE="local-lvm"
@@ -26,7 +26,7 @@ SWAP=512
 DISK_SIZE=8
 CORES=2
 BRIDGE="vmbr0"
-IP_ADDRESS="192.168.1.102/24"  # Adjust to your network
+IP_ADDRESS="192.168.1.204/24"  # VMID-to-IP correlation: 204 → .204
 GATEWAY="192.168.1.1"          # Adjust to your gateway
 NAMESERVER="1.1.1.1"
 

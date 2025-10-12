@@ -135,10 +135,13 @@ Network verification:
 ===============================================
 If using Proxmox with LXC containers:
 
-LXC Network Planning (192.168.1.0/24):
-□ 192.168.1.201 - Nginx Proxy Manager (reverse proxy + SSL)
-□ 192.168.1.202 - Tailscale (VPN subnet router)
-□ 192.168.1.203 - Ntfy (notification server)
+LXC Network Planning (VMID-to-IP Correlation):
+□ 192.168.1.201 - VMID 201 - Nginx Proxy Manager (reverse proxy + SSL)
+□ 192.168.1.202 - VMID 202 - Tailscale (VPN subnet router)
+□ 192.168.1.203 - VMID 203 - Ntfy (notification server)
+□ 192.168.1.204 - VMID 204 - Media File Share (Samba)
+□ 192.168.1.205 - VMID 205 - Pi-hole (DNS & ad blocking)
+□ 192.168.1.206 - VMID 206 - Vaultwarden (password management)
 □ 192.168.1.204 - Media File Share (media sharing)
 □ 192.168.1.205 - Pi-hole (DNS + ad blocking)
 □ 192.168.1.206 - Vaultwarden (password manager)

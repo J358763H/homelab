@@ -10,6 +10,7 @@ This guide identifies all configuration values that need to be customized before
 
 ### 📄 File: `lxc/nginx-proxy-manager/setup_npm_lxc.sh`
 **Status: ✅ Ready to deploy - No customization required**
+**Network**: VMID 201 → IP 192.168.1.201 (VMID-to-IP correlation)
 
 ### 🔧 Post-Deployment Configuration Required:
 - **Default Login**: `admin@example.com` / `changeme`
@@ -22,6 +23,7 @@ This guide identifies all configuration values that need to be customized before
 
 ### 📄 File: `lxc/tailscale/setup_tailscale_lxc.sh`
 **Status: 🔑 Requires Tailscale Auth Key**
+**Network**: VMID 202 → IP 192.168.1.202 (VMID-to-IP correlation)
 
 ### 🔧 Pre-Deployment Configuration Required:
 ```bash
@@ -63,6 +65,7 @@ Our setup includes privacy-focused configurations:
 
 ### 📄 File: `lxc/ntfy/setup_ntfy_lxc.sh`
 **Status: ✅ Ready to deploy - No customization required**
+**Network**: VMID 203 → IP 192.168.1.203 (VMID-to-IP correlation)
 
 ### 🔧 Optional Configuration:
 - Server runs with default settings
@@ -75,6 +78,7 @@ Our setup includes privacy-focused configurations:
 
 ### 📄 File: `lxc/samba/setup_samba_lxc.sh`
 **Status: ✅ Ready to deploy - No customization required**
+**Network**: VMID 204 → IP 192.168.1.204 (VMID-to-IP correlation)
 
 ### 🔧 Post-Deployment Configuration:
 - Default shares created automatically
@@ -87,6 +91,7 @@ Our setup includes privacy-focused configurations:
 
 ### 📄 File: `lxc/pihole/setup_pihole_lxc.sh`
 **Status: ⚠️ Customization Recommended**
+**Network**: VMID 205 → IP 192.168.1.205 (VMID-to-IP correlation)
 
 ### 🔧 Values to Customize:
 
@@ -131,6 +136,7 @@ DNS_UPSTREAM_2="8.8.8.8"     # Google (reliable)
 
 ### 📄 File: `lxc/vaultwarden/setup_vaultwarden_lxc.sh`
 **Status: ⚠️ Customization Required**
+**Network**: VMID 206 → IP 192.168.1.206 (VMID-to-IP correlation)
 
 ### 🔧 Values to Customize:
 

@@ -107,19 +107,22 @@ lxc/
 
 ## Network Planning
 
-### Recommended IP Allocation
+### VMID-to-IP Correlation Scheme
 
 ```bash
-# Infrastructure Services
-192.168.1.101    # Ntfy notifications
-192.168.1.102    # Media Share server
-192.168.1.103    # Future: Monitoring (Prometheus)
-192.168.1.104    # Future: Logging (Loki)
-192.168.1.105    # Future: Secrets (Vault)
-192.168.1.106    # Future: DNS (Pi-hole)
+# Core Principle: IP = 192.168.1.XXX where XXX = VMID
+# Benefits: Instant visual correlation, easy troubleshooting
 
-# Application Services  
-192.168.1.110+   # Additional app containers
+# Current Infrastructure Services (200-219)
+192.168.1.201    # VMID 201 - Nginx Proxy Manager
+192.168.1.202    # VMID 202 - Tailscale VPN Router  
+192.168.1.203    # VMID 203 - Ntfy Notifications
+192.168.1.204    # VMID 204 - Media File Share
+192.168.1.205    # VMID 205 - Pi-hole DNS
+192.168.1.206    # VMID 206 - Vaultwarden Password Manager
+
+# Future Services (220+)
+192.168.1.220+   # Additional infrastructure containers
 ```
 
 ### Firewall Considerations

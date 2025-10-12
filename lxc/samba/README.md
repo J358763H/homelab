@@ -64,10 +64,10 @@ Proxmox Host
    vi setup_samba_lxc.sh
    
    # Key variables to adjust:
-   IP_ADDRESS="192.168.1.102/24"    # Your desired IP
+   IP_ADDRESS="192.168.1.204/24"    # VMID-to-IP correlation: 204 → .204
    MEDIA_STORAGE_MOUNT="/mnt/media" # Your media storage path
    DOCKER_DATA_MOUNT="/mnt/docker"  # Your Docker data path
-   CONTAINER_ID=102                 # Available container ID
+   CONTAINER_ID=204                 # Available container ID
    ```
 
 3. **Run Setup Script**
@@ -76,8 +76,8 @@ Proxmox Host
    chmod +x setup_samba_lxc.sh
    ./setup_samba_lxc.sh [container_id]
    
-   # Example with custom container ID
-   ./setup_samba_lxc.sh 103
+   # Example with custom container ID  
+   ./setup_samba_lxc.sh 204
    ```
 
 4. **Set User Passwords**
