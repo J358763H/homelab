@@ -5,6 +5,7 @@ Welcome to the comprehensive documentation for Homelab-SHV, your self-hosted med
 ## 📖 Documentation Index
 
 ### 🏗️ Architecture & Design
+- **[Hardware Architecture](../HARDWARE_ARCHITECTURE.md)** - Physical server specs and performance planning
 - **[System Architecture](System_Architecture.md)** - Overall system design and component relationships
 - **[Network Plan](Network_Plan.md)** - Network topology, VLANs, and security zones  
 - **[Storage Layout](Storage_Layout.md)** - Storage architecture and data organization

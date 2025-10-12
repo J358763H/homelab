@@ -104,6 +104,8 @@ Once deployed, access your services at:
 - **Network**: Reliable internet connection
 - **Dependencies**: Docker, Docker Compose, Git
 
+📋 **For detailed hardware specifications and architecture planning, see [Hardware Architecture Guide](HARDWARE_ARCHITECTURE.md)**
+
 ## 🔧 Configuration
 
 ### Environment Variables
