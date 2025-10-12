@@ -1,0 +1,84 @@
+# Ntfy server configuration
+# Documentation: https://docs.ntfy.sh/config/
+# Copy this file to server.yml and customize for your setup
+
+# =================
+# Server Settings
+# =================
+base-url: "http://192.168.1.200"  # Change to your LXC IP
+listen-http: ":80"
+cache-file: "/var/cache/ntfy/cache.db"
+cache-duration: "12h"
+auth-file: "/var/lib/ntfy/auth.db"
+auth-default-access: "deny-all"  # Require authentication
+attachment-cache-dir: "/var/cache/ntfy/attachments"
+keepalive-interval: "45s"
+manager-interval: "1m"
+
+# =================
+# Logging
+# =================
+log-level: "INFO"  # DEBUG, INFO, WARN, ERROR
+log-format: "text"  # text or json
+
+# =================
+# Rate Limiting
+# =================
+# Adjust these based on your homelab's notification frequency
+visitor-request-limit-burst: 60
+visitor-request-limit-replenish: "10s"
+visitor-email-limit-burst: 16
+visitor-email-limit-replenish: "1h"
+visitor-subscription-limit: 30
+visitor-attachment-total-size-limit: "100M"
+visitor-attachment-daily-bandwidth-limit: "500M"
+
+# =================
+# Message Limits
+# =================
+message-limit: 4096    # Max message size
+title-limit: 256       # Max title length
+topic-limit: 64        # Max topic name length
+
+# =================
+# Web Interface
+# =================
+enable-web-ui: true    # Enable web interface at http://your-ip
+enable-cors: true      # Allow cross-origin requests
+
+# =================
+# SMTP Settings (Optional)
+# =================
+# Uncomment and configure if you want email notifications
+# smtp-sender-addr: "notifications@yourdomain.com"
+# smtp-sender-user: "notifications@yourdomain.com" 
+# smtp-sender-pass: "your-email-password"
+# smtp-server-listen: ":25"
+# smtp-server-domain: "yourdomain.com"
+# smtp-server-addr-prefix: "ntfy-"
+
+# =================
+# Firebase (Optional)
+# =================
+# Uncomment if you want to use Firebase for mobile push notifications  
+# firebase-key-file: "/etc/ntfy/firebase-key.json"
+
+# =================
+# Attachments
+# =================
+attachment-cache-dir: "/var/cache/ntfy/attachments"
+attachment-total-size-limit: "5G"
+attachment-file-size-limit: "15M"
+attachment-expiry-duration: "3h"
+
+# =================
+# Behind Reverse Proxy
+# =================
+# Uncomment if running behind nginx/Caddy/etc
+# behind-proxy: true
+# base-url: "https://ntfy.yourdomain.com"
+
+# =================
+# Custom Themes (Optional)
+# =================
+# web-root: "/var/lib/ntfy/web"  # Custom web UI files
