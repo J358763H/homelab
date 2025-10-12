@@ -131,7 +131,37 @@ Network verification:
 □ /dev/net/tun device exists
 
 ===============================================
-🔒 SECURITY CHECKLIST
+� LXC INFRASTRUCTURE SERVICES (Optional)
+===============================================
+If using Proxmox with LXC containers:
+
+LXC Network Planning (192.168.1.0/24):
+□ 192.168.1.201 - Nginx Proxy Manager (reverse proxy + SSL)
+□ 192.168.1.202 - Tailscale (VPN subnet router)
+□ 192.168.1.203 - Ntfy (notification server)
+□ 192.168.1.204 - Samba (file sharing)
+□ 192.168.1.205 - Pi-hole (DNS + ad blocking)
+
+Deploy LXC services:
+# After cloning repository on Proxmox host
+./homelab.sh lxc
+
+Individual LXC deployments:
+□ Nginx Proxy Manager: ./lxc/nginx-proxy-manager/setup_npm_lxc.sh
+□ Tailscale Router: ./lxc/tailscale/setup_tailscale_lxc.sh  
+□ Ntfy Notifications: ./lxc/ntfy/setup_ntfy_lxc.sh
+□ Samba File Share: ./lxc/samba/setup_samba_lxc.sh
+□ Pi-hole DNS/Ad Blocker: ./lxc/pihole/setup_pihole_lxc.sh
+
+LXC Benefits:
+- Better resource isolation than Docker
+- Dedicated IP addresses for services
+- Separate network segments
+- Independent system updates
+- Enhanced security boundaries
+
+===============================================
+�🔒 SECURITY CHECKLIST
 ===============================================
 Before deployment:
 □ Strong unique passwords in .env file

@@ -13,6 +13,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced security hardening options
 - Mobile app integration for remote management
 
+## [1.3.0] - 2025-10-12
+
+### Added
+- **Pi-hole LXC Container**: Network-wide ad blocking and DNS management (192.168.1.205)
+- **DNS Infrastructure**: Custom local domain resolution for homelab services
+- **LXC Orchestration**: Enhanced homelab.sh with interactive LXC deployment menu
+- **Ad Blocking Analytics**: Comprehensive Pi-hole monitoring and statistics dashboard
+- **DNS Security**: Malware protection and tracker blocking for entire network
+
+### Enhanced
+- **Main Control Script**: Added `./homelab.sh lxc` for interactive container deployment
+- **Pre-deployment Checklist**: Updated with LXC infrastructure planning section
+- **Network Architecture**: Complete DNS hierarchy with Pi-hole integration
+- **Service Discovery**: Local domain resolution (pihole.local, npm.local, etc.)
+
 ## [1.2.0] - 2025-10-11
 
 ### Added
