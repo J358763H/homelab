@@ -82,7 +82,7 @@ WEBPASSWORD="YourSecurePassword123!"
 #### **2. Timezone**
 ```bash
 # Line 27 - Current setting:
-TIMEZONE="America/New_York"  # Change to your timezone
+TIMEZONE="America/Phoenix"  # Change to your timezone
 
 # Common alternatives:
 TIMEZONE="America/Los_Angeles"    # Pacific Time
@@ -128,7 +128,7 @@ DOMAIN_NAME="passwords.local"         # Descriptive local name
 #### **2. Timezone**
 ```bash
 # Line 26 - Current setting:
-TIMEZONE="America/New_York"  # Change to your timezone
+TIMEZONE="America/Phoenix"  # Change to your timezone
 
 # Use same timezone as Pi-hole (see above for options)
 ```
