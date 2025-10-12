@@ -1,0 +1,292 @@
+===============================================
+🚀 HOMELAB-SHV PRE-DEPLOYMENT CHECKLIST
+===============================================
+Complete ALL items before running docker compose up -d
+Last Updated: October 11, 2025
+
+===============================================
+📋 SYSTEM REQUIREMENTS
+===============================================
+Hardware:
+□ CPU: 4+ cores (8+ recommended for transcoding)
+□ RAM: 8GB minimum (16GB+ recommended)
+□ Storage: 500GB+ available space
+□ Network: Gigabit Ethernet recommended
+
+Operating System:
+□ Ubuntu 20.04+ LTS or Debian 11+
+□ Root/sudo access available
+□ SSH access configured (for remote management)
+
+===============================================
+📦 SOFTWARE INSTALLATION
+===============================================
+Run these commands on your server:
+
+# Update system
+sudo apt update && sudo apt upgrade -y
+
+# Install Docker
+curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker $USER
+sudo systemctl enable docker
+
+# Install Docker Compose
+sudo apt install docker-compose-plugin
+
+# Install dependencies
+sudo apt install git curl rsync htop nano
+
+# Verify installations
+docker --version
+docker compose version
+git --version
+
+Verification Checklist:
+□ Docker installed and running
+□ Docker Compose plugin installed
+□ Git installed
+□ User added to docker group (logout/login required)
+
+===============================================
+🔧 DIRECTORY SETUP
+===============================================
+Run the bootstrap script:
+
+cd /path/to/homelab-deployment/deployment
+chmod +x bootstrap.sh
+sudo ./bootstrap.sh
+
+Manual verification:
+□ /data directory exists
+□ /data/docker subdirectories created
+□ /data/media subdirectories created
+□ Permissions set to 1000:1000
+□ Bootstrap script completed successfully
+
+===============================================
+🔑 VPN CONFIGURATION (CRITICAL!)
+===============================================
+You MUST have a VPN provider account:
+□ VPN provider account active (ProtonVPN, NordVPN, etc.)
+□ WireGuard credentials obtained from provider
+□ VPN tested and working
+
+Required VPN information:
+- Private Key: ____________________________
+- Public Key: _____________________________
+- Server Endpoint: ________________________
+- Allowed IPs: ____________________________
+
+Files to configure:
+□ deployment/wg0.conf created from template
+□ VPN credentials added to wg0.conf
+□ VPN configuration tested
+
+===============================================
+📝 CONFIGURATION FILES
+===============================================
+Copy templates:
+cp deployment/.env.example deployment/.env
+cp deployment/wg0.conf.example deployment/wg0.conf
+
+Edit configuration files:
+□ .env file created from template
+□ All "your_*_here" placeholders replaced
+□ Database passwords set (create strong passwords)
+□ Timezone configured (TZ=)
+□ PUID/PGID configured (usually 1000)
+
+Required .env variables to configure:
+□ VPN_SERVICE_PROVIDER=
+□ WIREGUARD_PUBLIC_KEY=
+□ WIREGUARD_PRIVATE_KEY=
+□ DB_PASS= (create strong password)
+□ JWT_SECRET= (create random string)
+□ TZ= (your timezone)
+
+===============================================
+🌐 NETWORK CONFIGURATION
+===============================================
+Required ports (must be available):
+□ 8096 - Jellyfin Media Server
+□ 8989 - Sonarr (TV Shows)
+□ 7878 - Radarr (Movies)
+□ 9696 - Prowlarr (Indexers)
+□ 5055 - Jellyseerr (Requests)
+□ 8080 - qBittorrent (Downloads via VPN)
+□ 3000 - Jellystat (Analytics)
+
+Firewall configuration:
+sudo ufw allow 8096
+sudo ufw allow 8989
+sudo ufw allow 7878
+sudo ufw allow 9696
+sudo ufw allow 5055
+
+Network verification:
+□ All required ports available
+□ No port conflicts with existing services
+□ Firewall configured
+□ /dev/net/tun device exists
+
+===============================================
+🔒 SECURITY CHECKLIST
+===============================================
+Before deployment:
+□ Strong unique passwords in .env file
+□ VPN credentials tested and working
+□ SSH key authentication configured
+□ Firewall properly configured
+□ Only necessary ports exposed
+
+Password Requirements:
+- DB_PASS: Minimum 16 characters, complex
+- JWT_SECRET: Random 32+ character string
+- Admin passwords: Unique for each service
+
+===============================================
+✅ PRE-DEPLOYMENT VALIDATION
+===============================================
+Run these commands to verify setup:
+
+# Check configuration syntax
+docker compose -f deployment/docker-compose.yml config
+
+# Verify no placeholder values remain
+grep -n "changeme\|your_.*_here\|replace_me" deployment/.env
+
+# Check VPN configuration
+grep -E "(PrivateKey|PublicKey|Endpoint)" deployment/wg0.conf
+
+# Verify directory permissions
+ls -la /data/
+
+Validation checklist:
+□ Docker compose config validates without errors
+□ No placeholder values in .env file
+□ VPN configuration complete
+□ Directory permissions correct (1000:1000)
+□ All required files exist
+
+===============================================
+🚀 DEPLOYMENT COMMANDS
+===============================================
+Only run when ALL above items are complete:
+
+# Deploy the stack
+cd /path/to/homelab-deployment
+docker compose -f deployment/docker-compose.yml up -d
+
+# Check service status
+docker compose -f deployment/docker-compose.yml ps
+
+# View logs if needed
+docker compose -f deployment/docker-compose.yml logs -f
+
+===============================================
+📱 POST-DEPLOYMENT SETUP REQUIRED
+===============================================
+After successful deployment, configure:
+
+1. Prowlarr (http://your-ip:9696)
+   - Add indexers (torrent/usenet sites)
+   - Configure categories
+
+2. Sonarr (http://your-ip:8989)
+   - Add root folder: /data/media/shows
+   - Connect to Prowlarr
+   - Add download client (qBittorrent)
+
+3. Radarr (http://your-ip:7878)
+   - Add root folder: /data/media/movies
+   - Connect to Prowlarr
+   - Add download client (qBittorrent)
+
+4. qBittorrent (http://your-ip:8080)
+   - Default login: admin/adminadmin (CHANGE IMMEDIATELY)
+   - Verify VPN IP address (should show VPN location)
+   - Configure download paths
+
+5. Jellyfin (http://your-ip:8096)
+   - Run setup wizard
+   - Add media libraries
+   - Create user accounts
+
+6. Jellyseerr (http://your-ip:5055)
+   - Connect to Jellyfin
+   - Connect to Sonarr/Radarr
+   - Configure permissions
+
+===============================================
+⚠️ CRITICAL WARNINGS
+===============================================
+- VPN IS MANDATORY: Stack won't work without proper VPN setup
+- NEVER skip VPN testing: Your ISP will see torrent traffic
+- Port conflicts: Ensure no other services use required ports
+- Storage space: Ensure adequate space in /data directory
+- Backup strategy: Plan backups before adding content
+- Legal compliance: Only download content you own or is legal
+
+===============================================
+🆘 TROUBLESHOOTING
+===============================================
+Common issues:
+
+Container won't start:
+- Check logs: docker logs <container_name>
+- Verify .env file has no placeholders
+- Check port conflicts: netstat -tulpn
+
+VPN not working:
+- Verify wg0.conf credentials
+- Check VPN provider status
+- Test connectivity: docker exec gluetun curl ifconfig.me
+
+Permission errors:
+- Ensure /data owned by 1000:1000
+- Check container user mappings (PUID/PGID)
+
+Service can't connect:
+- Verify all containers in same network
+- Check internal container IPs
+- Review docker-compose.yml network config
+
+===============================================
+📞 SUPPORT RESOURCES
+===============================================
+- Repository: https://github.com/J35867U/homelab-SHV
+- Documentation: /docs directory in repository
+- Troubleshooting: deployment/TROUBLESHOOTING.md
+- Issues: GitHub Issues section
+
+===============================================
+✅ DEPLOYMENT COMPLETION CHECKLIST
+===============================================
+Mark when complete:
+□ All containers started successfully
+□ VPN working (qBittorrent shows VPN IP)
+□ Jellyfin accessible and configured
+□ Sonarr/Radarr connected to Prowlarr
+□ Download test completed successfully
+□ All web interfaces accessible
+□ Backup strategy implemented
+
+Deployment Date: _______________
+VPN IP Address: _______________
+External IP Address: ___________
+
+===============================================
+🎉 CONGRATULATIONS!
+===============================================
+Your Homelab-SHV is now deployed and ready to use!
+
+Remember to:
+- Regularly update containers
+- Monitor disk space
+- Backup configurations
+- Keep VPN credentials secure
+- Follow legal guidelines for content
+
+Enjoy your self-hosted media server!
+===============================================
