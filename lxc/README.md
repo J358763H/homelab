@@ -12,6 +12,18 @@ This directory contains LXC container configurations and setup scripts for self-
 
 ## Available Containers
 
+### 🌐 Nginx Proxy Manager (`nginx-proxy-manager/`)
+- **Purpose**: Reverse proxy and SSL certificate management
+- **Resources**: 1GB RAM, 4GB storage, 1 CPU core
+- **Integration**: Proxies to Docker services and other LXC containers
+- **Features**: Web UI, Let's Encrypt SSL, access control, custom certificates
+
+### 🔒 Tailscale Subnet Router (`tailscale/`)
+- **Purpose**: Secure mesh networking and remote access gateway
+- **Resources**: 512MB RAM, 2GB storage, 1 CPU core
+- **Integration**: Routes entire homelab network (192.168.1.0/24) via Tailscale
+- **Features**: Subnet routing, SSH access, MagicDNS, exit node capability
+
 ### 📢 Ntfy Notification Server (`ntfy/`)
 - **Purpose**: Self-hosted push notification service
 - **Resources**: 512MB RAM, 2GB storage, 1 CPU core
@@ -28,14 +40,20 @@ This directory contains LXC container configurations and setup scripts for self-
 
 ```
 lxc/
-├── README.md                    # This file
-├── ntfy/                        # Ntfy notification server
-│   ├── setup_ntfy_lxc.sh        # Automated setup script
-│   ├── server.yml.example       # Configuration template
-│   ├── configure_homelab.sh     # Homelab integration script  
-│   └── README.md                # Ntfy-specific documentation
-└── samba/                       # Media Share file server
-    ├── setup_samba_lxc.sh       # Automated setup script
+├── README.md                         # This file
+├── nginx-proxy-manager/              # Reverse proxy & SSL management
+│   ├── setup_npm_lxc.sh             # Automated setup script
+│   └── README.md                     # NPM-specific documentation
+├── tailscale/                        # Secure mesh networking
+│   ├── setup_tailscale_lxc.sh       # Automated setup script
+│   └── README.md                     # Tailscale-specific documentation
+├── ntfy/                             # Ntfy notification server
+│   ├── setup_ntfy_lxc.sh            # Automated setup script
+│   ├── server.yml.example           # Configuration template
+│   ├── configure_homelab.sh         # Homelab integration script  
+│   └── README.md                     # Ntfy-specific documentation
+└── samba/                            # Media Share file server
+    ├── setup_samba_lxc.sh           # Automated setup script
     ├── smb.conf.example         # Media Share configuration template
     └── README.md                # Media Share documentation
 ```

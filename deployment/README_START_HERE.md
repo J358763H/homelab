@@ -40,11 +40,13 @@ Once deployed, access your services at:
 - **Jellystat** (Analytics): `http://your-server-ip:3000`
 - **qBittorrent** (Downloads): `http://your-server-ip:8080`
 
-### Reverse Proxy & Security
-- **Nginx Proxy Manager** (Web UI): `http://your-server-ip:81`
+### Reverse Proxy & Security (LXC Containers)
+- **Nginx Proxy Manager**: Deploy via `/lxc/nginx-proxy-manager/setup_npm_lxc.sh`
+  - Web UI: `http://192.168.1.201:81` (adjust IP as needed)
   - Default credentials: `admin@example.com` / `changeme` (change immediately!)
-- **Tailscale**: Provides secure remote access to all services
-  - Access services using Tailscale hostname from anywhere
+- **Tailscale**: Deploy via `/lxc/tailscale/setup_tailscale_lxc.sh`
+  - Provides secure remote access to entire homelab network
+  - Subnet router for 192.168.1.0/24 network
 
 ## 📁 Key Files
 
@@ -60,20 +62,24 @@ Once deployed, access your services at:
 ### VPN Setup
 The stack uses Gluetun for VPN connectivity. Your download traffic (qBittorrent) will be routed through the VPN automatically. Make sure to configure your WireGuard details in `wg0.conf`.
 
-### Tailscale Setup (Secure Remote Access)
-1. **Create Tailscale Auth Key:**
-   - Visit [Tailscale Admin Console](https://login.tailscale.com/admin/settings/keys)
-   - Generate a reusable auth key
-   - Add the key to your `.env` file as `TAILSCALE_AUTH_KEY`
+### Tailscale Setup (Secure Remote Access via LXC)
+1. **Deploy Tailscale LXC:**
+   ```bash
+   cd /lxc/tailscale/
+   chmod +x setup_tailscale_lxc.sh
+   ./setup_tailscale_lxc.sh
+   ```
 
-2. **Configure Routes:**
-   - Tailscale will advertise your Docker subnet (`172.20.0.0/16`) to your tailnet
-   - Access services using your server's Tailscale hostname from anywhere
-   - Example: `http://homelab-shv-docker:8096` for Jellyfin
+2. **Configure Subnet Routes:**
+   - Tailscale LXC will advertise your entire homelab network (`192.168.1.0/24`)
+   - Access Docker services at `192.168.1.100:port` 
+   - Access NPM at `192.168.1.201:81`
+   - Access any homelab service via its IP address
 
 3. **Security Benefits:**
    - Encrypted WireGuard tunnel to your homelab
    - No need to open firewall ports
+   - Dedicated routing container with proper isolation
    - Access control via Tailscale ACLs
 
 ### Storage Layout
