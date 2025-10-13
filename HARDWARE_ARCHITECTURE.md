@@ -69,20 +69,25 @@ Comprehensive hardware specifications and architecture for the Homelab-SHV infra
 │  512GB NVMe SSD #1                                              │
 │  ├── Docker volumes (databases)           ~200GB                │
 │  ├── Application data                     ~200GB                │
-│  └── Download staging                     ~100GB                │
+│  └── Cache/temp processing                ~100GB                │
 ├─────────────────────────────────────────────────────────────────┤
 │  512GB NVMe SSD #2                                              │
 │  ├── VM storage pool                      ~300GB                │
 │  └── Backup staging                       ~200GB                │
 ├─────────────────────────────────────────────────────────────────┤
-│  500GB HDD                                                      │
-│  └── Temporary/archive storage            ~500GB                │
+│  500GB 2.5" SATA HDD (via USB/SATA)                            │
+│  ├── Download staging (qBittorrent)       ~300GB                │
+│  ├── Processing queue (Sonarr/Radarr)     ~150GB                │
+│  └── Failed/incomplete downloads          ~50GB                 │
 ├─────────────────────────────────────────────────────────────────┤
-│  8TB HDD #1                                                     │
-│  └── Media library (movies/shows)         ~8TB                  │
-├─────────────────────────────────────────────────────────────────┤
-│  8TB HDD #2                                                     │
-│  └── Media library (backup/redundancy)    ~8TB                  │
+│  2x 8TB HDDs - RECOMMENDED CONFIGURATION                       │
+│  Option A: ZFS Mirror (8TB usable, full redundancy)            │
+│  ├── Media library (movies/shows)         ~8TB                  │
+│  └── Automatic redundancy + snapshots     (built-in)           │
+│                                                                 │
+│  Option B: Storage Pool (16TB usable, no redundancy)           │
+│  ├── Media library (combined)             ~16TB                 │
+│  └── Requires separate backup strategy    (manual)              │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -159,6 +164,197 @@ Switch (Gigabit/2.5Gb)
 192.168.1.205    # Pi-hole DNS
 192.168.1.206    # Vaultwarden Password Manager
 ```
+
+## 💾 Storage Strategy Deep Dive
+
+### **500GB 2.5" SATA HDD Usage**
+
+**Recommended Role: Download Staging Drive**
+
+**Why This Makes Sense:**
+- **Perfect Size**: Large enough for multiple simultaneous downloads, small enough to stay fast
+- **USB/SATA Connection**: Easy to connect via USB-to-SATA adapter or dock
+- **Wear Leveling**: Protects your NVMe drives from constant download writes
+- **Easy Replacement**: If it fails, minimal impact vs. losing media library
+
+**Optimal Configuration:**
+```bash
+# Mount as download staging
+/media/staging/
+├── downloads/          # qBittorrent download directory
+├── processing/         # Sonarr/Radarr processing queue  
+├── completed/          # Temporary storage before move to media drives
+└── failed/             # Failed/incomplete downloads for review
+```
+
+**Workflow Benefits:**
+1. **Download** → 500GB HDD (fast, disposable, protects other drives)
+2. **Process** → NVMe SSD (Sonarr/Radarr processing) 
+3. **Store** → 8TB ZFS mirror (permanent, protected media library)
+4. **Protect** → NVMe drives from download wear, media from download failures
+
+**500GB Drive Implementation:**
+```bash
+# USB-to-SATA adapter connection (recommended)
+# - Easy hot-swapping if drive fails
+# - No internal SATA port usage
+# - Can be moved between systems
+# - Cheap to replace ($20-30 vs $200+ media drives)
+
+# Mount configuration in Proxmox
+/media/downloads/
+├── incomplete/     # Active qBittorrent downloads
+├── completed/      # Finished downloads awaiting processing  
+├── processing/     # Sonarr/Radarr import queue
+└── failed/         # Failed downloads for manual review
+
+# Docker volume mapping
+qbittorrent:
+  volumes:
+    - /media/downloads:/downloads
+    
+sonarr/radarr:
+  volumes:
+    - /media/downloads/completed:/downloads
+    - /media/media-pool/shows:/tv
+    - /media/media-pool/movies:/movies
+```
+
+**Why This Setup Works for Aging Drives:**
+- **500GB failure**: Minimal impact, just re-download current items
+- **8TB failure in mirror**: Automatic rebuild, no data loss
+- **8TB failure in pool**: Catastrophic - lose entire library
+
+### **8TB HDD Configuration Analysis**
+
+#### **Option A: ZFS Mirror (ESSENTIAL for 5+ Year Old Drives)**
+```bash
+# ZFS mirror configuration for aging hardware
+Storage: 8TB usable (50% efficiency)
+Redundancy: Full - can lose 1 drive safely
+Performance: Good read speeds, decent write
+Protection: Built-in checksumming, snapshots, scrubbing
+Recovery: Automatic healing, hot replacement
+Monitoring: Proactive failure detection
+
+Pros:
+✅ Complete data protection (crucial for aging drives)
+✅ Automatic error correction and healing
+✅ Detects silent corruption (common in old drives)
+✅ Easy snapshots and backups
+✅ No manual intervention during drive failure
+✅ ZFS scrubs detect issues before catastrophic failure
+✅ Can replace failing drives without downtime
+
+Cons:
+❌ 50% storage efficiency (acceptable trade-off for reliability)
+❌ More complex setup (worth it for data protection)
+```
+
+#### **Option B: Simple Pool (DANGEROUS with Aging Drives)**
+```bash
+# Simple storage pool with aging drives
+Storage: 16TB usable (100% efficiency) 
+Redundancy: None - lose everything if 1 drive fails
+Performance: Good write speeds
+Protection: Manual backups only (high risk with old drives)
+Recovery: Complete rebuild from backups (if they exist)
+
+Pros:
+✅ Maximum storage space
+✅ Simple configuration initially
+
+Cons:
+❌ EXTREMELY HIGH RISK with 5+ year old used drives
+❌ Complete data loss when (not if) drive fails
+❌ No protection against silent bit rot (common in aging drives)
+❌ No early warning system for drive degradation
+❌ Manual backup burden (often neglected)
+❌ Catastrophic failure mode with aging hardware
+❌ 16TB loss vs 0TB loss with mirror
+```
+
+### **Storage Recommendation: ZFS Mirror (CRITICAL for Aging Drives)**
+
+**With 5+ year old drives, ZFS Mirror becomes ESSENTIAL:**
+
+1. **Aging Hardware Protection**: Older drives have higher failure probability
+2. **Used Drive Risk**: Unknown previous usage patterns and stress
+3. **SMART is Lagging Indicator**: Drives can fail suddenly even with good SMART
+4. **Irreplaceable Data**: Your media collection represents years of curation
+5. **Cost of Failure**: Losing 16TB of media vs. "only" 8TB in mirror
+
+**Critical Implementation for Aging Drives:**
+```bash
+# Create ZFS mirror with aggressive monitoring
+zpool create media-pool mirror /dev/sdb /dev/sdc
+zfs create media-pool/movies
+zfs create media-pool/shows  
+zfs create media-pool/music
+
+# Enable compression and frequent snapshots
+zfs set compression=lz4 media-pool
+zfs set snapdir=visible media-pool
+
+# Set up automatic scrubbing (weekly for aging drives)
+echo "0 2 * * 0 root zpool scrub media-pool" >> /etc/crontab
+
+# Enable email alerts for any ZFS issues
+echo "ZED_EMAIL_ADDR=your@email.com" >> /etc/zfs/zed.d/zed.rc
+```
+
+**Additional Monitoring for Aging Drives:**
+```bash
+# Daily SMART checks
+smartctl -a /dev/sdb | grep -E "(Temperature|Reallocated|Current_Pending)"
+smartctl -a /dev/sdc | grep -E "(Temperature|Reallocated|Current_Pending)"
+
+# Monitor ZFS pool health
+zpool status media-pool
+zpool iostat media-pool 1 5  # Check for unusual I/O patterns
+```
+
+### **Aging Drive Risk Assessment**
+
+**Your Hardware Profile: HIGH RISK**
+- **Primary Risk**: Multiple 5+ year old drives
+- **Secondary Risk**: Used 8TB drives (unknown wear history)
+- **Failure Window**: Higher probability in next 1-2 years
+- **Impact**: Complete media library loss without redundancy
+
+**Risk Mitigation Strategy:**
+```bash
+# Monitor drive health weekly
+#!/bin/bash
+# Add to weekly health check script
+for drive in /dev/sdb /dev/sdc; do
+    echo "=== SMART Status for $drive ==="
+    smartctl -H $drive
+    smartctl -A $drive | grep -E "(Reallocated_Sector_Ct|Current_Pending_Sector|Offline_Uncorrectable)"
+    echo "Temperature: $(smartctl -A $drive | grep Temperature_Celsius | awk '{print $10}')°C"
+done
+```
+
+**Drive Replacement Planning:**
+1. **Budget**: Set aside funds for replacement drives
+2. **Monitoring**: Watch for SMART attribute changes
+3. **Proactive Replacement**: Replace drives showing degradation before failure
+4. **Hot Spares**: Consider keeping spare drive if budget allows
+
+### **Future Expansion Strategy**
+
+**Phase 1 (Current)**: 500GB staging + 8TB ZFS mirror (essential with aging drives)
+**Phase 2 (3-6 months)**: Monitor drive health, replace any showing degradation
+**Phase 3 (6-12 months)**: Add second 8TB mirror pair → 16TB total
+**Phase 4 (1-2 years)**: Proactive replacement of original aging drives
+
+**Why ZFS Mirror is Critical for Your Setup:**
+- **Aging drives fail more frequently**: Redundancy is insurance
+- **Used drives have unknown stress**: Previous heavy usage patterns unknown
+- **SMART lag time**: Drives can fail suddenly even with good recent SMART data
+- **5+ years is critical age**: Many drives fail in years 5-8 of operation
+- **Media is irreplaceable**: Your time investment in curation
+- **Download bandwidth**: Re-downloading 8TB+ takes weeks even with fast internet
 
 ## ⚡ Performance Optimization
 
