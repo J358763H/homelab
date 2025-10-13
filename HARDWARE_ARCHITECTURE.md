@@ -82,11 +82,13 @@ Comprehensive hardware specifications and architecture for the Homelab-SHV infra
 ├─────────────────────────────────────────────────────────────────┤
 │  2x 8TB HDDs - RECOMMENDED CONFIGURATION                       │
 │  Option A: ZFS Mirror (8TB usable, full redundancy)            │
-│  ├── Media library (movies/shows)         ~8TB                  │
+│  ├── Media library (movies/shows)         ~6-7TB               │
+│  ├── Photo library (with room to grow)    ~1-2TB               │
 │  └── Automatic redundancy + snapshots     (built-in)           │
 │                                                                 │
 │  Option B: Storage Pool (16TB usable, no redundancy)           │
-│  ├── Media library (combined)             ~16TB                 │
+│  ├── Media library (combined)             ~14TB                │
+│  ├── Photo library                        ~2TB                 │
 │  └── Requires separate backup strategy    (manual)              │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -355,6 +357,105 @@ done
 - **5+ years is critical age**: Many drives fail in years 5-8 of operation
 - **Media is irreplaceable**: Your time investment in curation
 - **Download bandwidth**: Re-downloading 8TB+ takes weeks even with fast internet
+
+## 📸 Photo Library Considerations
+
+### **Current Storage Capacity Analysis**
+
+**Available for Photo Library:**
+```bash
+# With ZFS Mirror (8TB usable)
+Current video media:        ~0-2TB (starting collection)
+Photo library potential:    ~1-2TB (room for growth)
+Future video growth:        ~4-6TB (as collection expands)
+Emergency buffer:           ~1TB (recommended)
+
+# Storage Timeline Projection
+Year 1: ~500GB photos + 2TB video = 2.5TB used / 8TB
+Year 2: ~750GB photos + 4TB video = 4.75TB used / 8TB  
+Year 3: ~1TB photos + 6TB video = 7TB used / 8TB
+```
+
+### **Photo Library Setup Recommendation: START NOW**
+
+**Why You Should Begin Photo Library:**
+
+✅ **Sufficient Space**: 8TB ZFS mirror can handle both video and photos initially
+✅ **Critical Protection**: Photos are even more irreplaceable than downloaded media
+✅ **ZFS Benefits**: Automatic checksumming prevents photo corruption over time
+✅ **Snapshots**: Easy recovery from accidental deletions
+✅ **Growth Monitoring**: Can track usage and plan expansion before hitting limits
+
+### **Optimal Photo Library Implementation**
+
+**Recommended Software Stack:**
+```bash
+# Option 1: Immich (Modern, AI-powered)
+immich:
+  features:
+    - Automatic face recognition and tagging
+    - Mobile app auto-upload
+    - Timeline view with smart search
+    - Duplicate detection
+    - RAW photo support
+    - Video handling
+
+# Option 2: PhotoPrism (Privacy-focused)
+photoprism:
+  features:
+    - Advanced AI tagging and search
+    - No cloud dependencies
+    - RAW processing
+    - Map integration
+    - Facial recognition (optional)
+```
+
+**Storage Structure:**
+```bash
+/media/media-pool/photos/
+├── originals/              # Master photo/video files
+├── thumbnails/            # Generated previews (can regenerate)
+├── sidecar/               # Metadata files
+└── library/               # Organized structure
+
+# Typical storage requirements
+Personal collection (10 years):     ~200-500GB
+Family collection (20+ years):      ~500GB-2TB
+Professional/RAW workflow:          ~1-5TB
+```
+
+### **Photo Library Growth Management**
+
+**Monitoring Strategy:**
+```bash
+# Add to weekly monitoring script
+echo "=== Photo Library Storage Usage ==="
+df -h /media/media-pool
+zfs list media-pool/photos
+du -sh /media/media-pool/photos/*
+
+# Alert thresholds
+# Warning: 75% full (6TB used / 8TB)
+# Critical: 85% full (6.8TB used / 8TB)
+```
+
+**Expansion Planning:**
+- **Phase 1**: Start photo library now (plenty of room)
+- **Phase 2**: Monitor growth quarterly  
+- **Phase 3**: When approaching 6TB total usage, add second mirror pair
+- **Phase 4**: Continue monitoring and expanding as needed
+
+### **Photo Library vs Video Priority**
+
+**Storage Priority Assessment:**
+1. **Photos**: Highest priority (irreplaceable family memories)
+2. **Downloaded Video**: Medium priority (replaceable but time-consuming)
+3. **Temp/Processing**: Lowest priority (fully replaceable)
+
+**Risk Assessment:**
+- **Photo Loss**: Catastrophic - decades of memories
+- **Video Loss**: Significant but recoverable
+- **Both Protected**: ZFS mirror protects everything equally
 
 ## ⚡ Performance Optimization
 
