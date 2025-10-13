@@ -457,6 +457,272 @@ du -sh /media/media-pool/photos/*
 - **Video Loss**: Significant but recoverable
 - **Both Protected**: ZFS mirror protects everything equally
 
+## ☁️ Cloud Backup Strategy
+
+### **Multi-Tier Cloud Backup Architecture**
+
+Your homelab needs offsite protection against catastrophic events (fire, theft, natural disasters). Here's a comprehensive cloud backup strategy for all three systems:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    CLOUD BACKUP HIERARCHY                       │
+├─────────────────────────────────────────────────────────────────┤
+│  Tier 1: Critical Data (Photos, Configs, Databases)            │
+│  ├── Target: Multiple cloud providers                           │
+│  ├── Frequency: Daily incremental                              │
+│  ├── Retention: 30 daily, 12 monthly, 7 yearly               │
+│  └── Encryption: Client-side (zero knowledge)                  │
+├─────────────────────────────────────────────────────────────────┤
+│  Tier 2: Important Data (Documents, Game Saves)               │
+│  ├── Target: Primary cloud provider                           │
+│  ├── Frequency: Weekly full, daily incremental               │
+│  ├── Retention: 4 weekly, 12 monthly                         │
+│  └── Encryption: Client-side                                 │
+├─────────────────────────────────────────────────────────────────┤
+│  Tier 3: Replaceable Data (Media Library)                     │
+│  ├── Target: Cold storage (optional)                          │
+│  ├── Frequency: Monthly or manual                             │
+│  ├── Retention: Latest version only                           │
+│  └── Priority: Low (can re-download if needed)               │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### **🏆 Recommended Solution: Hybrid Approach**
+
+**Primary Recommendation: Backblaze B2 + Restic**
+- **Cost**: ~$6/TB/month (most cost-effective)
+- **Performance**: Good upload speeds, excellent for Restic
+- **Reliability**: 99.9% durability, proven track record
+- **Integration**: Native Restic support, easy automation
+
+**Why This Combination:**
+✅ **Cost Effective**: Cheapest per-TB among major providers
+✅ **Zero Knowledge**: Client-side encryption (your keys only)
+✅ **Deduplication**: Restic eliminates duplicate data
+✅ **Cross-Platform**: Works on all your systems
+✅ **Incremental**: Only uploads changes after initial backup
+✅ **Battle Tested**: Widely used in homelab community
+
+### **Cloud Provider Comparison**
+
+#### **Tier 1: Backblaze B2 (RECOMMENDED)**
+```bash
+Cost: $6/TB/month storage + $10/TB egress
+Pros:
+✅ Cheapest storage cost
+✅ Excellent Restic integration  
+✅ No API fees
+✅ S3-compatible API
+✅ Good performance
+✅ Homelab-friendly
+
+Cons:
+❌ Egress fees (rarely needed)
+❌ Newer company vs AWS/Google
+```
+
+#### **Tier 2: Wasabi Cloud Storage**
+```bash
+Cost: $7/TB/month (no egress fees)
+Pros:
+✅ No egress charges
+✅ S3-compatible
+✅ Good for frequent access
+✅ Predictable pricing
+
+Cons:
+❌ Slightly more expensive
+❌ Minimum storage requirements
+```
+
+#### **Tier 3: Amazon S3 Glacier Deep Archive**
+```bash
+Cost: $1/TB/month storage + high retrieval costs
+Pros:
+✅ Extremely cheap storage
+✅ AWS reliability
+✅ Good for long-term archive
+
+Cons:
+❌ Very expensive retrieval ($0.10/GB)
+❌ 12+ hour retrieval time
+❌ Complex pricing structure
+```
+
+### **Implementation Strategy by System**
+
+#### **Primary Homelab Server (i5-8400)**
+```bash
+# Critical data backup (daily)
+/backup-scripts/critical-backup.sh:
+- Docker volumes (/data/docker)
+- ZFS snapshots of photo library
+- Configuration files
+- Database exports
+- System configurations
+
+# Target: Backblaze B2
+Repository: b2:homelab-critical-backup
+Estimated size: 500GB-2TB
+Monthly cost: $3-12
+```
+
+#### **Game Server (i5-6500)**
+```bash
+# Game data backup (weekly)
+/backup-scripts/game-backup.sh:
+- Game saves and configurations
+- CoinOPS ROM configurations (not ROMs)
+- Sunshine/Moonlight settings
+- Docker game server configs
+
+# Target: Backblaze B2 (same account)
+Repository: b2:homelab-game-backup  
+Estimated size: 50-200GB
+Monthly cost: $0.30-1.20
+```
+
+#### **Backup Node (Laptop)**
+```bash
+# Backup coordination and monitoring
+/backup-scripts/orchestrate-backups.sh:
+- Coordinates cloud backups from all systems
+- Monitors backup health across infrastructure
+- Maintains backup logs and alerts
+- Emergency restore capabilities
+
+# Also backs up its own coordination data
+Repository: b2:homelab-backup-node
+Estimated size: 10-50GB
+Monthly cost: $0.06-0.30
+```
+
+### **Restic Configuration Example**
+
+#### **Installation and Setup**
+```bash
+# Install Restic on all systems
+curl -L https://github.com/restic/restic/releases/latest/download/restic_linux_amd64.bz2 | bunzip2 > /usr/local/bin/restic
+chmod +x /usr/local/bin/restic
+
+# Initialize Backblaze B2 repository
+export B2_ACCOUNT_ID="your-account-id"
+export B2_ACCOUNT_KEY="your-application-key"
+export RESTIC_REPOSITORY="b2:your-bucket-name:/"
+export RESTIC_PASSWORD="your-strong-encryption-password"
+
+restic init
+```
+
+#### **Automated Backup Scripts**
+```bash
+#!/bin/bash
+# /usr/local/bin/homelab-cloud-backup.sh
+
+# Source credentials
+source /etc/restic/credentials
+
+# Backup critical data
+restic backup \
+  /data/docker \
+  /media/media-pool/photos \
+  /etc/docker \
+  /home/user/.config \
+  --exclude-file=/etc/restic/excludes.txt \
+  --tag="homelab-$(date +%Y%m%d)"
+
+# Cleanup old snapshots
+restic forget --tag="homelab-*" \
+  --keep-daily=30 \
+  --keep-monthly=12 \
+  --keep-yearly=7 \
+  --prune
+
+# Send notification
+curl -d "Homelab backup completed: $(date)" ntfy.sh/homelab-shv-alerts
+```
+
+### **Cost Analysis (Your Estimated Usage)**
+
+#### **Monthly Cloud Backup Costs**
+```bash
+# Tier 1: Critical Data (Photos, Configs, Databases)
+Photos: 1TB × $6 = $6/month
+Configs/DBs: 100GB × $6 = $0.60/month
+Subtotal: $6.60/month
+
+# Tier 2: Game Server Data  
+Game saves/configs: 50GB × $6 = $0.30/month
+Subtotal: $0.30/month
+
+# Total Monthly Cost: ~$7-10/month
+# Annual Cost: ~$84-120/year
+
+# Compare to risk: Losing 10+ years of photos = PRICELESS
+# ROI: First prevented data loss pays for decades of backup
+```
+
+### **Alternative: Self-Hosted Offsite Backup**
+
+#### **Option: Remote VPS Backup**
+```bash
+# Rent cheap VPS with large storage
+Provider: Hetzner Storage Box (1TB = €3.81/month)
+Setup: rsync + encryption to remote server
+Cost: ~$4/month for 1TB
+
+Pros:
+✅ Very cheap per TB
+✅ Full control
+✅ No vendor lock-in
+✅ European data protection
+
+Cons:
+❌ Manual setup and maintenance
+❌ VPS reliability responsibility
+❌ Network transfer limits
+❌ More complex restoration
+```
+
+#### **Option: Family/Friend Backup Exchange**
+```bash
+# Reciprocal backup with trusted family/friends
+Setup: Both parties host each other's encrypted backups
+Cost: Hardware/bandwidth only
+Security: Strong encryption essential
+
+Pros:
+✅ Nearly free ongoing cost
+✅ Mutual benefit
+✅ Personal relationship trust
+
+Cons:
+❌ Depends on others' reliability  
+❌ Bandwidth limitations
+❌ Geographic risk concentration
+❌ Relationship complications if issues arise
+```
+
+### **🎯 Final Recommendation**
+
+**For your setup, I strongly recommend Backblaze B2 + Restic:**
+
+1. **Start Small**: Begin with critical data only (photos, configs)
+2. **Automate Everything**: Set up daily automated backups with notifications
+3. **Monitor Costs**: Track usage, adjust retention as needed
+4. **Test Restoration**: Quarterly restore tests to verify backup integrity
+5. **Expand Gradually**: Add more data types as you see value
+
+**Initial Setup Priority:**
+1. **Week 1**: Photos and personal documents (highest value)
+2. **Week 2**: Docker configurations and databases
+3. **Week 3**: Game server saves and settings
+4. **Week 4**: Automated monitoring and alerting
+
+**Budget**: Start with $10/month budget, should cover all critical data with room to grow.
+
+The peace of mind knowing your irreplaceable photos and configurations are safely stored offsite is worth every penny! 🌟
+
 ## ⚡ Performance Optimization
 
 ### **Intel Quick Sync (i5-8400)**
