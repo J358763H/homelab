@@ -204,6 +204,25 @@ services:
         ipv4_address: 172.20.0.10
     restart: unless-stopped
 
+  wizarr:
+    container_name: wizarr
+    image: ghcr.io/wizarrrr/wizarr
+    ports:
+      - "5690:5690"
+    volumes:
+      - /data/docker/wizarr:/data
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - DISABLE_BUILTIN_AUTH=false  # Set to true ONLY if you are using another auth provider (Authelia, Authentik, etc)
+      - TZ=${TZ}
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.11
+    restart: unless-stopped
+    depends_on:
+      - jellyfin
+
   jellyseerr:
     image: fallenbagel/jellyseerr:latest
     container_name: jellyseerr
