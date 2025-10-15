@@ -18,7 +18,7 @@ set -euo pipefail
 # Configuration
 # =================
 CONTAINER_ID=${1:-204}
-CONTAINER_NAME="media-share"
+CONTAINER_NAME="homelab-media-share-204"
 TEMPLATE="ubuntu-22.04-standard_22.04-1_amd64.tar.xz"
 STORAGE="local-lvm"
 MEMORY=1024
