@@ -1,6 +1,6 @@
 #!/bin/bash
 # =====================================================
-# 🚀 Homelab-SHV — Deployment Script (Dual-Subnet)
+# 🚀 Homelab — Deployment Script (Dual-Subnet)
 # =====================================================
 # Maintainer: J35867U
 # Email: mrnash404@protonmail.com
@@ -11,7 +11,7 @@
 
 set -e
 
-echo "🚀 Starting Homelab-SHV Deployment (PVE-Homelab 192.168.1.50)..."
+echo "🚀 Starting Homelab Deployment (PVE-Homelab 192.168.1.50)..."
 echo "📋 Network: 192.168.1.x subnet - Main homelab services"
 
 echo "--> Creating required directories..."
@@ -39,7 +39,7 @@ docker compose -f deployment/docker-compose.yml up -d
 
 echo "--> Setting up cron jobs..."
 CRON_ENTRIES="
-# Homelab-SHV Cron Jobs
+# Homelab Cron Jobs
 0 2 * * * /usr/local/bin/restic_backup_with_alerts.sh >/dev/null 2>&1
 0 3 * * * /usr/local/bin/hdd_health_check.sh >/dev/null 2>&1
 0 4 * * * /usr/local/bin/daily_backup_summary.sh >/dev/null 2>&1
@@ -48,10 +48,10 @@ CRON_ENTRIES="
 0 3 * * * /usr/local/bin/Homelab_Documentation_Archiver.sh >/dev/null 2>&1
 "
 
-# Remove any existing Homelab-SHV cron entries first, then add new ones
-( sudo crontab -l 2>/dev/null | grep -v "# Homelab-SHV Cron Jobs" | grep -v "restic_backup_with_alerts.sh" | grep -v "hdd_health_check.sh" | grep -v "daily_backup_summary.sh" | grep -v "maintenance_dashboard.sh" | grep -v "weekly_system_health.sh" | grep -v "Homelab_Documentation_Archiver.sh"; echo "$CRON_ENTRIES" ) | sudo crontab -
+# Remove any existing Homelab cron entries first, then add new ones
+( sudo crontab -l 2>/dev/null | grep -v "# Homelab Cron Jobs" | grep -v "restic_backup_with_alerts.sh" | grep -v "hdd_health_check.sh" | grep -v "daily_backup_summary.sh" | grep -v "maintenance_dashboard.sh" | grep -v "weekly_system_health.sh" | grep -v "Homelab_Documentation_Archiver.sh"; echo "$CRON_ENTRIES" ) | sudo crontab -
 
-echo "✅ Homelab-SHV deployed and scheduled."
+echo "✅ Homelab deployed and scheduled."
 echo ""
 echo "🌐 Access your services:"
 echo "  Jellyfin      → http://$(hostname -I | awk '{print $1}'):8096"

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # =====================================================
-# 🧪 Homelab-SHV Quick Validation Script
+# 🧪 Homelab Quick Validation Script
 # =====================================================
 # Tests configuration without full deployment
 # Optimized for Intel Quick Sync systems
@@ -9,7 +9,7 @@
 
 set -e
 
-echo "🧪 Homelab-SHV Configuration Validation"
+echo "🧪 Homelab Configuration Validation"
 echo "========================================"
 
 # Colors

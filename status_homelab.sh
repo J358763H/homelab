@@ -1,13 +1,13 @@
 #!/bin/bash
 # =====================================================
-# 📊 Homelab-SHV — Status Script
+# 📊 Homelab — Status Script
 # =====================================================
 # Maintainer: J35867U
 # Email: mrnash404@protonmail.com
 # Last Updated: 2025-10-11
 # =====================================================
 
-echo "=== Homelab-SHV Status Check ==="
+echo "=== Homelab Status Check ==="
 echo ""
 
 echo "--- Docker Container Status ---"
@@ -38,11 +38,11 @@ fi
 
 echo ""
 echo "--- Cron Job Schedule ---"
-if sudo crontab -l 2>/dev/null | grep -q "Homelab-SHV"; then
-    echo "Active Homelab-SHV cron jobs:"
-    sudo crontab -l 2>/dev/null | grep -A 10 "# Homelab-SHV Cron Jobs" | grep -v "^#" | grep -v "^$"
+if sudo crontab -l 2>/dev/null | grep -q "Homelab"; then
+    echo "Active Homelab cron jobs:"
+    sudo crontab -l 2>/dev/null | grep -A 10 "# Homelab Cron Jobs" | grep -v "^#" | grep -v "^$"
 else
-    echo "❌ No Homelab-SHV cron jobs found"
+    echo "❌ No Homelab cron jobs found"
 fi
 
 echo ""

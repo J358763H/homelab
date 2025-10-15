@@ -2,7 +2,7 @@
 
 ## 📋 Overview
 
-Vaultwarden is a lightweight, self-hosted Bitwarden-compatible password manager written in Rust. This LXC container setup provides enterprise-grade password management with maximum security isolation, integrating seamlessly with your Homelab-SHV infrastructure.
+Vaultwarden is a lightweight, self-hosted Bitwarden-compatible password manager written in Rust. This LXC container setup provides enterprise-grade password management with maximum security isolation, integrating seamlessly with your Homelab infrastructure.
 
 ## 🎯 Features
 

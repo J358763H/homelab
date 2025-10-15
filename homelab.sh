@@ -1,6 +1,6 @@
 #!/bin/bash
 # =====================================================
-# 🏠 Homelab-SHV — Master Control Script
+# 🏠 Homelab — Master Control Script
 # =====================================================
 # Usage:
 #   ./homelab.sh deploy    # Run deploy_homelab.sh
@@ -28,22 +28,22 @@ fi
 
 case "$ACTION" in
   deploy)
-    echo "🚀 Deploying Homelab-SHV..."
+    echo "🚀 Deploying Homelab..."
     chmod +x deploy_homelab.sh
     ./deploy_homelab.sh
     ;;
   teardown)
-    echo "🧹 Tearing down Homelab-SHV..."
+    echo "🧹 Tearing down Homelab..."
     chmod +x teardown_homelab.sh
     ./teardown_homelab.sh
     ;;
   reset)
-    echo "🔄 Resetting Homelab-SHV..."
+    echo "🔄 Resetting Homelab..."
     chmod +x reset_homelab.sh
     ./reset_homelab.sh
     ;;
   status)
-    echo "📊 Checking Homelab-SHV status..."
+    echo "📊 Checking Homelab status..."
     chmod +x status_homelab.sh
     ./status_homelab.sh
     ;;

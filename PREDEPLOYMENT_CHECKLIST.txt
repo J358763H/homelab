@@ -1,5 +1,5 @@
 ===============================================
-🚀 HOMELAB-SHV PRE-DEPLOYMENT CHECKLIST
+🚀 HOMELAB PRE-DEPLOYMENT CHECKLIST
 ===============================================
 Complete ALL items before running docker compose up -d
 Last Updated: October 11, 2025
@@ -290,7 +290,7 @@ Service can't connect:
 ===============================================
 📞 SUPPORT RESOURCES
 ===============================================
-- Repository: https://github.com/J35867U/homelab-SHV
+- Repository: https://github.com/J35867U/homelab
 - Documentation: /docs directory in repository
 - Troubleshooting: deployment/TROUBLESHOOTING.md
 - Issues: GitHub Issues section
@@ -314,7 +314,7 @@ External IP Address: ___________
 ===============================================
 🎉 CONGRATULATIONS!
 ===============================================
-Your Homelab-SHV is now deployed and ready to use!
+Your Homelab is now deployed and ready to use!
 
 Remember to:
 - Regularly update containers

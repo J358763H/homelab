@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 🔐 Vaultwarden LXC Container Setup Script
-# Part of the Homelab-SHV project
+# Part of the Homelab project
 # Creates and configures Vaultwarden for secure password management
 
 set -euo pipefail

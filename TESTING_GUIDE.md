@@ -1,4 +1,4 @@
-# Homelab-SHV Testing Guide
+# Homelab Testing Guide
 
 ## No-VM Testing (Configuration Validation)
 
@@ -117,8 +117,8 @@ sudo usermod -aG docker $USER
 sudo systemctl enable docker
 
 # Clone repository
-git clone https://github.com/J35867U/homelab-SHV.git
-cd homelab-SHV
+git clone https://github.com/J35867U/homelab.git
+cd homelab
 
 # Run bootstrap
 sudo deployment/bootstrap.sh

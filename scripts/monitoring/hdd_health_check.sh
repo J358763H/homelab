@@ -11,17 +11,17 @@
 set -e
 
 # Source environment variables
-if [ -f "/usr/local/etc/homelab-shv/config.env" ]; then
-    source /usr/local/etc/homelab-shv/config.env
+if [ -f "/usr/local/etc/homelab/config.env" ]; then
+    source /usr/local/etc/homelab/config.env
 elif [ -f "$HOME/homelab-deployment/deployment/.env" ]; then
     source $HOME/homelab-deployment/deployment/.env
 fi
 
 # Default values
 NTFY_SERVER=${NTFY_SERVER:-"https://ntfy.sh"}
-NTFY_TOPIC_ALERTS=${NTFY_TOPIC_ALERTS:-"homelab-shv-alerts"}
-SERVER_NAME=${SERVER_NAME:-"homelab-shv"}
-LOGFILE="/var/log/homelab-shv/hdd_health.log"
+NTFY_TOPIC_ALERTS=${NTFY_TOPIC_ALERTS:-"homelab-alerts"}
+SERVER_NAME=${SERVER_NAME:-"homelab"}
+LOGFILE="/var/log/homelab/hdd_health.log"
 DATE=$(date '+%Y-%m-%d %H:%M:%S')
 
 # Create log directory

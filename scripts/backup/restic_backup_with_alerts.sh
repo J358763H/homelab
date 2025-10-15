@@ -11,8 +11,8 @@
 set -e
 
 # Source environment variables
-if [ -f "/usr/local/etc/homelab-shv/config.env" ]; then
-    source /usr/local/etc/homelab-shv/config.env
+if [ -f "/usr/local/etc/homelab/config.env" ]; then
+    source /usr/local/etc/homelab/config.env
 elif [ -f "$HOME/homelab-deployment/deployment/.env" ]; then
     source $HOME/homelab-deployment/deployment/.env
 fi

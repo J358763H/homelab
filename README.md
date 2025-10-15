@@ -1,4 +1,4 @@
-# Homelab-SHV
+# Homelab
 
 A reproducible, automated homelab deployment built on Proxmox + Docker. This repository provides one‑step deployment, lifecycle management, and disaster recovery for a self‑hosted media and automation stack.
 
@@ -26,7 +26,7 @@ homelab-deployment/
 
 ### 1. Clone and Configure
 ```bash
-git clone https://github.com/J35867U/homelab-SHV.git homelab-deployment
+git clone https://github.com/J35867U/homelab.git homelab-deployment
 cd homelab-deployment
 
 # Copy configuration templates

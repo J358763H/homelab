@@ -64,8 +64,8 @@ Router (192.168.1.1)
 
 ### **Repository Access**
 - [ ] GitHub access confirmed for both repositories:
-  - [ ] `J35867U/homelab-SHV` (homelab infrastructure)
-  - [ ] `J35867U/game-server` (game server deployment)
+  - [ ] `J35867U/homelab` (homelab infrastructure)
+  - [ ] `J35867U/gamelab` (game server deployment)
 
 ---
 
@@ -124,7 +124,7 @@ systemctl restart pveproxy
 #### **Access Homelab Repository**
 ```bash
 # Clone or download the homelab deployment
-wget -O deploy_homelab.sh https://raw.githubusercontent.com/J35867U/homelab-SHV/main/deploy_homelab.sh
+wget -O deploy_homelab.sh https://raw.githubusercontent.com/J35867U/homelab/main/deploy_homelab.sh
 chmod +x deploy_homelab.sh
 ```
 
@@ -181,7 +181,7 @@ DNS: 192.168.1.205 (Pi-hole) or 192.168.1.1
 ssh username@192.168.1.106
 
 # Download and run setup script
-wget -O setup.sh https://raw.githubusercontent.com/J35867U/game-server/main/setup.sh
+wget -O setup.sh https://raw.githubusercontent.com/J35867U/gamelab/main/setup.sh
 chmod +x setup.sh
 sudo ./setup.sh
 ```
@@ -275,10 +275,10 @@ iptables -A INPUT -p tcp --dport 22 -j ACCEPT
 # For experienced users - complete deployment:
 
 # 1. Deploy homelab (run on PVE-Homelab):
-wget -qO- https://raw.githubusercontent.com/J35867U/homelab-SHV/main/deploy_homelab.sh | sudo bash
+wget -qO- https://raw.githubusercontent.com/J35867U/homelab/main/deploy_homelab.sh | sudo bash
 
 # 2. Deploy game server (run on game server VM):  
-wget -qO- https://raw.githubusercontent.com/J35867U/game-server/main/setup.sh | sudo bash
+wget -qO- https://raw.githubusercontent.com/J35867U/gamelab/main/setup.sh | sudo bash
 ```
 
 ---

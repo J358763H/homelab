@@ -11,20 +11,20 @@
 set -e
 
 # Source environment variables
-if [ -f "/usr/local/etc/homelab-shv/config.env" ]; then
-    source /usr/local/etc/homelab-shv/config.env
+if [ -f "/usr/local/etc/homelab/config.env" ]; then
+    source /usr/local/etc/homelab/config.env
 elif [ -f "$HOME/homelab-deployment/deployment/.env" ]; then
     source $HOME/homelab-deployment/deployment/.env
 fi
 
 # Default values
-SERVER_NAME=${SERVER_NAME:-"homelab-shv"}
+SERVER_NAME=${SERVER_NAME:-"homelab"}
 ADMIN_EMAIL=${ADMIN_EMAIL:-"mrnash404@protonmail.com"}
 ARCHIVE_DIR="/data/backups/docs"
 SOURCE_DIR="$HOME/homelab-deployment"
-LOGFILE="/var/log/homelab-shv/docs_archive.log"
+LOGFILE="/var/log/homelab/docs_archive.log"
 DATE=$(date '+%Y-%m-%d_%H-%M-%S')
-ARCHIVE_NAME="homelab-shv-docs-${DATE}"
+ARCHIVE_NAME="homelab-docs-${DATE}"
 
 # Create directories
 mkdir -p "$ARCHIVE_DIR"
@@ -85,7 +85,7 @@ log_message "📋 Creating archive manifest..."
 MANIFEST_FILE="$ARCHIVE_PATH/ARCHIVE_MANIFEST.txt"
 
 cat > "$MANIFEST_FILE" << EOF
-# Homelab-SHV Documentation Archive
+# Homelab Documentation Archive
 # Generated: $(date)
 # Server: $SERVER_NAME
 # Maintainer: $ADMIN_EMAIL
@@ -146,7 +146,7 @@ fi
 
 # Cleanup old archives (keep last 30 days)
 log_message "🧹 Cleaning up old archives..."
-OLD_ARCHIVES=$(find "$ARCHIVE_DIR" -name "homelab-shv-docs-*.tar.gz*" -mtime +30 2>/dev/null || true)
+OLD_ARCHIVES=$(find "$ARCHIVE_DIR" -name "homelab-docs-*.tar.gz*" -mtime +30 2>/dev/null || true)
 if [ -n "$OLD_ARCHIVES" ]; then
     echo "$OLD_ARCHIVES" | xargs rm -f
     OLD_COUNT=$(echo "$OLD_ARCHIVES" | wc -l)
@@ -158,10 +158,10 @@ fi
 # Create symlink to latest
 log_message "🔗 Creating symlink to latest archive..."
 cd "$ARCHIVE_DIR"
-ln -sf "$(basename "$ARCHIVE_FILE")" "homelab-shv-docs-latest.tar.gz"
+ln -sf "$(basename "$ARCHIVE_FILE")" "homelab-docs-latest.tar.gz"
 
 if [ -f "${ARCHIVE_FILE}.gpg" ]; then
-    ln -sf "$(basename "${ARCHIVE_FILE}.gpg")" "homelab-shv-docs-latest.tar.gz.gpg"
+    ln -sf "$(basename "${ARCHIVE_FILE}.gpg")" "homelab-docs-latest.tar.gz.gpg"
 fi
 
 # Generate archive summary
@@ -181,7 +181,7 @@ log_message "   - Location: $ARCHIVE_FILE"
 if [ -n "$NTFY_SERVER" ] && [ -n "$NTFY_TOPIC_SUMMARY" ]; then
     NOTIFICATION="📚 Documentation Archive Complete
 
-✅ Successfully archived Homelab-SHV documentation
+✅ Successfully archived Homelab documentation
 
 📊 Archive Details:
 • Files: $TOTAL_FILES

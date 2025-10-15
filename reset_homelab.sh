@@ -1,6 +1,6 @@
 #!/bin/bash
 # =====================================================
-# 🔄 Homelab-SHV — Reset Script
+# 🔄 Homelab — Reset Script
 # =====================================================
 # Maintainer: J35867U
 # Email: mrnash404@protonmail.com
@@ -9,7 +9,7 @@
 
 set -e
 
-echo "Resetting Homelab-SHV environment..."
+echo "Resetting Homelab environment..."
 
 echo "--> Running teardown script..."
 ./teardown_homelab.sh
