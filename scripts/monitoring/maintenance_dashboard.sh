@@ -11,17 +11,17 @@
 set -e
 
 # Source environment variables
-if [ -f "/usr/local/etc/homelab-shv/config.env" ]; then
-    source /usr/local/etc/homelab-shv/config.env
+if [ -f "/usr/local/etc/homelab/config.env" ]; then
+    source /usr/local/etc/homelab/config.env
 elif [ -f "$HOME/homelab-deployment/deployment/.env" ]; then
     source $HOME/homelab-deployment/deployment/.env
 fi
 
 # Default values
 NTFY_SERVER=${NTFY_SERVER:-"https://ntfy.sh"}
-NTFY_TOPIC_SUMMARY=${NTFY_TOPIC_SUMMARY:-"homelab-shv-summary"}
-SERVER_NAME=${SERVER_NAME:-"homelab-shv"}
-LOGFILE="/var/log/homelab-shv/maintenance_dashboard.log"
+NTFY_TOPIC_SUMMARY=${NTFY_TOPIC_SUMMARY:-"homelab-summary"}
+SERVER_NAME=${SERVER_NAME:-"homelab"}
+LOGFILE="/var/log/homelab/maintenance_dashboard.log"
 DATE=$(date '+%Y-%m-%d %H:%M:%S')
 START=$(date +%s)
 
@@ -172,7 +172,7 @@ fi
 # Task 7: Backup Verification
 TASKS_RUN=$((TASKS_RUN + 1))
 if run_maintenance_task "Backup Verification" \
-    "test -f /var/log/homelab-shv/restic_backup.log && tail -10 /var/log/homelab-shv/restic_backup.log | grep -q 'completed successfully'" \
+    "test -f /var/log/homelab/restic_backup.log && tail -10 /var/log/homelab/restic_backup.log | grep -q 'completed successfully'" \
     30 "💾"; then
     TASKS_SUCCESS=$((TASKS_SUCCESS + 1))
     TASK_RESULTS+=("💾 Backup Verification: ✅ Success")
@@ -196,7 +196,7 @@ fi
 # Task 9: Cron Job Verification
 TASKS_RUN=$((TASKS_RUN + 1))
 if run_maintenance_task "Cron Job Check" \
-    "sudo crontab -l | grep -q 'homelab-shv' && echo 'Homelab-SHV cron jobs found'" \
+    "sudo crontab -l | grep -q 'homelab' && echo 'Homelab cron jobs found'" \
     30 "⏰"; then
     TASKS_SUCCESS=$((TASKS_SUCCESS + 1))
     TASK_RESULTS+=("⏰ Cron Job Check: ✅ Success")
@@ -292,7 +292,7 @@ $(printf "%s\n" "${TASK_RESULTS[@]}" | grep "❌")
         -H "Priority: default" \
         -H "Tags: warning,maintenance" \
         -d "$ALERT_MESSAGE" \
-        "$NTFY_SERVER/${NTFY_TOPIC_ALERTS:-homelab-shv-alerts}" || true
+        "$NTFY_SERVER/${NTFY_TOPIC_ALERTS:-homelab-alerts}" || true
 fi
 
 # Log final status

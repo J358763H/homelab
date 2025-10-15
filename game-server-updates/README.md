@@ -10,7 +10,7 @@ A dedicated game server solution for Proxmox VE that provides game streaming via
 
 ```bash
 # On your Ubuntu 22.04 VM
-wget -O setup.sh https://raw.githubusercontent.com/J35867U/game-server/main/setup.sh
+wget -O setup.sh https://raw.githubusercontent.com/J35867U/gamelab/main/setup.sh
 chmod +x setup.sh
 sudo ./setup.sh
 ```

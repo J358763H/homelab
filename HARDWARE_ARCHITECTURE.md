@@ -1,6 +1,6 @@
 # 🏗️ Homelab Hardware Architecture
 
-Comprehensive hardware specifications and architecture for the Homelab-SHV infrastructure.
+Comprehensive hardware specifications and architecture for the homelab infrastructure.
 
 **Last Updated:** October 12, 2025  
 **Maintainer:** J35867U
@@ -9,7 +9,7 @@ Comprehensive hardware specifications and architecture for the Homelab-SHV infra
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    HOMELAB-SHV INFRASTRUCTURE                    │
+│                    HOMELAB INFRASTRUCTURE                    │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────┐ │
@@ -28,7 +28,7 @@ Comprehensive hardware specifications and architecture for the Homelab-SHV infra
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-## 🖥️ Primary Homelab Server (homelab-SHV)
+## 🖥️ Primary Homelab Server (homelab)
 
 ### **Hardware Specifications**
 - **CPU**: Intel Core i5-8400 (6 cores, 6 threads, 2.8-4.0 GHz)
@@ -146,7 +146,7 @@ Internet
 Router/Modem
     │
 Switch (Gigabit/2.5Gb)
-    ├── homelab-SHV (192.168.1.100) [2.5Gb]
+  ├── homelab (192.168.1.100) [2.5Gb]
     ├── Game Server (192.168.1.106) [1Gb]
     ├── Backup Node (WiFi/Ethernet as needed)
     └── Client Devices
@@ -639,7 +639,7 @@ restic forget --tag="homelab-*" \
   --prune
 
 # Send notification
-curl -d "Homelab backup completed: $(date)" ntfy.sh/homelab-shv-alerts
+curl -d "Homelab backup completed: $(date)" ntfy.sh/homelab-alerts
 ```
 
 ### **Cost Analysis (Your Estimated Usage)**

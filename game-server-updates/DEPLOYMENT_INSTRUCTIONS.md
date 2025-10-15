@@ -22,7 +22,7 @@ This directory contains the updated files needed to make your game server reposi
 ### **Method 1: Replace Files Directly**
 ```bash
 # 1. Navigate to your game server repository
-cd /path/to/your/game-server/
+cd /path/to/your/gamelab/
 
 # 2. Backup original files (optional)
 cp README.md README.md.backup
@@ -109,7 +109,7 @@ grep -r "192.168.100.252" .
 ```bash
 # SSH into VM and run setup
 ssh username@192.168.100.252
-wget -O setup.sh https://raw.githubusercontent.com/J35867U/game-server/main/setup.sh
+wget -O setup.sh https://raw.githubusercontent.com/J35867U/gamelab/main/setup.sh
 chmod +x setup.sh
 sudo ./setup.sh
 ```

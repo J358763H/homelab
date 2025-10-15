@@ -19,9 +19,9 @@ fi
 
 # Default values
 NTFY_SERVER=${NTFY_SERVER:-"https://ntfy.sh"}
-NTFY_TOPIC_SUMMARY=${NTFY_TOPIC_SUMMARY:-"homelab-shv-summary"}
-SERVER_NAME=${SERVER_NAME:-"homelab-shv"}
-LOGFILE="/var/log/homelab-shv/daily_backup_summary.log"
+NTFY_TOPIC_SUMMARY=${NTFY_TOPIC_SUMMARY:-"homelab-summary"}
+SERVER_NAME=${SERVER_NAME:-"homelab"}
+LOGFILE="/var/log/homelab/daily_backup_summary.log"
 DATE=$(date '+%Y-%m-%d %H:%M:%S')
 START=$(date +%s)
 
@@ -74,7 +74,7 @@ TASKS+=("$(run_task "Container Health Check" \
 
 # Task: Backup verification
 TASKS+=("$(run_task "Backup Status Check" \
-    "test -f /var/log/homelab-shv/restic_backup.log && tail -1 /var/log/homelab-shv/restic_backup.log | grep -q 'completed successfully'" \
+    "test -f /var/log/homelab/restic_backup.log && tail -1 /var/log/homelab/restic_backup.log | grep -q 'completed successfully'" \
     "💾")")
 
 # Task: Disk space check
@@ -99,7 +99,7 @@ TASKS+=("$(run_task "System Load Check" \
 
 # Task: Log rotation
 TASKS+=("$(run_task "Log Rotation" \
-    "find /var/log/homelab-shv -name '*.log' -size +10M -exec truncate -s 1M {} \;" \
+    "find /var/log/homelab -name '*.log' -size +10M -exec truncate -s 1M {} \;" \
     "📝")")
 
 # Calculate duration
@@ -172,7 +172,7 @@ $(echo "${TASKS[@]}" | grep "❌" | head -5)
         -H "Priority: default" \
         -H "Tags: warning,alert" \
         -d "$ALERT_MESSAGE" \
-        "$NTFY_SERVER/${NTFY_TOPIC_ALERTS:-homelab-shv-alerts}" || true
+        "$NTFY_SERVER/${NTFY_TOPIC_ALERTS:-homelab-alerts}" || true
 fi
 
 echo "Daily backup summary completed at $DATE"

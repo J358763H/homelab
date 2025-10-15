@@ -2,7 +2,7 @@
 
 ## 📋 Overview
 
-Pi-hole provides network-wide ad blocking and DNS management for your homelab. This LXC container setup integrates seamlessly with your existing Homelab-SHV infrastructure, providing DNS filtering, custom domain resolution, and comprehensive network analytics.
+Pi-hole provides network-wide ad blocking and DNS management for your homelab. This LXC container setup integrates seamlessly with your existing homelab infrastructure, providing DNS filtering, custom domain resolution, and comprehensive network analytics.
 
 ## 🎯 Features
 

@@ -22,10 +22,10 @@ RESTIC_REPOSITORY=${RESTIC_REPOSITORY:-""}
 RESTIC_PASSWORD=${RESTIC_PASSWORD:-""}
 BACKUP_PATHS=${BACKUP_PATHS:-"/data/docker /data/media"}
 NTFY_SERVER=${NTFY_SERVER:-"https://ntfy.sh"}
-NTFY_TOPIC_ALERTS=${NTFY_TOPIC_ALERTS:-"homelab-shv-alerts"}
-SERVER_NAME=${SERVER_NAME:-"homelab-shv"}
+NTFY_TOPIC_ALERTS=${NTFY_TOPIC_ALERTS:-"homelab-alerts"}
+SERVER_NAME=${SERVER_NAME:-"homelab"}
 
-LOGFILE="/var/log/homelab-shv/restic_backup.log"
+LOGFILE="/var/log/homelab/restic_backup.log"
 DATE=$(date '+%Y-%m-%d %H:%M:%S')
 START=$(date +%s)
 

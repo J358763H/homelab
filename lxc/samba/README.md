@@ -363,4 +363,4 @@ BACKUP_PATHS="/data/docker /media/movies /media/tv /media/music"
 - [Samba/SMB Documentation](https://www.samba.org/samba/docs/)
 - [Proxmox LXC Documentation](https://pve.proxmox.com/wiki/Linux_Container)
 - [Original Guide Video](https://youtu.be/qmSizZUbCOA?si=qWmb60b_BrFNtoLr)
-- [Homelab-SHV Main Documentation](../../README.md)
+- [Homelab Main Documentation](../../README.md)

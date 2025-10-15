@@ -11,17 +11,17 @@
 set -e
 
 # Source environment variables
-if [ -f "/usr/local/etc/homelab-shv/config.env" ]; then
-    source /usr/local/etc/homelab-shv/config.env
+if [ -f "/usr/local/etc/homelab/config.env" ]; then
+    source /usr/local/etc/homelab/config.env
 elif [ -f "$HOME/homelab-deployment/deployment/.env" ]; then
     source $HOME/homelab-deployment/deployment/.env
 fi
 
 # Default values
 NTFY_SERVER=${NTFY_SERVER:-"https://ntfy.sh"}
-NTFY_TOPIC_SUMMARY=${NTFY_TOPIC_SUMMARY:-"homelab-shv-summary"}
-SERVER_NAME=${SERVER_NAME:-"homelab-shv"}
-LOGFILE="/var/log/homelab-shv/weekly_health.log"
+NTFY_TOPIC_SUMMARY=${NTFY_TOPIC_SUMMARY:-"homelab-summary"}
+SERVER_NAME=${SERVER_NAME:-"homelab"}
+LOGFILE="/var/log/homelab/weekly_health.log"
 DATE=$(date '+%Y-%m-%d %H:%M:%S')
 START=$(date +%s)
 
@@ -225,7 +225,7 @@ fi
 
 # 7. Backup Status
 log_message "💾 Checking backup status..."
-BACKUP_LOG="/var/log/homelab-shv/restic_backup.log"
+BACKUP_LOG="/var/log/homelab/restic_backup.log"
 if [ -f "$BACKUP_LOG" ]; then
     LAST_BACKUP=$(stat -c %Y "$BACKUP_LOG" 2>/dev/null || echo 0)
     CURRENT_TIME=$(date +%s)

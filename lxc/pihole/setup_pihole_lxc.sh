@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 🕳️ Pi-hole LXC Container Setup Script
-# Part of the Homelab-SHV project
+# Part of the homelab project
 # Creates and configures Pi-hole for network-wide ad blocking and DNS management
 
 set -euo pipefail

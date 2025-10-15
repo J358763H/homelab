@@ -173,4 +173,4 @@ pct pull 200 /tmp/ntfy-backup.tar.gz ./ntfy-backup-$(date +%Y%m%d).tar.gz
 
 - [Ntfy Documentation](https://docs.ntfy.sh/)
 - [Proxmox LXC Documentation](https://pve.proxmox.com/wiki/Linux_Container)
-- [Homelab-SHV Main Documentation](../../README.md)
+- [Homelab Main Documentation](../../README.md)

@@ -30,8 +30,8 @@ ENV_EXAMPLE="$HOMELAB_ROOT/deployment/.env.example"
 
 # Default Ntfy server (will be updated by user input)
 NTFY_SERVER=""
-NTFY_TOPIC_ALERTS="homelab-shv-alerts"
-NTFY_TOPIC_SUMMARY="homelab-shv-summary"
+NTFY_TOPIC_ALERTS="homelab-alerts"
+NTFY_TOPIC_SUMMARY="homelab-summary"
 
 # =================
 # Helper Functions
@@ -132,7 +132,7 @@ if command -v curl >/dev/null 2>&1; then
         prompt "Send test notification? (y/N):"
         read -r send_test
         if [[ "$send_test" == "y" || "$send_test" == "Y" ]]; then
-            curl -d "🏠 Homelab-SHV configuration updated! Self-hosted Ntfy is now active." \
+            curl -d "🏠 Homelab configuration updated! Self-hosted Ntfy is now active." \
                  -H "title: Homelab Setup" \
                  -H "tags: house,gear" \
                  "$NTFY_SERVER/$NTFY_TOPIC_SUMMARY" 2>/dev/null || warn "Test message failed"

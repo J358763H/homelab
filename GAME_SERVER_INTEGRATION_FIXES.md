@@ -8,7 +8,7 @@
 - Network: `192.168.1.x` 
 - PVE-Homelab: `192.168.1.50` (homelab infrastructure)
 - PVE-Gamelab: `192.168.1.51` (game server infrastructure)
-- Repository: `J35867U/homelab-SHV` ✅ & `J35867U/game-server` ✅
+- Repository: `J35867U/homelab` ✅ & `J35867U/gamelab` ✅
 
 **Physical Setup:**
 - Single unmanaged gigabit switch connected to router port 1
@@ -92,7 +92,7 @@ GAME_SERVER=192.168.1.106             # Direct streaming access
 
 #### **2. Repository Status - ✅ UPDATED & PUSHED:**
 ```bash
-# Changes committed to J35867U/game-server repository:
+# Changes committed to J35867U/gamelab repository:
 ✅ IP Address: 192.168.1.106 (single subnet)
 ✅ VMID: 106 (homelab consistency)
 ✅ VM Name: gamelab-moonlight-stream-106 
@@ -119,8 +119,8 @@ Sunshine Config: https://192.168.1.106:47990
 ### **✅ DEPLOYMENT STATUS - BOTH REPOSITORIES READY**
 
 **Repository Status:**
-- **homelab-SHV**: ✅ **DEPLOYMENT READY** (192.168.1.x subnet)
-- **game-server**: ✅ **DEPLOYMENT READY** (192.168.1.x subnet) - **UPDATED**
+- **homelab**: ✅ **DEPLOYMENT READY** (192.168.1.x subnet)
+- **gamelab**: ✅ **DEPLOYMENT READY** (192.168.1.x subnet) - **UPDATED**
 
 **Changes Applied to Game Server Repository:**
 - ✅ All IP addresses updated (192.168.100.252 → 192.168.1.106)
@@ -174,7 +174,7 @@ qm create 252 \
 ```bash
 # SSH into the VM and run setup:
 ssh username@192.168.100.252
-wget -O setup.sh https://raw.githubusercontent.com/J35867U/game-server/main/setup.sh
+wget -O setup.sh https://raw.githubusercontent.com/J35867U/gamelab/main/setup.sh
 chmod +x setup.sh
 sudo ./setup.sh
 ```
@@ -213,8 +213,8 @@ BACKUP_TARGET="//192.168.1.204/gamelab-backups"
 ## 🎯 Final Status - Single Subnet Conversion Complete ✅
 
 ### **✅ DEPLOYMENT READY - Both Repositories Updated****Repository Status:**
-- **homelab-SHV**: ✅ Ready (192.168.1.x subnet)
-- **game-server**: ✅ Updated & Pushed (192.168.1.x subnet)
+- **homelab**: ✅ Ready (192.168.1.x subnet)
+- **gamelab**: ✅ Updated & Pushed (192.168.1.x subnet)
 
 **Network Architecture - Single Subnet:**
 ```bash

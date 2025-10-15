@@ -1,4 +1,4 @@
-version: "3.8"
+
 
 # =====================================================
 # 🐳 Homelab — Docker Compose File
@@ -34,8 +34,8 @@ services:
       - "6881:6881/udp"
     volumes:
       - ./wg0.conf:/gluetun/wireguard/wg0.conf:ro
-    environment:
-     .env 
+    env_file:
+      - .env
     networks:
       homelab:
         ipv4_address: 172.20.0.2
@@ -348,20 +348,16 @@ services:
   # =================
   # Request Management
   # =================
-  suggestarr:
-    image: ghcr.io/l3uddz/suggestarr:latest
-    container_name: suggestarr
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - RADARR_API_KEY=${RADARR_API_KEY}
-      - SONARR_API_KEY=${SONARR_API_KEY}
-    volumes:
-      - /data/docker/suggestarr:/config
-    ports:
-      - "${SUGGESTARR_PORT}:5000"
-    networks:
-      homelab:
-        ipv4_address: 172.20.0.18
-    restart: unless-stopped
+  # suggestarr:
+  #   image: ghcr.io/l3uddz/suggestarr:latest
+  #   container_name: suggestarr
+  #   env_file:
+  #     - .env
+  #   volumes:
+  #     - /data/docker/suggestarr:/config
+  #   ports:
+  #     - "${SUGGESTARR_PORT}:5000"
+  #   networks:
+  #     homelab:
+  #       ipv4_address: 172.20.0.18
+  #   restart: unless-stopped

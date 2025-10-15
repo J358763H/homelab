@@ -29,4 +29,4 @@ This directory contains all updated files to make your game server repository de
 
 ---
 Generated: October 14, 2025  
-For: J35867U/game-server dual-subnet migration
+For: J35867U/gamelab dual-subnet migration

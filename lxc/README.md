@@ -261,4 +261,4 @@ Planned container additions:
 
 - [Proxmox LXC Documentation](https://pve.proxmox.com/wiki/Linux_Container)
 - [Container Best Practices](https://pve.proxmox.com/wiki/Linux_Container#_best_practices)
-- [Homelab-SHV Main Documentation](../README.md)
+- [Homelab Main Documentation](../README.md)

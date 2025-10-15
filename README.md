@@ -188,7 +188,7 @@ See [changelog.md](changelog.md) for detailed version history.
 ### Game Server Repository
 For gaming and emulation needs, check out our dedicated game server project:
 
-**[🔗 homelab-game-server](https://github.com/J35867U/game-server)**
+**[🔗 gamelab](https://github.com/J35867U/gamelab)**
 
 **Features:**
 - **Moonlight/Sunshine**: Stream games to any device with CPU-optimized encoding

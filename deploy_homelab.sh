@@ -21,9 +21,31 @@ mkdir -p /data/media/{movies,shows,music,youtube}
 chown -R 1000:1000 /data
 
 echo "--> Installing core packages..."
+
+# Install sudo if not available
+if ! command -v sudo &> /dev/null; then
+    apt-get update -y && apt-get install -y sudo
+fi
+
+# Install lsb-release first (needed for repository setup)
+sudo apt-get update -y && sudo apt-get install -y lsb-release curl gnupg
+
+# Add Docker repository
+if [ ! -f /usr/share/keyrings/docker-archive-keyring.gpg ]; then
+    curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+fi
+
+# Add Tailscale repository
+if [ ! -f /usr/share/keyrings/tailscale-archive-keyring.gpg ]; then
+    curl -fsSL https://pkgs.tailscale.com/stable/debian/$(lsb_release -cs).noarmor.gpg | tee /usr/share/keyrings/tailscale-archive-keyring.gpg >/dev/null
+    echo "deb [signed-by=/usr/share/keyrings/tailscale-archive-keyring.gpg] https://pkgs.tailscale.com/stable/debian $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/tailscale.list
+fi
+
+# Update and install packages
 sudo apt-get update -y && sudo apt-get install -y \
-  curl rsync restic smartmontools lm-sensors zfsutils-linux \
-  tailscale docker.io docker-compose-plugin lsb-release tree mailutils
+  rsync restic smartmontools lm-sensors zfsutils-linux \
+  tailscale docker.io docker-compose-plugin tree mailutils
 
 echo "--> Enabling and starting core services..."
 sudo systemctl enable --now docker tailscaled
