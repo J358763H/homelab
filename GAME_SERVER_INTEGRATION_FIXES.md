@@ -1,15 +1,27 @@
-# 🎮 Game Server Network Integration Fixes
+# 🎮 Game Server Dual-Subnet Integration Guide
 
-## Current Inconsistencies
+## Network Topology Confirmation
 
-### **Game Server Repository (J35867U/game-server)**
+### **Dual-Subnet Architecture (FINAL)**
 
-**Hardcoded IP Issues:**
+**Homelab Network (PVE-Homelab):**
+- Proxmox Host: `192.168.1.50`
+- Services: `192.168.1.100-254`
+- Repository: `J35867U/homelab-SHV` ✅
+
+**Game Server Network (PVE-Gamelab):**
+- Proxmox Host: `192.168.100.50` 
+- Services: `192.168.100.50-254`
+- Repository: `J35867U/game-server` (needs IP updates)
+
+### **Game Server Repository Updates Required**
+
+**Current State:**
 ```bash
-# Found in game-server repo setup.sh and documentation
-- Expected IP: 192.168.1.106 
-- New topology: 192.168.100.252 (gamelab subnet)
-- VMID should be: 252 (not 106)
+# Game server repo currently expects single subnet
+Expected IP: 192.168.1.106 (old assumption)
+Target IP: 192.168.100.252 (dual-subnet correct)
+VMID: 252 (gamelab naming convention)
 ```
 
 **Integration Fixes Needed:**
@@ -64,19 +76,50 @@ MONITORING_HUB=192.168.1.201          # NPM for reverse proxy
 
 ## Required Repository Updates
 
-### **Game Server Repo Fixes** 
-```bash
-# These changes need to be made to J35867U/game-server:
+### **Required Changes for Game Server Repository**
 
-1. setup.sh - Update IP expectations
-2. README.md - Update VM creation examples  
-3. scripts/monitoring/* - Update Ntfy server references
-4. scripts/backup/* - Update backup target paths
-5. All documentation - IP schema alignment
+**Update these files in `J35867U/game-server` when deploying:**
+
+1. **IP Address Updates:**
+```bash
+# Find and replace in all files:
+192.168.1.106 → 192.168.100.252
+192.168.1.xxx → 192.168.100.xxx (any homelab references)
 ```
 
-### **Integration Scripts**
-Create cross-subnet integration scripts for:
-- Backup sync from game server to homelab Samba
-- Monitoring data relay to homelab monitoring stack
-- Notifications routing through homelab Ntfy
+2. **VM Creation Scripts:**
+```bash
+# Update VM creation command:
+qm create 106 → qm create 252
+--name "game-server" → --name "gamelab-moonlight-stream-252"
+```
+
+3. **Network Configuration:**
+```bash
+# Update network interfaces and gateway:
+IP_ADDRESS="192.168.100.252/24"
+GATEWAY="192.168.100.1"
+BRIDGE="vmbr0"
+```
+
+4. **Service Ports & Firewall:**
+```bash
+# Update firewall rules for 192.168.100.x subnet
+# Ensure game streaming ports accessible from both subnets
+```
+
+### **Repository Independence**
+
+**Keep Repositories Completely Separate:**
+- **No cross-subnet dependencies** - each repo runs independently
+- **No shared services** - each manages its own infrastructure  
+- **Optional integration only** - document for future reference but not required
+
+### **Deployment Strategy**
+```bash
+# Phase 1: Deploy homelab-SHV (192.168.1.x subnet)
+cd /homelab-SHV && ./deploy_homelab.sh
+
+# Phase 2: Update & deploy game-server (192.168.100.x subnet) 
+cd /game-server && ./setup.sh  # After IP updates
+```

@@ -105,14 +105,15 @@ Required .env Variables:
 □ JELLYFIN_PUBLISHED_SERVER_URL
 
 ===============================================
-🌐 NETWORK CONFIGURATION VERIFICATION
+🌐 DUAL-SUBNET NETWORK VERIFICATION  
 ===============================================
 
-Subnet Verification:
-□ 192.168.1.x subnet configured for homelab
-□ 192.168.100.x subnet configured for game server
-□ Router/switch properly segmenting networks
-□ DNS resolution working between subnets (if needed)
+**Network Topology (FINAL):**
+□ **PVE-Homelab**: 192.168.1.50 (homelab infrastructure subnet)
+□ **PVE-Gamelab**: 192.168.100.50 (game server infrastructure subnet)
+□ Router/switch configured for dual-subnet topology
+□ Each subnet operates independently (no cross-dependencies)
+□ Internet connectivity verified on both subnets
 
 LXC IP Assignments (Homelab):
 □ 192.168.1.201 - homelab-nginx-proxy-201
@@ -221,17 +222,18 @@ Phase 1 - Homelab Infrastructure:
 6. Deploy Pi-hole: ./lxc/pihole/setup_pihole_lxc.sh
 7. Deploy Vaultwarden: ./lxc/vaultwarden/setup_vaultwarden_lxc.sh
 
-Phase 2 - Game Server:
-1. Create Windows/Ubuntu gaming VM
-2. Install Moonlight/Sunshine
-3. Deploy CoinOps emulation platform
-4. Configure monitoring and backup integration
+Phase 2 - Game Server (Separate Repository):
+1. Update game-server repository IP addresses (192.168.1.x → 192.168.100.x)
+2. Create gaming VM on PVE-Gamelab (VMID 252, IP 192.168.100.252)
+3. Install Moonlight/Sunshine for game streaming
+4. Deploy CoinOps emulation platform  
+5. Configure independent monitoring and backup
 
-Phase 3 - Integration:
-1. Configure cross-subnet monitoring
-2. Set up backup synchronization  
-3. Test end-to-end functionality
-4. Document access URLs and credentials
+Phase 3 - Independent Operation:
+1. Verify homelab services (192.168.1.x) operate independently
+2. Verify game server services (192.168.100.x) operate independently  
+3. Test each subnet's functionality separately
+4. Document access URLs for both networks
 
 ===============================================
 🎯 SUCCESS CRITERIA
