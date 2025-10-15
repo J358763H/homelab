@@ -128,9 +128,21 @@ Web Interface: http://192.168.100.252:8080
 Sunshine Config: https://192.168.100.252:47990
 ```
 
-### **Repository Independence**
+### **✅ DEPLOYMENT STATUS - BOTH REPOSITORIES READY**
 
-**Keep Repositories Completely Separate:**
+**Repository Status:**
+- **homelab-SHV**: ✅ **DEPLOYMENT READY** (192.168.1.x subnet)
+- **game-server**: ✅ **DEPLOYMENT READY** (192.168.100.x subnet) - **UPDATED**
+
+**Changes Applied to Game Server Repository:**
+- ✅ All IP addresses updated (192.168.1.106 → 192.168.100.252)
+- ✅ VMID updated (106 → 252)
+- ✅ VM naming updated (gamelab-moonlight-stream-252)
+- ✅ Documentation aligned with dual-subnet architecture
+- ✅ Network testing examples corrected
+- ✅ Client setup instructions updated
+
+**Repository Independence:**
 - **No cross-subnet dependencies** - each repo runs independently
 - **No shared services** - each manages its own infrastructure  
 - **Optional integration only** - document for future reference but not required
