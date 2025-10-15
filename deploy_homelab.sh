@@ -1,15 +1,18 @@
 #!/bin/bash
 # =====================================================
-# 🚀 Homelab-SHV — Deployment Script
+# 🚀 Homelab-SHV — Deployment Script (Dual-Subnet)
 # =====================================================
 # Maintainer: J35867U
 # Email: mrnash404@protonmail.com
-# Last Updated: 2025-10-11
+# Last Updated: 2025-10-14
+# 
+# Network: PVE-Homelab (192.168.1.50) - Main Services
 # =====================================================
 
 set -e
 
-echo "Starting Homelab-SHV Deployment..."
+echo "🚀 Starting Homelab-SHV Deployment (PVE-Homelab 192.168.1.50)..."
+echo "📋 Network: 192.168.1.x subnet - Main homelab services"
 
 echo "--> Creating required directories..."
 mkdir -p /data/{docker,media,backups,logs}

@@ -1,16 +1,24 @@
 # 🌐 Homelab IP Addressing & Naming Convention
 
 ## 📋 **Overview**
-This document defines the standardized IP addressing and naming scheme for the entire homelab infrastructure, where IP addresses correspond to VMIDs for easy organization.
+This document defines the standardized IP addressing and naming scheme for the entire homelab infrastructure, supporting dual-subnet topology with separate homelab and game server networks.
 
 ---
 
 ## 🎯 **IP Addressing Strategy**
 
-### **Core Principle:** `192.168.1.XXX = VMID XXX`
+### **Dual-Subnet Architecture**
+- **Homelab Network**: `192.168.1.x` (PVE-Homelab @ 192.168.1.50)
+- **Game Server Network**: `192.168.100.x` (PVE-Gamelab @ 192.168.100.50)
+
+### **Core Principle:** `192.168.1.XXX = VMID XXX` (Homelab)
 - **Benefit**: Instant visual correlation between IP and container/VM ID
 - **Example**: Container 205 → IP 192.168.1.205
-- **Range**: 192.168.1.100-254 for infrastructure
+- **Range**: 192.168.1.100-254 for homelab infrastructure
+
+### **Game Server Principle:** `192.168.100.XXX = VMID XXX` (Gamelab)
+- **Example**: Game server VM 300 → IP 192.168.100.300 (or 192.168.100.50+ for services)
+- **Range**: 192.168.100.50-99 for game server infrastructure
 
 ---
 
@@ -30,15 +38,24 @@ This document defines the standardized IP addressing and naming scheme for the e
 192.168.1.120    # VMID 120 - Backup/Archive VM
 ```
 
-### **🏠 Core Services LXC (200-219)**
+### **🏠 Core Services LXC - Homelab Network (200-219)**
 ```bash
-# Essential Infrastructure Services
-192.168.1.201    # VMID 201 - Nginx Proxy Manager (Reverse Proxy & SSL)
-192.168.1.202    # VMID 202 - Tailscale VPN Router (Secure Remote Access)
-192.168.1.203    # VMID 203 - Ntfy Notifications (Alert System)
-192.168.1.204    # VMID 204 - Media File Share (Samba/NFS)
-192.168.1.205    # VMID 205 - Pi-hole DNS (Ad Blocking & Local DNS)
-192.168.1.206    # VMID 206 - Vaultwarden (Password Manager)
+# Essential Infrastructure Services (PVE-Homelab 192.168.1.50)
+192.168.1.201    # VMID 201 - homelab-nginx-proxy-201 (Reverse Proxy & SSL)
+192.168.1.202    # VMID 202 - homelab-tailscale-vpn-202 (Secure Remote Access)
+192.168.1.203    # VMID 203 - homelab-ntfy-notify-203 (Alert System)
+192.168.1.204    # VMID 204 - homelab-media-share-204 (Samba/NFS)
+192.168.1.205    # VMID 205 - homelab-pihole-dns-205 (Ad Blocking & Local DNS)
+192.168.1.206    # VMID 206 - homelab-vaultwarden-pass-206 (Password Manager)
+```
+
+### **🎮 Game Server Services - Game Network (250-269)**
+```bash
+# Game Server Infrastructure Services (PVE-Gamelab 192.168.100.50)
+192.168.100.252  # VMID 252 - gamelab-moonlight-stream-252 (GameStream Server)
+192.168.100.253  # VMID 253 - gamelab-coinops-emu-253 (CoinOps Emulation)
+192.168.100.254  # VMID 254 - gamelab-game-mgmt-254 (Game Management)
+192.168.100.255  # VMID 255 - gamelab-monitoring-255 (Game Server Monitoring)
 ```
 
 ### **🔧 Extended Services LXC (220-249)**
@@ -68,7 +85,42 @@ This document defines the standardized IP addressing and naming scheme for the e
 
 ---
 
-## 🏷️ **Naming Convention**
+## � **Current Network Topology**
+
+### **Physical Network Setup**
+```
+Router/Switch Configuration:
+├── Port 1: 192.168.1.x subnet
+│   └── PVE-Homelab (192.168.1.50)
+│       ├── Docker VM (192.168.1.100)
+│       ├── LXC Services (192.168.1.201-249)
+│       └── Application VMs (192.168.1.250+)
+│
+└── Port 2: 192.168.100.x subnet
+    └── PVE-Gamelab (192.168.100.50)
+        ├── Moonlight GameStream (192.168.100.252)
+        ├── CoinOps Emulation (192.168.100.253)
+        └── Game Management (192.168.100.254)
+
+Future: Gigabit Switch for unified network (optional)
+```
+
+### **Access Points**
+```bash
+# Proxmox Web Interfaces
+PVE-Homelab:  https://192.168.1.50:8006
+PVE-Gamelab:  https://192.168.100.50:8006
+
+# Service Access (after deployment)
+Jellyfin:     http://192.168.1.100:8096
+NPM:          http://192.168.1.201:81
+Pi-hole:      http://192.168.1.205/admin
+Moonlight:    http://192.168.100.252:47989
+```
+
+---
+
+## �🏷️ **Naming Convention**
 
 ### **🖥️ Virtual Machines**
 ```bash
@@ -82,15 +134,23 @@ monitor-homelab-105         # System monitoring
 
 ### **📦 LXC Containers**
 ```bash
-# Format: [service]-[environment]-[vmid]
-nginx-proxy-201             # Reverse proxy
-tailscale-vpn-202          # VPN router
-ntfy-notify-203            # Notification service
-media-share-204            # File sharing
-pihole-dns-205             # DNS & ad blocking
-vaultwarden-pass-206       # Password manager
-uptime-monitor-220         # Service monitoring
-portainer-mgmt-221         # Container management
+# Format: [location]-[service]-[purpose]-[vmid]
+
+# Homelab Network (192.168.1.x)
+homelab-nginx-proxy-201     # Reverse proxy & SSL
+homelab-tailscale-vpn-202   # VPN router
+homelab-ntfy-notify-203     # Notification service
+homelab-media-share-204     # File sharing (Samba/NFS)
+homelab-pihole-dns-205      # DNS & ad blocking
+homelab-vaultwarden-pass-206 # Password manager
+homelab-uptime-monitor-220  # Service monitoring
+homelab-portainer-mgmt-221  # Container management
+
+# Game Server Network (192.168.100.x)
+gamelab-moonlight-stream-252 # Moonlight GameStream
+gamelab-coinops-emu-253     # CoinOps emulation platform
+gamelab-game-mgmt-254       # Game server management
+gamelab-monitoring-255      # Game server monitoring
 ```
 
 ### **🌐 DNS Names (via Pi-hole)**

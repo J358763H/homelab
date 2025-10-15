@@ -10,14 +10,14 @@ set -euo pipefail
 
 # Configuration
 CTID="${1:-202}"
-HOSTNAME="tailscale-homelab"
+HOSTNAME="homelab-tailscale-vpn-202"
 MEMORY="512"
 SWAP="256"
 CORES="1" 
 STORAGE="2"
 TEMPLATE="local:vztmpl/ubuntu-22.04-standard_22.04-1_amd64.tar.zst"
 
-# Network configuration (adjust for your environment)
+# Network configuration (homelab subnet)
 BRIDGE="vmbr0"
 IP="192.168.1.202"
 NETMASK="24"

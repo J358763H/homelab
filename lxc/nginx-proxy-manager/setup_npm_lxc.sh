@@ -10,14 +10,14 @@ set -euo pipefail
 
 # Configuration
 CTID="${1:-201}"
-HOSTNAME="npm-homelab"
+HOSTNAME="homelab-nginx-proxy-201"
 MEMORY="1024"
 SWAP="512"
 CORES="1"
 STORAGE="4"
 TEMPLATE="local:vztmpl/ubuntu-22.04-standard_22.04-1_amd64.tar.zst"
 
-# Network configuration (adjust for your environment)
+# Network configuration (homelab subnet)
 BRIDGE="vmbr0"
 IP="192.168.1.201"
 NETMASK="24"

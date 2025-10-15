@@ -18,7 +18,7 @@ NC='\033[0m' # No Color
 
 # 📋 Configuration
 CONTAINER_ID="205"
-CONTAINER_NAME="pihole"
+CONTAINER_NAME="homelab-pihole-dns-205"
 CONTAINER_IP="192.168.1.205"
 GATEWAY_IP="192.168.1.1"
 DNS_UPSTREAM_1="1.1.1.1"
