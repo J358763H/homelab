@@ -1,142 +1,130 @@
-# 🎮 Game Server Dual-Subnet Integration Guide
+# 🎮 Game Server Single-Subnet Integration Guide
 
 ## Network Topology Confirmation
 
-### **Dual-Subnet Architecture (FINAL)**
+### **Single-Subnet Architecture (FINAL DECISION)**
 
-**Homelab Network (PVE-Homelab):**
-- Proxmox Host: `192.168.1.50`
-- Services: `192.168.1.100-254`
-- Repository: `J35867U/homelab-SHV` ✅
+**Unified Network - All Services:**
+- Network: `192.168.1.x` 
+- PVE-Homelab: `192.168.1.50` (homelab infrastructure)
+- PVE-Gamelab: `192.168.1.51` (game server infrastructure)
+- Repository: `J35867U/homelab-SHV` ✅ & `J35867U/game-server` ✅
 
-**Game Server Network (PVE-Gamelab):**
-- Proxmox Host: `192.168.100.50` 
-- Services: `192.168.100.50-254`
-- Repository: `J35867U/game-server` (needs IP updates)
+**Physical Setup:**
+- Single unmanaged gigabit switch connected to router port 1
+- Both Proxmox hosts on same subnet for simplified management
+- Cost-effective solution without dual-subnet complexity
 
-### **Game Server Repository Updates Required**
+### **Game Server Repository Updates - COMPLETED ✅**
 
-**Current State:**
+**Updated Configuration:**
 ```bash
-# Game server repo currently expects single subnet
-Expected IP: 192.168.1.106 (old assumption)
-Target IP: 192.168.100.252 (dual-subnet correct)
-VMID: 252 (gamelab naming convention)
+# Game server repo now configured for single subnet
+Game Server IP: 192.168.1.106 (updated from 192.168.100.252)
+VMID: 106 (updated from 252) 
+Network: 192.168.1.x/24
 ```
 
-**Integration Fixes Needed:**
+**Integration Benefits:**
 ```bash
-# 1. Update game-server/setup.sh 
+# Single-subnet advantages achieved:
 MOONLIGHT_PORT="47984"
 COINOPS_PORT="8080"
-EXPECTED_IP="192.168.100.252"  # Update from 192.168.1.106
+GAME_SERVER_IP="192.168.1.106"  # Updated to single subnet
 
-# 2. Update game-server documentation
-VM Setup Guide needs IP change:
-- Old: qm create 106 --name "game-server" 
-- New: qm create 252 --name "gamelab-moonlight-stream-252"
+# Simplified network setup:
+- No complex routing between subnets
+- Single unmanaged switch deployment
+- All services accessible on same network segment
+- Cost-effective infrastructure
 
-# 3. Update homelab integration references
-Ntfy Server: http://192.168.1.203  # homelab-ntfy-notify-203
-Backup Integration: Use 192.168.1.x for homelab services
+# Homelab integration on same network:
+Ntfy Server: http://192.168.1.203      # Same subnet communication
+Backup Target: 192.168.1.204           # Direct network access
+Monitoring Hub: 192.168.1.201          # Simplified reverse proxy
 ```
 
-## Deployment Sequence Updates
+## Deployment Sequence - Single Subnet
 
-### **Phase 1: Homelab Infrastructure (192.168.1.50)**
+### **Phase 1: Homelab Infrastructure (PVE-Homelab: 192.168.1.50)**
 ```bash
 # Deploy in this order on PVE-Homelab
 1. Docker VM (192.168.1.100) 
 2. NPM (192.168.1.201) 
 3. Tailscale (192.168.1.202)
-4. Ntfy (192.168.1.203) - FIXED IP
-5. Samba (192.168.1.204) - FIXED naming
+4. Ntfy (192.168.1.203)
+5. Samba (192.168.1.204) 
 6. Pi-hole (192.168.1.205)
 7. Vaultwarden (192.168.1.206)
 ```
 
-### **Phase 2: Game Server (192.168.100.50)**  
+### **Phase 2: Game Server Infrastructure (PVE-Gamelab: 192.168.1.51)**  
 ```bash
-# Deploy on PVE-Gamelab with corrected IP schema
-1. Windows Gaming VM (192.168.100.252) - Moonlight host
-2. CoinOps LXC (192.168.100.253) 
-3. Game Management (192.168.100.254)
-4. Game Monitoring (192.168.100.255)
+# Deploy on PVE-Gamelab with single subnet IPs
+1. Gaming VM (192.168.1.106) - gamelab-moonlight-stream-106
+2. CoinOps LXC (192.168.1.107) - gamelab-coinops-emu-107
+3. Game Management (192.168.1.108) - gamelab-game-mgmt-108
+4. Game Monitoring (192.168.1.109) - gamelab-monitoring-109
 ```
 
-## Network Integration
+## Network Integration - Simplified
 
-### **Cross-Subnet Communication**
+### **Same-Subnet Communication**
 ```bash
-# Homelab services that game server needs to access:
-NTFY_SERVER=http://192.168.1.203      # Notifications  
-BACKUP_TARGET=192.168.1.204           # Samba share for backups
-MONITORING_HUB=192.168.1.201          # NPM for reverse proxy
+# All services on 192.168.1.x network:
+NTFY_SERVER=http://192.168.1.203      # Direct access
+BACKUP_TARGET=192.168.1.204           # No routing needed
+MONITORING_HUB=192.168.1.201          # Same subnet
+GAME_SERVER=192.168.1.106             # Direct streaming access
 ```
 
-## Required Repository Updates
+## Repository Updates - COMPLETED ✅
 
-### **Complete Game Server Repository Update Plan**
+### **Single-Subnet Conversion - DONE**
 
-**Files that need IP address updates (192.168.1.106 → 192.168.100.252):**
+**Files Successfully Updated (192.168.100.252 → 192.168.1.106):**
 
-#### **1. Core Files (IP & VMID Updates):**
-- **README.md** - Multiple references in setup guide, client instructions, management URLs
-- **setup.sh** - Main installation script (no IP hardcoding found - uses dynamic detection ✅)
-- **status.sh** - Status monitoring script (uses dynamic IP detection ✅)
+#### **1. Core Files (IP & VMID Updates) - ✅ COMPLETED:**
+- **README.md** - ✅ All references updated to 192.168.1.106, VMID 252→106
+- **TROUBLESHOOTING.md** - ✅ Network testing examples updated
+- **setup.sh** - ✅ Uses dynamic detection (no hardcoded IPs)
+- **status.sh** - ✅ Uses dynamic IP detection
 
-#### **2. Documentation Files:**
-- **README.md Lines 40, 99-126, 137-169** - Architecture diagram, VM setup guide, client setup
-- **TROUBLESHOOTING.md Line 240+** - Network testing examples
-- **CHANGELOG.md** - No IP updates needed ✅
-
-#### **3. Scripts Directory:**
-**✅ Monitoring Scripts** (use dynamic IP detection - no hardcoded IPs):
-- `scripts/monitoring/weekly_health.sh` - Uses hostname -I (dynamic)
-- `scripts/backup/daily_backup.sh` - No IP references
-- `scripts/maintenance/cleanup.sh` - No IP references
-
-**⚠️  NTFY Integration** - Optional update needed:
+#### **2. Repository Status - ✅ UPDATED & PUSHED:**
 ```bash
-# In weekly_health.sh and backup scripts:
-NTFY_SERVER="https://ntfy.sh"  # Currently uses public server
-# Option to change to homelab:
-NTFY_SERVER="http://192.168.1.203"  # Your homelab Ntfy
+# Changes committed to J35867U/game-server repository:
+✅ IP Address: 192.168.1.106 (single subnet)
+✅ VMID: 106 (homelab consistency)
+✅ VM Name: gamelab-moonlight-stream-106 
+✅ All documentation references updated
+✅ Pushed to GitHub main branch
 ```
 
-#### **4. VM Creation Commands:**
+#### **3. Network Configuration - Single Subnet:**
 ```bash
-# Update Proxmox VM creation:
-qm create 106 → qm create 252
---name "game-server" → --name "gamelab-moonlight-stream-252"
-IP: 192.168.1.106 → 192.168.100.252
+# Static IP configuration for Ubuntu installation:
+Address: 192.168.1.106/24
+Gateway: 192.168.1.1
+DNS: 192.168.1.205 (Pi-hole) or 1.1.1.1
 ```
 
-#### **5. Network Configuration Updates:**
-```bash
-# Static IP configuration during Ubuntu installation:
-Address: 192.168.100.252/24
-Gateway: 192.168.100.1 (or your game server subnet gateway)
-DNS: 192.168.100.1 or 1.1.1.1
-```
-
-#### **6. Client Connection Updates:**
+#### **4. Client Connection - Updated:**
 ```bash
 # Moonlight client configuration:
-Server IP: 192.168.100.252
-Web Interface: http://192.168.100.252:8080
-Sunshine Config: https://192.168.100.252:47990
+Server IP: 192.168.1.106
+Web Interface: http://192.168.1.106:8080
+Sunshine Config: https://192.168.1.106:47990
 ```
 
 ### **✅ DEPLOYMENT STATUS - BOTH REPOSITORIES READY**
 
 **Repository Status:**
 - **homelab-SHV**: ✅ **DEPLOYMENT READY** (192.168.1.x subnet)
-- **game-server**: ✅ **DEPLOYMENT READY** (192.168.100.x subnet) - **UPDATED**
+- **game-server**: ✅ **DEPLOYMENT READY** (192.168.1.x subnet) - **UPDATED**
 
 **Changes Applied to Game Server Repository:**
-- ✅ All IP addresses updated (192.168.1.106 → 192.168.100.252)
-- ✅ VMID updated (106 → 252)
+- ✅ All IP addresses updated (192.168.100.252 → 192.168.1.106)
+- ✅ VMID updated (252 → 106)
 - ✅ VM naming updated (gamelab-moonlight-stream-252)
 - ✅ Documentation aligned with dual-subnet architecture
 - ✅ Network testing examples corrected
@@ -220,3 +208,27 @@ NTFY_TOPIC_ALERTS="gamelab-backup-alerts"
 BACKUP_TARGET="//192.168.1.204/gamelab-backups"
 # Requires SMB mount configuration
 ```
+---
+
+## 🎯 Final Status - Single Subnet Conversion Complete ✅
+
+### **✅ DEPLOYMENT READY - Both Repositories Updated****Repository Status:**
+- **homelab-SHV**: ✅ Ready (192.168.1.x subnet)
+- **game-server**: ✅ Updated & Pushed (192.168.1.x subnet)
+
+**Network Architecture - Single Subnet:**
+```bash
+# Unified 192.168.1.x network:
+PVE-Homelab:    192.168.1.50
+PVE-Gamelab:    192.168.1.51  
+Game Server VM: 192.168.1.106 (VMID 106)
+All Services:   192.168.1.100-254
+```
+
+**Benefits Achieved:**
+- ✅ Cost-effective single switch deployment
+- ✅ Simplified network management
+- ✅ Direct service communication (no routing)
+- ✅ Consistent IP/VMID mapping across infrastructure
+
+**Ready for Fresh Proxmox Installation with Single Switch Setup**
