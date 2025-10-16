@@ -25,7 +25,7 @@ NC='\033[0m'
 
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-HOMELAB_ROOT="$(dirname "$SCRIPT_DIR")"
+HOMELAB_ROOT="$SCRIPT_DIR"
 LOG_FILE="/var/log/homelab_deployment_$(date +%Y%m%d_%H%M%S).log"
 
 # Functions
@@ -239,9 +239,20 @@ deploy_lxc_containers() {
         ["206"]="vaultwarden"
     )
     
+    # Map service names to their actual script names
+    declare -A SCRIPT_NAMES=(
+        ["nginx-proxy-manager"]="setup_npm_lxc.sh"
+        ["tailscale"]="setup_tailscale_lxc.sh"
+        ["ntfy"]="setup_ntfy_lxc.sh"
+        ["samba"]="setup_samba_lxc.sh"
+        ["pihole"]="setup_pihole_lxc.sh"
+        ["vaultwarden"]="setup_vaultwarden_lxc.sh"
+    )
+    
     for vmid in "${!LXC_SERVICES[@]}"; do
         service="${LXC_SERVICES[$vmid]}"
-        script_path="$HOMELAB_ROOT/lxc/$service/setup_${service//-/_}_lxc.sh"
+        script_name="${SCRIPT_NAMES[$service]}"
+        script_path="$HOMELAB_ROOT/lxc/$service/$script_name"
         
         log "Deploying LXC $vmid: $service"
         
@@ -287,6 +298,13 @@ prepare_docker_environment() {
     # Create Docker host VM if it doesn't exist
     if ! pct status 100 >/dev/null 2>&1; then
         log "Creating Docker host VM (VMID 100)..."
+        
+        # Download Ubuntu template if not exists
+        if [[ ! -f /var/lib/vz/template/cache/ubuntu-22.04-standard_22.04-1_amd64.tar.zst ]]; then
+            log "Downloading Ubuntu 22.04 LXC template..."
+            pveam update
+            pveam download local ubuntu-22.04-standard_22.04-1_amd64.tar.zst
+        fi
         
         # Create Ubuntu LXC for Docker
         pct create 100 local:vztmpl/ubuntu-22.04-standard_22.04-1_amd64.tar.zst \
