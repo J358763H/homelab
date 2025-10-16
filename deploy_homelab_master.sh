@@ -270,6 +270,10 @@ deploy_lxc_containers() {
         if [[ -f "$script_path" ]]; then
             chmod +x "$script_path"
             
+            # Set environment variable for automation
+            export HOMELAB_DEPLOYMENT=true
+            export AUTOMATED_MODE=true
+            
             # Run the setup script with automation flag
             if "$script_path" --automated; then
                 # Wait for container to be ready instead of sleep

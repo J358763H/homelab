@@ -34,10 +34,26 @@ success() {
 # Check if running in automated mode
 check_automated_mode() {
     AUTOMATED_MODE=false
+    
+    # Check command line argument
     if [[ "$1" == "--automated" ]]; then
         AUTOMATED_MODE=true
+    fi
+    
+    # Check environment variable
+    if [[ "${AUTOMATED_MODE:-false}" == "true" ]]; then
+        AUTOMATED_MODE=true
+    fi
+    
+    # Check if called from deployment script
+    if [[ -n "${HOMELAB_DEPLOYMENT:-}" ]]; then
+        AUTOMATED_MODE=true
+    fi
+    
+    if [[ "$AUTOMATED_MODE" == "true" ]]; then
         log "Running in automated mode"
     fi
+    
     export AUTOMATED_MODE
 }
 
