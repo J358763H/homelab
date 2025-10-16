@@ -1,0 +1,50 @@
+# Core Infrastructure - VPN & Networking
+
+networks:
+  homelab:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+services:
+  # VPN Gateway - All download traffic routes through this
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - "8080:8080"   # qBittorrent WebUI
+      - "6881:6881"   # qBittorrent P2P
+      - "6881:6881/udp"
+      - "6789:6789"   # NZBGet WebUI
+    volumes:
+      - ./wg0.conf:/gluetun/wireguard/wg0.conf:ro
+    env_file:
+      - ../../.env
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.5
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000/v1/openvpn/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # FlareSolverr - Cloudflare bypass utility
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=info
+      - TZ=${TZ}
+    ports:
+      - "8191:8191"
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.9
+    restart: unless-stopped

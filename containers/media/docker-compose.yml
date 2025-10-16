@@ -1,0 +1,179 @@
+# Media Management & Streaming Services
+
+networks:
+  homelab:
+    external: true  # Use the network from core
+
+services:
+  # =====================================================
+  # 🎥 MEDIA SERVER
+  # =====================================================
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - JELLYFIN_PublishedServerUrl=${JELLYFIN_PUBLISHED_SERVER_URL:-http://localhost:8096}
+    volumes:
+      - /data/docker/jellyfin:/config
+      - /data/media:/data/media
+      - /dev/shm:/data/transcode  # RAM disk for transcoding
+    ports:
+      - "8096:8096"   # Main web interface
+      - "8920:8920"   # HTTPS
+      - "7359:7359/udp"  # Auto-discovery
+      - "1900:1900/udp"  # Service discovery
+    devices:
+      - /dev/dri:/dev/dri  # Intel QuickSync - REMOVE if no Intel GPU
+    group_add:
+      - "${RENDER_GROUP_ID}"  # render group - REMOVE if no Intel GPU
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.20
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8096/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # =====================================================
+  # 🎬 SERVARR STACK
+  # =====================================================
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /data/docker/prowlarr:/config
+    ports:
+      - "9696:9696"
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.10
+    restart: unless-stopped
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /data/docker/sonarr:/config
+      - /data/media:/data/media
+      - /data/media/downloads:/downloads
+      - /data/media/shows:/shows
+    ports:
+      - "8989:8989"
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.11
+    depends_on:
+      - prowlarr
+    restart: unless-stopped
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /data/docker/radarr:/config
+      - /data/media:/data/media
+      - /data/media/movies:/movies
+      - /data/media/downloads:/downloads
+    ports:
+      - "7878:7878"
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.12
+    depends_on:
+      - prowlarr
+    restart: unless-stopped
+
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /data/docker/bazarr:/config
+      - /data/media:/data/media
+      - /data/media/movies:/movies
+      - /data/media/shows:/shows
+    ports:
+      - "6767:6767"
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.13
+    depends_on:
+      - sonarr
+      - radarr
+    restart: unless-stopped
+
+  recyclarr:
+    image: ghcr.io/recyclarr/recyclarr:latest
+    container_name: recyclarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /data/docker/recyclarr:/config
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.14
+    depends_on:
+      - sonarr
+      - radarr
+    restart: unless-stopped
+
+  # =====================================================
+  # 📊 ANALYTICS
+  # =====================================================
+  jellystat-db:
+    image: postgres:15
+    container_name: jellystat-db
+    environment:
+      - POSTGRES_DB=jfstat
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+    volumes:
+      - /data/docker/jellystat-db:/var/lib/postgresql/data
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.25
+    restart: unless-stopped
+
+  jellystat:
+    image: cyfershepard/jellystat:latest
+    container_name: jellystat
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_IP=jellystat-db
+      - POSTGRES_PORT=5432
+      - JWT_SECRET=${JWT_SECRET}
+      - TZ=${TZ}
+    ports:
+      - "3000:3000"
+    volumes:
+      - /data/docker/jellystat/backup-data:/app/backend/backup-data
+    depends_on:
+      - jellystat-db
+      - jellyfin
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.26
+    restart: unless-stopped

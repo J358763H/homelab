@@ -1,51 +1,52 @@
-# Homelab
-A reproducible, automated homelab deployment built on Proxmox + Docker. This repository provides one‑step deployment, lifecycle management, and disaster recovery for a self‑hosted media and automation stack.
+# 🏠 Simple Homelab Setup
+
+Clean, organized Docker homelab with manual control over service groups.
 
 **Maintainer:** J35867U
-**Email:** <mrnash404@protonmail.com>
-**Last Updated:** 2025-10-11
+**Last Updated:** 2025-10-16
 
-## 📂 Repository Layout
-```
-homelab-deployment/
-├── homelab.sh               # Master wrapper (deploy|teardown|reset|status)
-├── deploy_homelab.sh        # One-step deployment script
-├── teardown_homelab.sh      # Clean removal script
-├── reset_homelab.sh         # Teardown + redeploy script
-├── status_homelab.sh        # Health/status check script
-├── deployment/              # Docker configs, .env examples, and bootstrap
-├── scripts/                 # Backup, monitoring, and utility scripts
-├── docs/                    # Project documentation and reference files
-├── automation/              # YouTube and media automation
-└── README.md                # This file
+## Structure
 
 ```
-## 🚀 Quick Start
+homelab/
+├── containers/
+│   ├── core/           # VPN & networking (Gluetun, FlareSolverr)
+│   ├── downloads/      # Download clients (qBittorrent, NZBGet)
+│   └── media/          # Media management & streaming (Jellyfin, Servarr)
+├── setup/              # Simple deployment scripts
+└── docs/               # Documentation
+```
 
-### 1. Ready to Deploy ✅
+## Quick Start
 
-Environment is pre-configured! No copying needed.
-
+### 1. Setup Environment
 ```bash
-git clone https://github.com/J358763H/homelab.git homelab-deployment
-cd homelab-deployment
-
-# Validate environment (optional)
-./validate_env.sh
-
+cd setup
+./prepare.sh
 ```
 
-### 2. Deploy
-
+### 2. Deploy Step by Step
 ```bash
-# Option A: Simple Docker deployment
-sudo ./deploy_homelab.sh
+# Start core services first (VPN)
+cd containers/core
+docker-compose up -d
 
-# Option B: Full Proxmox with LXC
-./deploy_homelab_master.sh
+# Then downloads (depends on VPN)
+cd ../downloads
+docker-compose up -d
 
+# Finally media services
+cd ../media
+docker-compose up -d
 ```
-### 3. Access Services
+
+### 3. Or Deploy Everything
+```bash
+cd setup
+./deploy-all.sh
+```
+
+## Service Access
 
 Once deployed, access your services at:
 
