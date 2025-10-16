@@ -34,37 +34,37 @@ success() {
 # Check if running in automated mode
 check_automated_mode() {
     AUTOMATED_MODE=false
-    
+
     # Check command line argument
-    if [[ "$1" == "--automated" ]]; then
+    if [[ "${1:-}" == "--automated" ]]; then
         AUTOMATED_MODE=true
     fi
-    
+
     # Check environment variable
     if [[ "${AUTOMATED_MODE:-false}" == "true" ]]; then
         AUTOMATED_MODE=true
     fi
-    
+
     # Check if called from deployment script
     if [[ -n "${HOMELAB_DEPLOYMENT:-}" ]]; then
         AUTOMATED_MODE=true
     fi
-    
+
     if [[ "$AUTOMATED_MODE" == "true" ]]; then
         log "Running in automated mode"
     fi
-    
+
     export AUTOMATED_MODE
 }
 
 # Enhanced container existence check
 handle_existing_container() {
     local ctid=$1
-    
+
     if pct status "$ctid" >/dev/null 2>&1; then
         local container_status=$(pct status "$ctid" 2>/dev/null | awk '{print $2}' || echo "unknown")
         warn "Container $ctid already exists (status: $container_status)"
-        
+
         if [[ "$AUTOMATED_MODE" == "true" ]]; then
             if [[ "$container_status" == "running" ]]; then
                 success "Container $ctid is already running, skipping recreation"
@@ -75,7 +75,7 @@ handle_existing_container() {
                 sleep 2
                 pct destroy "$ctid" 2>/dev/null || true
                 sleep 2
-                
+
                 # Verify container is gone
                 if pct status "$ctid" >/dev/null 2>&1; then
                     error "Failed to destroy existing container $ctid"
@@ -106,9 +106,9 @@ wait_for_container_ready() {
     local ctid=$1
     local max_attempts=${2:-30}
     local attempt=1
-    
+
     log "Waiting for container $ctid to be ready..."
-    
+
     while [ $attempt -le $max_attempts ]; do
         # Check if container is running
         if ! pct status "$ctid" 2>/dev/null | grep -q "running"; then
@@ -117,18 +117,18 @@ wait_for_container_ready() {
             ((attempt++))
             continue
         fi
-        
+
         # Check if system is ready
         if pct exec "$ctid" -- systemctl is-system-running --wait >/dev/null 2>&1; then
             success "Container $ctid is ready (attempt $attempt)"
             return 0
         fi
-        
+
         log "Container $ctid system not ready, attempt $attempt/$max_attempts"
         sleep 3
         ((attempt++))
     done
-    
+
     error "Container $ctid failed to become ready after $max_attempts attempts"
     return 1
 }
@@ -138,20 +138,20 @@ wait_for_network() {
     local ctid=$1
     local max_attempts=${2:-20}
     local attempt=1
-    
+
     log "Waiting for network connectivity in container $ctid..."
-    
+
     while [ $attempt -le $max_attempts ]; do
         if pct exec "$ctid" -- ping -c 1 8.8.8.8 >/dev/null 2>&1; then
             success "Network connectivity established (attempt $attempt)"
             return 0
         fi
-        
+
         log "Network not ready, attempt $attempt/$max_attempts"
         sleep 2
         ((attempt++))
     done
-    
+
     error "Network connectivity failed after $max_attempts attempts"
     return 1
 }
@@ -163,20 +163,20 @@ wait_for_service_port() {
     local service_name=${3:-"service"}
     local max_attempts=${4:-60}
     local attempt=1
-    
+
     log "Waiting for $service_name on port $port in container $ctid..."
-    
+
     while [ $attempt -le $max_attempts ]; do
         if pct exec "$ctid" -- netstat -tln 2>/dev/null | grep -q ":$port "; then
             success "$service_name is ready on port $port (attempt $attempt)"
             return 0
         fi
-        
+
         log "$service_name not ready on port $port, attempt $attempt/$max_attempts"
         sleep 2
         ((attempt++))
     done
-    
+
     error "$service_name failed to start on port $port after $max_attempts attempts"
     return 1
 }
@@ -188,23 +188,23 @@ wait_for_http_endpoint() {
     local service_name=${3:-"service"}
     local max_attempts=${4:-60}
     local attempt=1
-    
+
     log "Waiting for $service_name HTTP endpoint: $endpoint..."
-    
+
     while [ $attempt -le $max_attempts ]; do
         local http_code=$(pct exec "$ctid" -- curl -s -o /dev/null -w '%{http_code}' "$endpoint" 2>/dev/null || echo "000")
-        
+
         # Accept any HTTP response (not connection refused)
         if [[ "$http_code" != "000" && "$http_code" != "7" ]]; then
             success "$service_name HTTP endpoint is responding (HTTP $http_code, attempt $attempt)"
             return 0
         fi
-        
+
         log "$service_name endpoint not ready (HTTP $http_code), attempt $attempt/$max_attempts"
         sleep 3
         ((attempt++))
     done
-    
+
     error "$service_name HTTP endpoint failed to respond after $max_attempts attempts"
     return 1
 }
@@ -215,20 +215,20 @@ validate_systemd_service() {
     local service_name=$2
     local max_attempts=${3:-30}
     local attempt=1
-    
+
     log "Validating systemd service: $service_name in container $ctid..."
-    
+
     while [ $attempt -le $max_attempts ]; do
         if pct exec "$ctid" -- systemctl is-active "$service_name" >/dev/null 2>&1; then
             success "Service $service_name is active (attempt $attempt)"
             return 0
         fi
-        
+
         log "Service $service_name not active, attempt $attempt/$max_attempts"
         sleep 2
         ((attempt++))
     done
-    
+
     error "Service $service_name failed to become active after $max_attempts attempts"
     return 1
 }
@@ -239,9 +239,9 @@ validate_docker_service() {
     local container_name=$2
     local max_attempts=${3:-30}
     local attempt=1
-    
+
     log "Validating Docker service: $container_name in container $ctid..."
-    
+
     while [ $attempt -le $max_attempts ]; do
         if pct exec "$ctid" -- docker ps --format "table {{.Names}}" | grep -q "^$container_name$"; then
             local status=$(pct exec "$ctid" -- docker inspect --format='{{.State.Status}}' "$container_name" 2>/dev/null)
@@ -250,12 +250,12 @@ validate_docker_service() {
                 return 0
             fi
         fi
-        
+
         log "Docker service $container_name not ready, attempt $attempt/$max_attempts"
         sleep 3
         ((attempt++))
     done
-    
+
     error "Docker service $container_name failed to start properly after $max_attempts attempts"
     return 1
 }
@@ -267,7 +267,7 @@ display_service_info() {
     local ip=$3
     local port=$4
     local additional_info=${5:-""}
-    
+
     success "$service_name setup completed successfully!"
     echo
     echo -e "${BLUE}================================${NC}"
@@ -276,11 +276,11 @@ display_service_info() {
     echo -e "Container ID: ${GREEN}$ctid${NC}"
     echo -e "IP Address:   ${GREEN}$ip${NC}"
     echo -e "Service URL:  ${GREEN}http://$ip:$port${NC}"
-    
+
     if [[ -n "$additional_info" ]]; then
         echo -e "$additional_info"
     fi
-    
+
     echo
     echo -e "${BLUE}Container Management:${NC}"
     echo -e "Enter container: ${GREEN}pct enter $ctid${NC}"
@@ -302,19 +302,19 @@ check_root() {
 check_dependencies() {
     local required_tools=("pct" "curl" "wget")
     local missing_tools=()
-    
+
     for tool in "${required_tools[@]}"; do
         if ! command -v "$tool" >/dev/null 2>&1; then
             missing_tools+=("$tool")
         fi
     done
-    
+
     if [[ ${#missing_tools[@]} -gt 0 ]]; then
         error "Missing required tools: ${missing_tools[*]}"
         error "Please install missing dependencies"
         return 1
     fi
-    
+
     return 0
 }
 
