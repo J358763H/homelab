@@ -110,7 +110,7 @@ deploy_lxc_stage1_no_pihole() {
     
     # Stage 1 LXC Services (ONLY NPM - skipping Pi-hole)
     local services=(
-        "nginx-proxy-manager:201:Reverse Proxy & SSL"
+        "npm:201:Reverse Proxy & SSL"
     )
     
     for service_info in "${services[@]}"; do
@@ -146,7 +146,7 @@ deploy_lxc_stage1_no_pihole() {
             
             # Additional service-specific wait time
             case "$service" in
-                "nginx-proxy-manager")
+                "npm")
                     log "🔒 Waiting for Nginx Proxy Manager to start..."
                     sleep 20
                     ;;
@@ -164,7 +164,7 @@ deploy_lxc_stage1_no_pihole() {
 verify_lxc_deployment() {
     log "🔍 Verifying LXC Stage 1 deployment..."
     
-    local services=("201:nginx-proxy-manager")
+    local services=("201:npm")
     local all_healthy=true
     
     for service_info in "${services[@]}"; do
@@ -175,7 +175,7 @@ verify_lxc_deployment() {
             
             # Service-specific health checks
             case "$service" in
-                "nginx-proxy-manager")
+                "npm")
                     local ip
                     ip=$(pct exec "$ctid" -- hostname -I | awk '{print $1}')
                     log "   NPM Admin: http://$ip:81"
