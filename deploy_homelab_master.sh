@@ -266,16 +266,16 @@ deploy_lxc_containers() {
                     success "LXC $vmid ($service) deployed and ready"
                 else
                     error "LXC $vmid ($service) failed to become ready"
-                    if [[ "${CONTINUE_ON_ERROR:-false}" == "true" ]]; then
-                        warning "Continuing deployment due to CONTINUE_ON_ERROR=true"
+                    if [[ "${CONTINUE_ON_ERROR:-false}" == "true" ]] || [[ "${AUTOMATED_MODE:-false}" == "true" ]]; then
+                        warning "Continuing deployment despite error (CONTINUE_ON_ERROR=true or AUTOMATED_MODE=true)"
                     else
                         return 1
                     fi
                 fi
             else
                 error "Failed to deploy LXC $vmid ($service)"
-                if [[ "${CONTINUE_ON_ERROR:-false}" == "true" ]]; then
-                    warning "Continuing deployment due to CONTINUE_ON_ERROR=true"
+                if [[ "${CONTINUE_ON_ERROR:-false}" == "true" ]] || [[ "${AUTOMATED_MODE:-false}" == "true" ]]; then
+                    warning "Continuing deployment despite error (CONTINUE_ON_ERROR=true or AUTOMATED_MODE=true)"
                 else
                     return 1
                 fi
