@@ -391,7 +391,18 @@ deploy_docker_stack() {
     
     # Copy deployment files to Docker host
     log "Copying deployment files..."
-    pct push 100 "$HOMELAB_ROOT/deployment/" /opt/homelab/ --recursive
+    
+    # Create directory in container first
+    pct exec 100 -- mkdir -p /opt/homelab
+    
+    # Copy files individually (pct push doesn't support --recursive)
+    for file in "$HOMELAB_ROOT/deployment"/*; do
+        if [[ -f "$file" ]]; then
+            local filename=$(basename "$file")
+            log "Copying $filename..."
+            pct push 100 "$file" "/opt/homelab/$filename"
+        fi
+    done
     
     # Copy ZFS script to container if it exists (for compatibility)
     if [[ -f "$HOMELAB_ROOT/setup_zfs_mirror.sh" ]]; then
