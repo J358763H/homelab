@@ -1,8 +1,8 @@
 # Homelab
 A reproducible, automated homelab deployment built on Proxmox + Docker. This repository provides one‑step deployment, lifecycle management, and disaster recovery for a self‑hosted media and automation stack.
 
-**Maintainer:** J35867U  
-**Email:** <mrnash404@protonmail.com>  
+**Maintainer:** J35867U
+**Email:** <mrnash404@protonmail.com>
 **Last Updated:** 2025-10-11
 
 ## 📂 Repository Layout
@@ -21,27 +21,28 @@ homelab-deployment/
 
 ```
 ## 🚀 Quick Start
-### 1. Clone and Configure
+
+### 1. Ready to Deploy ✅
+
+Environment is pre-configured! No copying needed.
 
 ```bash
-git clone https://github.com/J35867U/homelab.git homelab-deployment
+git clone https://github.com/J358763H/homelab.git homelab-deployment
 cd homelab-deployment
 
-# Copy configuration templates
-cp deployment/.env.example deployment/.env
-cp deployment/wg0.conf.example deployment/wg0.conf
-
-# Edit with your secrets and settings
-nano deployment/.env
-nano deployment/wg0.conf
+# Validate environment (optional)
+./validate_env.sh
 
 ```
+
 ### 2. Deploy
 
 ```bash
-# Make scripts executable and deploy
-chmod +x *.sh
-./homelab.sh deploy
+# Option A: Simple Docker deployment
+sudo ./deploy_homelab.sh
+
+# Option B: Full Proxmox with LXC
+./deploy_homelab_master.sh
 
 ```
 ### 3. Access Services
@@ -161,7 +162,7 @@ Comprehensive documentation is available in the `/docs` directory:
 
 - Container status monitoring
 - System resource tracking
-- Disk health (SMART) monitoring  
+- Disk health (SMART) monitoring
 - Network connectivity verification
 
 ### Notifications
@@ -205,4 +206,3 @@ Built with and inspired by:
 **⭐ Star this repository if you find it helpful!**
 
 Made with ❤️ for the self-hosting community.
-

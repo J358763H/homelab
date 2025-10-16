@@ -6,18 +6,26 @@
 # Maintainer: J35867U
 # Email: mrnash404@protonmail.com
 # Last Updated: 2025-10-11
-# 
+#
 # Sets up a dedicated media file server for network sharing
+# Usage: ./setup_samba_lxc.sh [--automated] [ctid]
 # Integrates with Docker media stack on Proxmox
 # Based on: https://youtu.be/qmSizZUbCOA?si=qWmb60b_BrFNtoLr
 # =====================================================
 
 set -euo pipefail
 
-# =================
-# Configuration
-# =================
-CONTAINER_ID=${1:-204}
+# Get script directory and source common functions
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../common_functions.sh"
+
+# Check dependencies and root access
+check_root
+check_dependencies
+
+# Parse arguments
+check_automated_mode "$@"
+CONTAINER_ID=${2:-204}
 CONTAINER_NAME="homelab-media-share-204"
 TEMPLATE="ubuntu-22.04-standard_22.04-1_amd64.tar.xz"
 STORAGE="local-lvm"
@@ -126,12 +134,12 @@ log "Installing Media Share services and dependencies..."
 pct exec $CONTAINER_ID -- bash -c "
     # Update system
     apt update && apt upgrade -y
-    
+
     # Install Samba and utilities
     apt install -y samba samba-common-bin smbclient cifs-utils
     apt install -y netatalk avahi-daemon
     apt install -y htop nano curl wget net-tools
-    
+
     # Enable services
     systemctl enable smbd nmbd
     systemctl enable avahi-daemon
@@ -145,19 +153,19 @@ log "Setting up users and permissions..."
 pct exec $CONTAINER_ID -- bash -c "
     # Create media group
     groupadd -g 1500 mediagroup
-    
+
     # Create media user
     useradd -u 1500 -g mediagroup -s /bin/bash -d /home/mediauser mediauser
     mkdir -p /home/mediauser
     chown mediauser:mediagroup /home/mediauser
-    
+
     # Set password for media user (you'll be prompted)
     echo 'Setting password for mediauser...'
     passwd mediauser
-    
+
     # Add mediauser to samba
     smbpasswd -a mediauser
-    
+
     # Create admin user for management
     useradd -u 1501 -G sudo -s /bin/bash -d /home/admin admin
     mkdir -p /home/admin
@@ -175,11 +183,11 @@ pct exec $CONTAINER_ID -- bash -c "
     # Create media directories
     mkdir -p /media/{movies,shows,music,youtube,downloads}
     mkdir -p /media/downloads/{movies,shows,music}
-    
+
     # Set proper permissions
     chown -R mediauser:mediagroup /media
     chmod -R 775 /media
-    
+
     # Create symbolic links for easier access
     ln -sf /media /home/mediauser/media
     ln -sf /docker-data /home/admin/docker-data
@@ -309,14 +317,14 @@ pct push $CONTAINER_ID /tmp/smb.conf /etc/samba/smb.conf
 pct exec $CONTAINER_ID -- bash -c "
     chown root:root /etc/samba/smb.conf
     chmod 644 /etc/samba/smb.conf
-    
+
     # Test configuration
     testparm -s
-    
+
     # Restart services
     systemctl restart smbd nmbd
     systemctl restart avahi-daemon
-    
+
     # Enable and check status
     systemctl enable smbd nmbd avahi-daemon
     systemctl status smbd --no-pager
@@ -333,16 +341,16 @@ log "Configuring firewall for Media Share..."
 pct exec $CONTAINER_ID -- bash -c "
     # Install UFW if not present
     apt install -y ufw
-    
+
     # Configure UFW for Samba
     ufw allow from 192.168.1.0/24 to any port 139
     ufw allow from 192.168.1.0/24 to any port 445
     ufw allow from 192.168.1.0/24 to any port 137
     ufw allow from 192.168.1.0/24 to any port 138
-    
+
     # SSH access
     ufw allow from 192.168.1.0/24 to any port 22
-    
+
     # Enable firewall
     ufw --force enable
     ufw status
@@ -407,7 +415,7 @@ log "Media Share LXC container setup complete!"
 echo ""
 echo -e "${GREEN}=== Container Information ===${NC}"
 echo -e "Container ID: ${BLUE}$CONTAINER_ID${NC}"
-echo -e "Container Name: ${BLUE}$CONTAINER_NAME${NC}" 
+echo -e "Container Name: ${BLUE}$CONTAINER_NAME${NC}"
 echo -e "IP Address: ${BLUE}$IP_ONLY${NC}"
 echo -e "Users: ${BLUE}mediauser, admin${NC}"
 echo ""

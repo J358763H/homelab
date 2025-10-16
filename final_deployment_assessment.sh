@@ -24,7 +24,7 @@ WARNINGS=0
 echo -e "\n${BLUE}🏥 Proxmox Environment${NC}"
 if grep -q "pve" /proc/version 2>/dev/null || [ -d "/etc/pve" ] 2>/dev/null; then
     echo -e "${GREEN}✅ Proxmox VE detected${NC}"
-    
+
     if [ -f "/etc/systemd/system/pve-cluster.service.d/override.conf" ]; then
         timeout=$(grep "TimeoutStopSec" /etc/systemd/system/pve-cluster.service.d/override.conf 2>/dev/null | cut -d'=' -f2)
         echo -e "${GREEN}✅ Cluster timeout fixed: $timeout${NC}"
@@ -42,25 +42,25 @@ fi
 echo -e "\n${BLUE}⚙️  Environment Configuration${NC}"
 if [ -f ".env" ]; then
     echo -e "${GREEN}✅ .env file exists${NC}"
-    
-    # Check critical variables
-    critical_vars=("TZ" "MEDIA_PATH" "CONFIG_PATH")
+
+    # Check critical variables (check for your actual variable names)
+    critical_vars=("HOMELAB_TIMEZONE" "TAILSCALE_AUTH_KEY" "NPM_ADMIN_EMAIL")
     missing_vars=0
-    
+
     for var in "${critical_vars[@]}"; do
         if ! grep -q "^${var}=" .env 2>/dev/null; then
             echo -e "${RED}❌ Missing critical variable: $var${NC}"
             ((missing_vars++))
         fi
     done
-    
+
     if [ $missing_vars -gt 0 ]; then
         echo -e "${RED}❌ DEPLOYMENT BLOCKER: $missing_vars critical variables missing${NC}"
         ((BLOCKERS++))
     else
         echo -e "${GREEN}✅ Critical environment variables configured${NC}"
     fi
-    
+
     # Check for placeholder values
     if grep -q "changeme\|your_\|placeholder" .env 2>/dev/null; then
         echo -e "${YELLOW}⚠️  Contains placeholder values - may cause issues${NC}"
@@ -76,14 +76,14 @@ fi
 echo -e "\n${BLUE}🐳 Docker Environment${NC}"
 if command -v docker >/dev/null 2>&1; then
     echo -e "${GREEN}✅ Docker installed: $(docker --version | cut -d' ' -f3)${NC}"
-    
+
     if docker compose version >/dev/null 2>&1; then
         echo -e "${GREEN}✅ Docker Compose available${NC}"
     else
         echo -e "${RED}❌ DEPLOYMENT BLOCKER: Docker Compose not available${NC}"
         ((BLOCKERS++))
     fi
-    
+
     # Check if Docker daemon is running
     if docker info >/dev/null 2>&1; then
         echo -e "${GREEN}✅ Docker daemon running${NC}"
@@ -106,7 +106,7 @@ if [ ${#compose_files[@]} -eq 0 ]; then
     ((BLOCKERS++))
 else
     echo -e "${GREEN}✅ Found ${#compose_files[@]} compose file(s)${NC}"
-    
+
     syntax_errors=0
     for compose_file in "${compose_files[@]}"; do
         if command -v docker >/dev/null 2>&1; then
@@ -118,7 +118,7 @@ else
             fi
         fi
     done
-    
+
     if [ $syntax_errors -gt 0 ]; then
         echo -e "${RED}❌ DEPLOYMENT BLOCKER: $syntax_errors compose file(s) have errors${NC}"
         ((BLOCKERS++))

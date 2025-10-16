@@ -4,16 +4,26 @@
 # 🔒 Tailscale LXC Setup Script
 # =====================================================
 # Creates and configures Tailscale subnet router
+# Usage: ./setup_tailscale_lxc.sh [--automated] [ctid]
 # =====================================================
 
 set -euo pipefail
 
-# Configuration
-CTID="${1:-202}"
+# Get script directory and source common functions
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../common_functions.sh"
+
+# Check dependencies and root access
+check_root
+check_dependencies
+
+# Parse arguments
+check_automated_mode "$@"
+CTID="${2:-202}"
 HOSTNAME="homelab-tailscale-vpn-202"
 MEMORY="512"
 SWAP="256"
-CORES="1" 
+CORES="1"
 STORAGE="2"
 TEMPLATE="local:vztmpl/ubuntu-22.04-standard_22.04-1_amd64.tar.zst"
 
@@ -51,18 +61,9 @@ if [[ $EUID -ne 0 ]]; then
    error "This script must be run as root (on Proxmox host)"
 fi
 
-# Check if container ID already exists
-if pct status $CTID >/dev/null 2>&1; then
-    warn "Container $CTID already exists!"
-    read -p "Do you want to destroy and recreate it? (y/N): " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        log "Stopping and destroying container $CTID..."
-        pct stop $CTID 2>/dev/null || true
-        pct destroy $CTID
-    else
-        error "Aborted. Choose a different container ID."
-    fi
+# Handle existing container
+if ! handle_existing_container "$CTID"; then
+    exit 1
 fi
 
 # Get Tailscale auth key (from environment or prompt)
@@ -113,27 +114,27 @@ log "Configuring container..."
 pct exec $CTID -- bash -c "
     # Update system
     apt update && apt upgrade -y
-    
+
     # Install required packages
     apt install -y curl wget git nano htop iptables-persistent
 
     # Install Tailscale
     curl -fsSL https://tailscale.com/install.sh | sh
-    
+
     # Enable IP forwarding
     echo 'net.ipv4.ip_forward = 1' >> /etc/sysctl.conf
     echo 'net.ipv6.conf.all.forwarding = 1' >> /etc/sysctl.conf
     sysctl -p
-    
+
     # Configure iptables for forwarding
     iptables -A FORWARD -i tailscale0 -j ACCEPT
     iptables -A FORWARD -o tailscale0 -j ACCEPT
     iptables-save > /etc/iptables/rules.v4
-    
+
     # Start and authenticate Tailscale
     systemctl enable tailscaled
     systemctl start tailscaled
-    
+
     # Connect to Tailscale with enhanced privacy settings
     tailscale up --authkey=$AUTH_KEY \
         --advertise-routes=$SUBNET_ROUTE \
@@ -143,12 +144,12 @@ pct exec $CTID -- bash -c "
         --shields-up \
         --netfilter-mode=on \
         --hostname=$HOSTNAME
-    
+
     # Additional privacy configurations
     sleep 5
     tailscale set --accept-dns=false
     tailscale set --shields-up=true
-        
+
     # Wait for connection
     sleep 10
 "

@@ -6,17 +6,25 @@
 # Maintainer: J35867U
 # Email: mrnash404@protonmail.com
 # Last Updated: 2025-10-11
-# 
+#
 # Sets up a dedicated LXC container for Ntfy notifications
+# Usage: ./setup_ntfy_lxc.sh [--automated] [ctid]
 # Run this on your Proxmox host or LXC-capable system
 # =====================================================
 
 set -euo pipefail
 
-# =================
-# Configuration
-# =================
-CONTAINER_ID=${1:-203}
+# Get script directory and source common functions
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../common_functions.sh"
+
+# Check dependencies and root access
+check_root
+check_dependencies
+
+# Parse arguments
+check_automated_mode "$@"
+CONTAINER_ID=${2:-203}
 CONTAINER_NAME="homelab-ntfy-notify-203"
 TEMPLATE="ubuntu-22.04-standard_22.04-1_amd64.tar.xz"
 STORAGE="local-lvm"
@@ -100,23 +108,23 @@ log "Installing Ntfy server..."
 pct exec $CONTAINER_ID -- bash -c "
     # Update system
     apt update && apt upgrade -y
-    
+
     # Install prerequisites
     apt install -y curl gnupg2 software-properties-common apt-transport-https
-    
+
     # Add Ntfy repository (new secure method)
     mkdir -p /etc/apt/keyrings
     curl -L -o /etc/apt/keyrings/ntfy.gpg https://archive.ntfy.sh/apt/keyring.gpg
     echo 'deb [arch=amd64 signed-by=/etc/apt/keyrings/ntfy.gpg] https://archive.ntfy.sh/apt stable main' > /etc/apt/sources.list.d/ntfy.list
-    
+
     # Install Ntfy
     apt update
     apt install -y ntfy
-    
+
     # Enable and start service
     systemctl enable ntfy
     systemctl start ntfy
-    
+
     # Create config directory
     mkdir -p /etc/ntfy
 "

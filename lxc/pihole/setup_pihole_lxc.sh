@@ -3,8 +3,20 @@
 # 🕳️ Pi-hole LXC Container Setup Script
 # Part of the homelab project
 # Creates and configures Pi-hole for network-wide ad blocking and DNS management
+# Usage: ./setup_pihole_lxc.sh [--automated] [ctid]
 
 set -euo pipefail
+
+# Get script directory and source common functions
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../common_functions.sh"
+
+# Check dependencies and root access
+check_root
+check_dependencies
+
+# Parse arguments
+check_automated_mode "$@"
 
 # 🎨 Color definitions for output
 RED='\033[0;31m'
@@ -17,7 +29,7 @@ WHITE='\033[1;37m'
 NC='\033[0m' # No Color
 
 # 📋 Configuration
-CONTAINER_ID="205"
+CONTAINER_ID="${2:-205}"
 CONTAINER_NAME="homelab-pihole-dns-205"
 CONTAINER_IP="192.168.1.205"
 GATEWAY_IP="192.168.1.1"
@@ -67,7 +79,7 @@ check_proxmox() {
         print_error "Proxmox Container Toolkit (pct) not found"
         exit 1
     fi
-    
+
     if [ "$EUID" -ne 0 ]; then
         print_error "This script must be run as root"
         print_error "Please run: sudo $0"
@@ -79,7 +91,7 @@ check_proxmox() {
 cleanup_existing() {
     if pct list | grep -q "^$CONTAINER_ID"; then
         print_warning "Container $CONTAINER_ID already exists"
-        
+
         if [[ "$AUTOMATED_MODE" == "true" ]]; then
             # In automated mode, check if container is running
             local container_status=$(pct status "$CONTAINER_ID" 2>/dev/null | awk '{print $2}' || echo "unknown")
@@ -98,10 +110,10 @@ cleanup_existing() {
             if [[ $REPLY =~ ^[Yy]$ ]]; then
                 print_status "Stopping existing container..."
                 pct stop $CONTAINER_ID || true
-                
+
                 print_status "Destroying existing container..."
                 pct destroy $CONTAINER_ID
-                
+
                 print_success "Existing container removed"
             else
                 print_error "Aborting setup"
@@ -114,7 +126,7 @@ cleanup_existing() {
 # 📦 Function to download Ubuntu template if not present
 download_template() {
     local template="ubuntu-22.04-standard_22.04-1_amd64.tar.zst"
-    
+
     if ! pveam list local | grep -q "$template"; then
         print_status "Downloading Ubuntu 22.04 LTS template..."
         pveam download local "$template"
@@ -127,7 +139,7 @@ download_template() {
 # 🏗️ Function to create LXC container
 create_container() {
     print_status "Creating Pi-hole LXC container..."
-    
+
     pct create $CONTAINER_ID \
         local:vztmpl/ubuntu-22.04-standard_22.04-1_amd64.tar.zst \
         --hostname $CONTAINER_NAME \
@@ -141,28 +153,28 @@ create_container() {
         --start 1 \
         --features nesting=1 \
         --description "Pi-hole DNS Server - Network-wide ad blocking and DNS management"
-    
+
     print_success "Pi-hole container created with ID: $CONTAINER_ID"
 }
 
 # ⏳ Function to wait for container to be ready
 wait_for_container() {
     print_status "Waiting for container to start and be ready..."
-    
+
     local max_attempts=30
     local attempt=1
-    
+
     while [ $attempt -le $max_attempts ]; do
         if pct exec $CONTAINER_ID -- systemctl is-system-running --wait 2>/dev/null; then
             print_success "Container is ready!"
             return 0
         fi
-        
+
         echo -n "."
         sleep 2
         ((attempt++))
     done
-    
+
     print_error "Container failed to become ready within timeout"
     exit 1
 }
@@ -170,10 +182,10 @@ wait_for_container() {
 # 📦 Function to install Pi-hole dependencies
 install_dependencies() {
     print_status "Installing Pi-hole dependencies..."
-    
+
     # Update package lists
     pct exec $CONTAINER_ID -- bash -c "apt update"
-    
+
     # Install required packages
     pct exec $CONTAINER_ID -- bash -c "apt install -y \
         curl \
@@ -187,14 +199,14 @@ install_dependencies() {
         net-tools \
         cron \
         logrotate"
-    
+
     print_success "Dependencies installed"
 }
 
 # 🕳️ Function to install Pi-hole
 install_pihole() {
     print_status "Installing Pi-hole..."
-    
+
     # Create installation script inside container
     pct exec $CONTAINER_ID -- bash -c "cat > /tmp/pihole_setup.sh << 'EOF'
 #!/bin/bash
@@ -240,23 +252,23 @@ timedatectl set-timezone $TIMEZONE
 
 echo 'Pi-hole installation completed!'
 EOF"
-    
+
     # Make script executable and run it
     pct exec $CONTAINER_ID -- chmod +x /tmp/pihole_setup.sh
     pct exec $CONTAINER_ID -- /tmp/pihole_setup.sh
-    
+
     print_success "Pi-hole installed and configured"
 }
 
 # 🔧 Function to configure Pi-hole
 configure_pihole() {
     print_status "Configuring Pi-hole settings..."
-    
+
     # Wait for Pi-hole to be fully ready
     print_status "Waiting for Pi-hole service to be ready..."
     local retry_count=0
     local max_retries=30
-    
+
     while [ $retry_count -lt $max_retries ]; do
         if pct exec $CONTAINER_ID -- test -f /usr/local/bin/pihole; then
             print_success "Pi-hole binary found"
@@ -265,7 +277,7 @@ configure_pihole() {
         sleep 2
         retry_count=$((retry_count + 1))
     done
-    
+
     if [ $retry_count -eq $max_retries ]; then
         print_warning "Pi-hole binary not found in expected location, trying alternative paths..."
         # Try to find pihole binary and create symlink if needed
@@ -277,7 +289,7 @@ configure_pihole() {
             fi
         "
     fi
-    
+
     # Update gravity (blocklists) with error handling
     print_status "Updating Pi-hole gravity database..."
     if pct exec $CONTAINER_ID -- /usr/local/bin/pihole -g; then
@@ -285,7 +297,7 @@ configure_pihole() {
     else
         print_warning "Gravity update failed, but Pi-hole should still work"
     fi
-    
+
     # Add custom DNS records for homelab services
     pct exec $CONTAINER_ID -- bash -c "cat >> /etc/pihole/custom.list << 'EOF'
 # Homelab Service Records
@@ -298,7 +310,7 @@ configure_pihole() {
 192.168.1.205 dns.local
 192.168.1.206 homelab-vault.local
 EOF"
-    
+
     # Restart DNS service to apply changes with error handling
     print_status "Restarting Pi-hole DNS service..."
     if pct exec $CONTAINER_ID -- /usr/local/bin/pihole restartdns; then
@@ -307,65 +319,65 @@ EOF"
         print_warning "DNS restart failed, trying systemctl restart"
         pct exec $CONTAINER_ID -- systemctl restart pihole-FTL || true
     fi
-    
+
     print_success "Pi-hole configuration completed"
 }
 
 # 🔒 Function to configure firewall rules
 configure_firewall() {
     print_status "Configuring container firewall..."
-    
+
     # Allow DNS (port 53) and Web interface (port 80)
     pct set $CONTAINER_ID --net0 name=eth0,bridge=vmbr0,firewall=1,gw=$GATEWAY_IP,ip=$CONTAINER_IP/24,type=veth
-    
+
     print_success "Firewall configured"
 }
 
 # 📊 Function to display final information
 display_info() {
     print_header "🎉 Pi-hole LXC Container Setup Complete!"
-    
+
     echo -e "${GREEN}Container Details:${NC}"
     echo -e "  📦 Container ID: ${WHITE}$CONTAINER_ID${NC}"
     echo -e "  🏷️  Name: ${WHITE}$CONTAINER_NAME${NC}"
     echo -e "  🌐 IP Address: ${WHITE}$CONTAINER_IP${NC}"
     echo -e "  💾 Memory: ${WHITE}${MEMORY}MB${NC}"
     echo -e "  💿 Storage: ${WHITE}${DISK_SIZE}GB${NC}"
-    
+
     echo -e "\n${BLUE}Access Information:${NC}"
     echo -e "  🌐 Web Interface: ${WHITE}http://$CONTAINER_IP/admin${NC}"
     echo -e "  🔑 Admin Password: ${WHITE}$WEBPASSWORD${NC}"
     echo -e "  🏠 Local DNS: ${WHITE}http://pihole.local/admin${NC} (after DNS setup)"
-    
+
     echo -e "\n${YELLOW}DNS Configuration:${NC}"
     echo -e "  📡 Primary DNS: ${WHITE}$CONTAINER_IP${NC}"
     echo -e "  🔄 Upstream DNS: ${WHITE}$DNS_UPSTREAM_1, $DNS_UPSTREAM_2${NC}"
-    
+
     echo -e "\n${PURPLE}Next Steps:${NC}"
     echo -e "  1. 🔧 Configure your router to use ${WHITE}$CONTAINER_IP${NC} as primary DNS"
     echo -e "  2. 🌐 Access web interface at ${WHITE}http://$CONTAINER_IP/admin${NC}"
     echo -e "  3. 📋 Review and customize blocklists in the admin panel"
     echo -e "  4. 📊 Monitor query logs and statistics"
     echo -e "  5. 🛡️  Add custom blacklist/whitelist entries as needed"
-    
+
     echo -e "\n${GREEN}Integration with Homelab:${NC}"
     echo -e "  🔗 Nginx Proxy Manager: ${WHITE}192.168.1.201${NC}"
     echo -e "  🔗 Tailscale Router: ${WHITE}192.168.1.202${NC}"
     echo -e "  🔗 Ntfy Notifications: ${WHITE}192.168.1.203${NC}"
     echo -e "  🔗 Samba File Share: ${WHITE}192.168.1.204${NC}"
-    
+
     print_success "Pi-hole is ready to provide network-wide ad blocking!"
 }
 
 # 🚀 Main execution function
 main() {
     print_header "🕳️ Pi-hole LXC Container Setup"
-    
+
     print_status "Starting Pi-hole LXC container creation..."
-    
+
     # Pre-flight checks
     check_proxmox
-    
+
     # Setup process
     cleanup_existing
     download_template
@@ -375,10 +387,10 @@ main() {
     install_pihole
     configure_pihole
     configure_firewall
-    
+
     # Final information
     display_info
-    
+
     print_success "🎊 Pi-hole LXC setup completed successfully!"
 }
 

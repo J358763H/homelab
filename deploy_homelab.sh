@@ -4,12 +4,27 @@
 # =====================================================
 # Maintainer: J35867U
 # Email: mrnash404@protonmail.com
-# Last Updated: 2025-10-14
-# 
+# Last Updated: 2025-10-15
+#
 # Network: PVE-Homelab (192.168.1.50) - Main Services
 # =====================================================
 
-set -e
+set -euo pipefail
+
+# Check if running as root
+if [[ $EUID -ne 0 ]]; then
+   echo "❌ This script must be run as root"
+   echo "Usage: sudo $0"
+   exit 1
+fi
+
+# Check if .env file exists
+if [[ ! -f "deployment/.env" ]]; then
+   echo "❌ Missing deployment/.env file"
+   echo "📋 Please copy deployment/.env.example to deployment/.env"
+   echo "📋 Then edit deployment/.env with your actual configuration"
+   exit 1
+fi
 
 echo "🚀 Starting Homelab Deployment (PVE-Homelab 192.168.1.50)..."
 echo "📋 Network: 192.168.1.x subnet - Main homelab services"
@@ -22,9 +37,13 @@ chown -R 1000:1000 /data
 
 echo "--> Installing core packages..."
 
-# Install sudo if not available
-if ! command -v sudo &> /dev/null; then
-    apt-get update -y && apt-get install -y sudo
+# Validate Docker is available or install it
+if ! command -v docker &> /dev/null; then
+    echo "📦 Docker not found, installing..."
+    apt-get update -y
+    apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
+else
+    echo "✅ Docker is already installed"
 fi
 
 # Install lsb-release first (needed for repository setup)
@@ -56,8 +75,19 @@ sudo sensors-detect --auto || true
 echo "--> Running bootstrap script to place scripts in /usr/local/bin..."
 chmod +x deployment/bootstrap.sh && ./deployment/bootstrap.sh
 
+echo "--> Validating Docker Compose configuration..."
+if ! docker compose -f deployment/docker-compose.yml config -q; then
+    echo "❌ Docker Compose configuration is invalid"
+    echo "Run: docker compose -f deployment/docker-compose.yml config"
+    exit 1
+fi
+
 echo "--> Starting Docker containers..."
-docker compose -f deployment/docker-compose.yml up -d
+if ! docker compose -f deployment/docker-compose.yml up -d; then
+    echo "❌ Failed to start Docker containers"
+    echo "Check logs: docker compose -f deployment/docker-compose.yml logs"
+    exit 1
+fi
 
 echo "--> Setting up cron jobs..."
 CRON_ENTRIES="
@@ -76,12 +106,14 @@ CRON_ENTRIES="
 echo "✅ Homelab deployed and scheduled."
 echo ""
 echo "🌐 Access your services:"
-echo "  Jellyfin      → http://$(hostname -I | awk '{print $1}'):8096"
-echo "  Sonarr        → http://$(hostname -I | awk '{print $1}'):8989" 
-echo "  Radarr        → http://$(hostname -I | awk '{print $1}'):7878"
-echo "  Prowlarr      → http://$(hostname -I | awk '{print $1}'):9696"
-echo "  Jellyseerr    → http://$(hostname -I | awk '{print $1}'):5055"
-echo "  Jellystat     → http://$(hostname -I | awk '{print $1}'):3000"
+# Get primary IP address safely
+PRIMARY_IP=$(ip route get 1.1.1.1 2>/dev/null | awk '{print $7; exit}' || echo "localhost")
+echo "  Jellyfin      → http://${PRIMARY_IP}:8096"
+echo "  Sonarr        → http://${PRIMARY_IP}:8989"
+echo "  Radarr        → http://${PRIMARY_IP}:7878"
+echo "  Prowlarr      → http://${PRIMARY_IP}:9696"
+echo "  Jellyseerr    → http://${PRIMARY_IP}:5055"
+echo "  Jellystat     → http://${PRIMARY_IP}:3000"
 echo ""
 echo "📋 Next Steps:"
 echo "  1. Configure your VPN settings in deployment/.env"

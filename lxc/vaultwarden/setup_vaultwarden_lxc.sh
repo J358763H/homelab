@@ -3,8 +3,20 @@
 # 🔐 Vaultwarden LXC Container Setup Script
 # Part of the Homelab project
 # Creates and configures Vaultwarden for secure password management
+# Usage: ./setup_vaultwarden_lxc.sh [--automated] [ctid]
 
 set -euo pipefail
+
+# Get script directory and source common functions
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../common_functions.sh"
+
+# Check dependencies and root access
+check_root
+check_dependencies
+
+# Parse arguments
+check_automated_mode "$@"
 
 # 🎨 Color definitions for output
 RED='\033[0;31m'
@@ -17,7 +29,7 @@ WHITE='\033[1;37m'
 NC='\033[0m' # No Color
 
 # 📋 Configuration
-CONTAINER_ID="206"
+CONTAINER_ID="${2:-206}"
 CONTAINER_NAME="vaultwarden"
 CONTAINER_IP="192.168.1.206"
 GATEWAY_IP="192.168.1.1"
@@ -75,7 +87,7 @@ check_proxmox() {
         print_error "Proxmox Container Toolkit (pct) not found"
         exit 1
     fi
-    
+
     if [ "$EUID" -ne 0 ]; then
         print_error "This script must be run as root"
         print_error "Please run: sudo $0"
@@ -92,10 +104,10 @@ cleanup_existing() {
         if [[ $REPLY =~ ^[Yy]$ ]]; then
             print_status "Stopping existing container..."
             pct stop $CONTAINER_ID || true
-            
+
             print_status "Destroying existing container..."
             pct destroy $CONTAINER_ID
-            
+
             print_success "Existing container removed"
         else
             print_error "Aborting setup"
@@ -107,7 +119,7 @@ cleanup_existing() {
 # 📦 Function to download Ubuntu template if not present
 download_template() {
     local template="ubuntu-22.04-standard_22.04-1_amd64.tar.zst"
-    
+
     if ! pveam list local | grep -q "$template"; then
         print_status "Downloading Ubuntu 22.04 LTS template..."
         pveam download local "$template"
@@ -120,7 +132,7 @@ download_template() {
 # 🏗️ Function to create LXC container
 create_container() {
     print_status "Creating Vaultwarden LXC container..."
-    
+
     pct create $CONTAINER_ID \
         local:vztmpl/ubuntu-22.04-standard_22.04-1_amd64.tar.zst \
         --hostname $CONTAINER_NAME \
@@ -134,28 +146,28 @@ create_container() {
         --start 1 \
         --features nesting=1 \
         --description "Vaultwarden Password Manager - Secure self-hosted Bitwarden alternative"
-    
+
     print_success "Vaultwarden container created with ID: $CONTAINER_ID"
 }
 
 # ⏳ Function to wait for container to be ready
 wait_for_container() {
     print_status "Waiting for container to start and be ready..."
-    
+
     local max_attempts=30
     local attempt=1
-    
+
     while [ $attempt -le $max_attempts ]; do
         if pct exec $CONTAINER_ID -- systemctl is-system-running --wait 2>/dev/null; then
             print_success "Container is ready!"
             return 0
         fi
-        
+
         echo -n "."
         sleep 2
         ((attempt++))
     done
-    
+
     print_error "Container failed to become ready within timeout"
     exit 1
 }
@@ -163,10 +175,10 @@ wait_for_container() {
 # 📦 Function to install system dependencies
 install_dependencies() {
     print_status "Installing system dependencies..."
-    
+
     # Update package lists
     pct exec $CONTAINER_ID -- bash -c "apt update"
-    
+
     # Install required packages
     pct exec $CONTAINER_ID -- bash -c "apt install -y \
         curl \
@@ -189,18 +201,18 @@ install_dependencies() {
         nginx \
         certbot \
         python3-certbot-nginx"
-    
+
     print_success "System dependencies installed"
 }
 
 # 🦀 Function to install Rust (required for Vaultwarden)
 install_rust() {
     print_status "Installing Rust toolchain..."
-    
+
     pct exec $CONTAINER_ID -- bash -c "
         # Install Rust as vaultwarden user
         useradd -m -s /bin/bash vaultwarden
-        
+
         # Install Rust for vaultwarden user
         sudo -u vaultwarden bash -c '
             curl --proto \"=https\" --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
@@ -208,75 +220,75 @@ install_rust() {
             rustup update stable
         '
     "
-    
+
     print_success "Rust toolchain installed"
 }
 
 # 🔐 Function to compile and install Vaultwarden
 install_vaultwarden() {
     print_status "Compiling and installing Vaultwarden..."
-    
+
     pct exec $CONTAINER_ID -- bash -c "
         # Create application directories
         mkdir -p /opt/vaultwarden/{bin,data,web-vault}
         chown -R vaultwarden:vaultwarden /opt/vaultwarden
-        
+
         # Compile Vaultwarden as vaultwarden user
         sudo -u vaultwarden bash -c '
             cd /home/vaultwarden
             source ~/.cargo/env
-            
+
             # Clone and build Vaultwarden
             git clone https://github.com/dani-garcia/vaultwarden.git
             cd vaultwarden
-            
+
             # Build with SQLite support (add postgresql/mysql features if needed)
             cargo build --features sqlite,web-vault --release
-            
+
             # Copy binary to installation directory
             cp target/release/vaultwarden /opt/vaultwarden/bin/
         '
-        
+
         # Set proper permissions
         chown vaultwarden:vaultwarden /opt/vaultwarden/bin/vaultwarden
         chmod +x /opt/vaultwarden/bin/vaultwarden
     "
-    
+
     print_success "Vaultwarden compiled and installed"
 }
 
 # 🌐 Function to download and setup web vault
 setup_web_vault() {
     print_status "Setting up Vaultwarden web vault..."
-    
+
     pct exec $CONTAINER_ID -- bash -c "
         # Download latest web vault
         cd /tmp
         VAULT_VERSION=\$(curl -s https://api.github.com/repos/dani-garcia/bw_web_builds/releases/latest | grep 'tag_name' | cut -d'\"' -f4)
         wget https://github.com/dani-garcia/bw_web_builds/releases/download/\$VAULT_VERSION/bw_web_\$VAULT_VERSION.tar.gz
-        
+
         # Extract web vault
         tar -xzf bw_web_\$VAULT_VERSION.tar.gz -C /opt/vaultwarden/web-vault --strip-components=1
-        
+
         # Set permissions
         chown -R vaultwarden:vaultwarden /opt/vaultwarden/web-vault
-        
+
         # Cleanup
         rm bw_web_\$VAULT_VERSION.tar.gz
     "
-    
+
     print_success "Web vault installed"
 }
 
 # ⚙️ Function to configure Vaultwarden
 configure_vaultwarden() {
     print_status "Configuring Vaultwarden..."
-    
+
     # Generate admin token if not set
     if [ -z "$ADMIN_TOKEN" ]; then
         generate_admin_token
     fi
-    
+
     # Create configuration file
     pct exec $CONTAINER_ID -- bash -c "cat > /opt/vaultwarden/.env << 'EOF'
 # Vaultwarden Configuration
@@ -328,25 +340,25 @@ ORG_CREATION_USERS=all
 ORG_ATTACHMENT_LIMIT=100000
 USER_ATTACHMENT_LIMIT=100000
 EOF"
-    
+
     # Set proper permissions
     pct exec $CONTAINER_ID -- bash -c "
         chown vaultwarden:vaultwarden /opt/vaultwarden/.env
         chmod 600 /opt/vaultwarden/.env
-        
+
         # Create data directory
         mkdir -p /opt/vaultwarden/data
         chown -R vaultwarden:vaultwarden /opt/vaultwarden/data
         chmod 700 /opt/vaultwarden/data
     "
-    
+
     print_success "Vaultwarden configured"
 }
 
 # 🔧 Function to create systemd service
 create_systemd_service() {
     print_status "Creating systemd service..."
-    
+
     pct exec $CONTAINER_ID -- bash -c "cat > /etc/systemd/system/vaultwarden.service << 'EOF'
 [Unit]
 Description=Vaultwarden Server (Bitwarden compatible server written in Rust)
@@ -374,29 +386,29 @@ RestartSec=5
 [Install]
 WantedBy=multi-user.target
 EOF"
-    
+
     # Enable and start the service
     pct exec $CONTAINER_ID -- bash -c "
         systemctl daemon-reload
         systemctl enable vaultwarden
         systemctl start vaultwarden
     "
-    
+
     print_success "Systemd service created and started"
 }
 
 # 🌐 Function to configure Nginx reverse proxy
 configure_nginx() {
     print_status "Configuring Nginx reverse proxy..."
-    
+
     pct exec $CONTAINER_ID -- bash -c "cat > /etc/nginx/sites-available/vaultwarden << 'EOF'
 server {
     listen 80;
     server_name $DOMAIN_NAME $CONTAINER_IP;
-    
+
     # Redirect HTTP to HTTPS (uncomment when SSL is configured)
     # return 301 https://\$server_name\$request_uri;
-    
+
     # Allow HTTP for initial setup (remove after SSL setup)
     location / {
         proxy_pass http://127.0.0.1:8080;
@@ -407,13 +419,13 @@ server {
         proxy_set_header X-Forwarded-Host \$host;
         proxy_set_header X-Forwarded-Server \$host;
         proxy_redirect off;
-        
+
         # WebSocket support for notifications
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection \"upgrade\";
     }
-    
+
     # WebSocket endpoint
     location /notifications/hub {
         proxy_pass http://127.0.0.1:3012;
@@ -424,7 +436,7 @@ server {
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
     }
-    
+
     # Security headers
     add_header X-Frame-Options DENY;
     add_header X-Content-Type-Options nosniff;
@@ -436,15 +448,15 @@ server {
 # server {
 #     listen 443 ssl http2;
 #     server_name $DOMAIN_NAME;
-#     
+#
 #     ssl_certificate /etc/letsencrypt/live/$DOMAIN_NAME/fullchain.pem;
 #     ssl_certificate_key /etc/letsencrypt/live/$DOMAIN_NAME/privkey.pem;
-#     
+#
 #     # SSL configuration
 #     ssl_protocols TLSv1.2 TLSv1.3;
 #     ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384;
 #     ssl_prefer_server_ciphers off;
-#     
+#
 #     location / {
 #         proxy_pass http://127.0.0.1:8080;
 #         proxy_set_header Host \$host;
@@ -454,13 +466,13 @@ server {
 #         proxy_set_header X-Forwarded-Host \$host;
 #         proxy_set_header X-Forwarded-Server \$host;
 #         proxy_redirect off;
-#         
+#
 #         # WebSocket support
 #         proxy_http_version 1.1;
 #         proxy_set_header Upgrade \$http_upgrade;
 #         proxy_set_header Connection \"upgrade\";
 #     }
-#     
+#
 #     location /notifications/hub {
 #         proxy_pass http://127.0.0.1:3012;
 #         proxy_set_header Upgrade \$http_upgrade;
@@ -472,7 +484,7 @@ server {
 #     }
 # }
 EOF"
-    
+
     # Enable the site
     pct exec $CONTAINER_ID -- bash -c "
         ln -sf /etc/nginx/sites-available/vaultwarden /etc/nginx/sites-enabled/
@@ -481,43 +493,43 @@ EOF"
         systemctl restart nginx
         systemctl enable nginx
     "
-    
+
     print_success "Nginx configured and started"
 }
 
 # 🔒 Function to setup firewall
 configure_firewall() {
     print_status "Configuring container firewall..."
-    
+
     pct exec $CONTAINER_ID -- bash -c "
         # Install and configure ufw
         apt install -y ufw
-        
+
         # Default policies
         ufw default deny incoming
         ufw default allow outgoing
-        
+
         # Allow SSH (if needed)
         ufw allow ssh
-        
+
         # Allow HTTP and HTTPS
         ufw allow 80/tcp
         ufw allow 443/tcp
-        
+
         # Allow from homelab network
         ufw allow from 192.168.1.0/24
-        
+
         # Enable firewall
         echo 'y' | ufw enable
     "
-    
+
     print_success "Firewall configured"
 }
 
 # 📊 Function to setup logging and monitoring
 setup_logging() {
     print_status "Setting up logging and log rotation..."
-    
+
     pct exec $CONTAINER_ID -- bash -c "
         # Create log rotation configuration
         cat > /etc/logrotate.d/vaultwarden << 'EOF'
@@ -533,7 +545,7 @@ setup_logging() {
     endscript
 }
 EOF
-        
+
         # Create monitoring script
         cat > /usr/local/bin/vaultwarden-health-check.sh << 'EOF'
 #!/bin/bash
@@ -562,20 +574,20 @@ fi
 # Log successful check
 echo \"\$TIMESTAMP INFO: Vaultwarden health check passed\" >> \$LOG_FILE
 EOF
-        
+
         chmod +x /usr/local/bin/vaultwarden-health-check.sh
-        
+
         # Add to crontab
         echo '*/5 * * * * /usr/local/bin/vaultwarden-health-check.sh' | crontab -
     "
-    
+
     print_success "Logging and monitoring configured"
 }
 
 # 💾 Function to setup backup script
 create_backup_script() {
     print_status "Creating backup script..."
-    
+
     pct exec $CONTAINER_ID -- bash -c "
         cat > /usr/local/bin/vaultwarden-backup.sh << 'EOF'
 #!/bin/bash
@@ -602,39 +614,39 @@ find \$BACKUP_DIR -name \"vaultwarden_backup_*.tar.gz\" -type f -mtime +7 -delet
 
 echo \"Backup completed: \$BACKUP_NAME.tar.gz\"
 EOF
-        
+
         chmod +x /usr/local/bin/vaultwarden-backup.sh
-        
+
         # Schedule daily backups at 2 AM
         echo '0 2 * * * /usr/local/bin/vaultwarden-backup.sh' | crontab -
     "
-    
+
     print_success "Backup script created and scheduled"
 }
 
 # 📊 Function to display final information
 display_info() {
     print_header "🎉 Vaultwarden LXC Container Setup Complete!"
-    
+
     echo -e "${GREEN}Container Details:${NC}"
     echo -e "  📦 Container ID: ${WHITE}$CONTAINER_ID${NC}"
     echo -e "  🏷️  Name: ${WHITE}$CONTAINER_NAME${NC}"
     echo -e "  🌐 IP Address: ${WHITE}$CONTAINER_IP${NC}"
     echo -e "  💾 Memory: ${WHITE}${MEMORY}MB${NC}"
     echo -e "  💿 Storage: ${WHITE}${DISK_SIZE}GB${NC}"
-    
+
     echo -e "\n${BLUE}Access Information:${NC}"
     echo -e "  🌐 Web Interface: ${WHITE}http://$CONTAINER_IP${NC}"
     echo -e "  🏠 Local Domain: ${WHITE}http://$DOMAIN_NAME${NC}"
     echo -e "  🔑 Admin Panel: ${WHITE}http://$CONTAINER_IP/admin${NC}"
     echo -e "  🗝️  Admin Token: ${WHITE}$ADMIN_TOKEN${NC}"
-    
+
     echo -e "\n${YELLOW}Security Configuration:${NC}"
     echo -e "  🔒 Signups: ${WHITE}$SIGNUPS_ALLOWED${NC} (Enable temporarily for user creation)"
     echo -e "  📧 Invitations: ${WHITE}$INVITATIONS_ALLOWED${NC}"
     echo -e "  🌐 Web Vault: ${WHITE}$WEB_VAULT_ENABLED${NC}"
     echo -e "  🔔 WebSocket: ${WHITE}$WEBSOCKET_ENABLED${NC}"
-    
+
     echo -e "\n${PURPLE}Important Next Steps:${NC}"
     echo -e "  1. 🔧 Access admin panel: ${WHITE}http://$CONTAINER_IP/admin${NC}"
     echo -e "  2. 🔑 Use admin token: ${WHITE}$ADMIN_TOKEN${NC}"
@@ -644,31 +656,31 @@ display_info() {
     echo -e "  6. 🛡️  Disable signups after account creation"
     echo -e "  7. 🌐 Configure SSL certificate for HTTPS"
     echo -e "  8. 🔗 Add to Nginx Proxy Manager for external access"
-    
+
     echo -e "\n${GREEN}Integration with Homelab:${NC}"
     echo -e "  🔗 Nginx Proxy Manager: ${WHITE}192.168.1.201${NC} (for SSL termination)"
     echo -e "  🔒 Tailscale VPN: ${WHITE}192.168.1.202${NC} (for secure remote access)"
     echo -e "  📢 Ntfy Notifications: ${WHITE}192.168.1.203${NC} (for alerts)"
     echo -e "  🕳️  Pi-hole DNS: ${WHITE}192.168.1.205${NC} (for local domain resolution)"
-    
+
     echo -e "\n${CYAN}Backup & Maintenance:${NC}"
     echo -e "  💾 Daily backups: ${WHITE}Automated at 2 AM${NC}"
     echo -e "  📊 Health checks: ${WHITE}Every 5 minutes${NC}"
     echo -e "  📝 Logs: ${WHITE}/opt/vaultwarden/data/vaultwarden.log${NC}"
     echo -e "  🔄 Manual backup: ${WHITE}/usr/local/bin/vaultwarden-backup.sh${NC}"
-    
+
     print_success "🔐 Vaultwarden is ready for secure password management!"
 }
 
 # 🚀 Main execution function
 main() {
     print_header "🔐 Vaultwarden LXC Container Setup"
-    
+
     print_status "Starting Vaultwarden LXC container creation..."
-    
+
     # Pre-flight checks
     check_proxmox
-    
+
     # Setup process
     cleanup_existing
     download_template
@@ -684,10 +696,10 @@ main() {
     configure_firewall
     setup_logging
     create_backup_script
-    
+
     # Final information
     display_info
-    
+
     print_success "🎊 Vaultwarden LXC setup completed successfully!"
 }
 

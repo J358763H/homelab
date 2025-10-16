@@ -5,10 +5,17 @@
 # Prepares the system and installs required scripts
 # Maintainer: J35867U
 # Email: mrnash404@protonmail.com
-# Last Updated: 2025-10-11
+# Last Updated: 2025-10-15
 # =====================================================
 
-set -e
+set -euo pipefail
+
+# Check if running as root (required for /usr/local/bin operations)
+if [[ $EUID -ne 0 ]]; then
+   echo "❌ This script must be run as root"
+   echo "Usage: sudo $0"
+   exit 1
+fi
 
 echo "=== Homelab-SHV Bootstrap Starting ==="
 
@@ -31,20 +38,31 @@ done
 # Install scripts to /usr/local/bin
 echo "--> Installing scripts to /usr/local/bin..."
 
-# Backup scripts
-sudo cp scripts/backup/restic_backup_with_alerts.sh /usr/local/bin/
-sudo cp scripts/backup/daily_backup_summary.sh /usr/local/bin/
+# Function to safely copy script if it exists
+copy_script_if_exists() {
+    local src="$1"
+    local filename=$(basename "$src")
 
-# Monitoring scripts  
-sudo cp scripts/monitoring/hdd_health_check.sh /usr/local/bin/
-sudo cp scripts/monitoring/weekly_system_health.sh /usr/local/bin/
-sudo cp scripts/monitoring/maintenance_dashboard.sh /usr/local/bin/
+    if [[ -f "$src" ]]; then
+        cp "$src" "/usr/local/bin/"
+        chmod +x "/usr/local/bin/$filename"
+        echo "✅ Installed: $filename"
+    else
+        echo "⚠️  Warning: $src not found, skipping"
+    fi
+}
+
+# Backup scripts
+copy_script_if_exists "scripts/backup/restic_backup_with_alerts.sh"
+copy_script_if_exists "scripts/backup/daily_backup_summary.sh"
+
+# Monitoring scripts
+copy_script_if_exists "scripts/monitoring/hdd_health_check.sh"
+copy_script_if_exists "scripts/monitoring/weekly_system_health.sh"
+copy_script_if_exists "scripts/monitoring/maintenance_dashboard.sh"
 
 # Documentation scripts
-sudo cp scripts/docs/Homelab_Documentation_Archiver.sh /usr/local/bin/
-
-# Make all scripts executable
-sudo chmod +x /usr/local/bin/*.sh
+copy_script_if_exists "scripts/docs/Homelab_Documentation_Archiver.sh"
 
 # Set proper ownership for /data
 echo "--> Setting up permissions..."
