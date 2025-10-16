@@ -1,10 +1,7 @@
 #!/bin/bash
 
 # Deploy all homelab services in correct order
-echo "🏠 Deploying Complete Homelab Stack..."
-
-# Enhanced compatibility for Proxmox web UI
-echo "🌐 Proxmox Web UI Compatible Deployment"
+echo "🏠 Deploying Homelab Stack..."
 
 # Check if we have Docker
 if ! command -v docker &> /dev/null; then
@@ -39,35 +36,17 @@ EOF
 fi
 
 # Create data directories
-echo "📁 Creating data directories..."
-mkdir -p /opt/homelab-data/{downloads,media,config}
+echo "📁 Creating directories..."
 mkdir -p /data/{docker,media}/{qbittorrent,nzbget,jellyfin,sonarr,radarr,prowlarr,bazarr,jellystat,jellystat-db}
 mkdir -p /data/media/{downloads,movies,shows,music}
-chmod -R 777 /opt/homelab-data
-chmod -R 755 /data
 
 # Deploy core services first (VPN)
 echo "🔒 Starting core infrastructure..."
 cd ../containers/core || exit
 
-# Check if VPN config exists
-if [ ! -f "wg0.conf" ]; then
-    echo "⚠️ Warning: VPN config not found (wg0.conf)"
-    echo "   Download services may not work without VPN"
-    echo "   See wg0.conf.example for setup instructions"
-    echo ""
-fi
-
 docker-compose up -d
-echo "Waiting for VPN to establish..."
+echo "Waiting for VPN..."
 sleep 30
-
-# Check if VPN is working
-if docker logs gluetun 2>/dev/null | grep -q "Connected"; then
-    echo "✅ VPN connection established"
-else
-    echo "⚠️ VPN may not be connected - check gluetun logs"
-fi
 
 # Deploy downloads (depends on VPN)
 echo "📥 Starting download clients..."

@@ -1,45 +1,18 @@
-# 🌐 Proxmox Web UI Homelab Deployment Guide
+# 🌐 Proxmox Web UI Deployment
 
-## 🚀 **One-Command Homelab Deployment**
+## Quick Deploy
 
-Perfect for deploying your homelab directly from the Proxmox web interface shell!
-
-### **🎯 Quick Deploy (Copy & Paste into Proxmox Web UI Shell):**
+Copy and paste into Proxmox web UI shell:
 
 ```bash
 wget -O deploy.sh https://raw.githubusercontent.com/J358763H/homelab/main/proxmox-deploy-homelab.sh && chmod +x deploy.sh && ./deploy.sh
 ```
 
-**That's it!** This single command will:
-- ✅ Download the deployment script
-- ✅ Install Docker and dependencies
-- ✅ Clone your homelab repository
-- ✅ Deploy all services automatically
-- ✅ Show status and access information
-
----
-
-## 📋 **Deployment Options**
-
-### **Full Deployment (Recommended)**
-```bash
-wget -O deploy.sh https://raw.githubusercontent.com/J358763H/homelab/main/proxmox-deploy-homelab.sh && chmod +x deploy.sh && ./deploy.sh
-```
-
-### **Download Repository Only**
-```bash
-./deploy.sh --download-only
-```
-
-### **Deploy Existing Repository**
-```bash
-./deploy.sh --deploy-only
-```
-
-### **Skip Dependency Installation**
-```bash
-./deploy.sh --no-deps
-```
+This will:
+- Install Docker
+- Download homelab repository  
+- Deploy all services
+- Show access URLs
 
 ---
 
