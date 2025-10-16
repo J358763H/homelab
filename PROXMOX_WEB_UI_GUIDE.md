@@ -107,7 +107,7 @@ cd /opt/homelab && git pull origin main
 ## 🌐 **Proxmox Web UI Advantages**
 
 ✅ **Direct Host Access** - Deploy directly on Proxmox host
-✅ **No SSH Required** - Use built-in web shell  
+✅ **No SSH Required** - Use built-in web shell
 ✅ **Real-time Output** - See deployment progress instantly
 ✅ **Easy Copy/Paste** - Simple command execution
 ✅ **Persistent Sessions** - Web UI maintains connection

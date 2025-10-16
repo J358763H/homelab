@@ -48,7 +48,7 @@ show_banner() {
 # Check if we're on Proxmox (relaxed check for web UI)
 check_proxmox_environment() {
     log "🔍 Checking Proxmox environment..."
-    
+
     # Multiple ways to detect Proxmox
     if [[ -f /etc/pve/version ]] || command -v pct >/dev/null 2>&1 || command -v qm >/dev/null 2>&1 || [[ $(uname -r) == *"pve"* ]]; then
         success "✅ Proxmox VE environment detected"
@@ -62,10 +62,10 @@ check_proxmox_environment() {
 # Install required packages
 install_dependencies() {
     header "📦 INSTALLING REQUIRED PACKAGES"
-    
+
     log "Updating package lists..."
     apt-get update -qq
-    
+
     log "Installing Docker and Docker Compose..."
     apt-get install -y \
         apt-transport-https \
@@ -76,7 +76,7 @@ install_dependencies() {
         git \
         wget \
         unzip
-    
+
     # Install Docker if not present
     if ! command -v docker >/dev/null 2>&1; then
         log "Installing Docker..."
@@ -88,7 +88,7 @@ install_dependencies() {
     else
         log "Docker already installed"
     fi
-    
+
     # Install Docker Compose if not present
     if ! command -v docker-compose >/dev/null 2>&1; then
         log "Installing Docker Compose..."
@@ -97,56 +97,56 @@ install_dependencies() {
     else
         log "Docker Compose already installed"
     fi
-    
+
     success "Dependencies installed"
 }
 
 # Download homelab repository
 download_homelab() {
     header "📥 DOWNLOADING HOMELAB REPOSITORY"
-    
+
     # Create homelab directory
     HOMELAB_DIR="/opt/homelab"
-    
+
     if [[ -d "$HOMELAB_DIR" ]]; then
         log "Existing homelab directory found, backing up..."
         mv "$HOMELAB_DIR" "${HOMELAB_DIR}-backup-$(date +%Y%m%d-%H%M%S)"
     fi
-    
+
     log "Downloading latest homelab repository..."
     git clone https://github.com/J358763H/homelab.git "$HOMELAB_DIR"
-    
+
     cd "$HOMELAB_DIR"
-    
+
     # Make scripts executable
     log "Making scripts executable..."
     find . -name "*.sh" -exec chmod +x {} \;
-    
+
     success "Homelab repository downloaded to $HOMELAB_DIR"
 }
 
 # Deploy homelab services
 deploy_homelab() {
     header "🚀 DEPLOYING HOMELAB SERVICES"
-    
+
     cd "$HOMELAB_DIR"
-    
+
     log "Starting homelab deployment..."
-    
+
     # Check if setup directory exists
     if [[ -d "setup" ]]; then
         cd setup
-        
+
         # Run deployment script
         if [[ -f "deploy-all.sh" ]]; then
             log "Running deploy-all.sh..."
             ./deploy-all.sh
         else
             warning "deploy-all.sh not found, trying manual deployment..."
-            
+
             # Manual deployment fallback
             cd ../containers
-            
+
             # Deploy core services first
             if [[ -d "core" ]]; then
                 log "Deploying core services..."
@@ -154,7 +154,7 @@ deploy_homelab() {
                 docker-compose up -d
                 cd ..
             fi
-            
+
             # Deploy downloads services
             if [[ -d "downloads" ]]; then
                 log "Deploying download services..."
@@ -162,7 +162,7 @@ deploy_homelab() {
                 docker-compose up -d
                 cd ..
             fi
-            
+
             # Deploy media services
             if [[ -d "media" ]]; then
                 log "Deploying media services..."
@@ -173,7 +173,7 @@ deploy_homelab() {
         fi
     else
         warning "Setup directory not found, trying legacy deployment..."
-        
+
         # Legacy deployment fallback
         if [[ -f "docker-compose.yml" ]]; then
             docker-compose up -d
@@ -189,16 +189,16 @@ deploy_homelab() {
             done
         fi
     fi
-    
+
     success "Homelab services deployed"
 }
 
 # Show deployment status
 show_status() {
     header "📊 DEPLOYMENT STATUS"
-    
+
     cd "$HOMELAB_DIR"
-    
+
     # Check if status script exists
     if [[ -f "setup/status.sh" ]]; then
         log "Running status check..."
@@ -207,7 +207,7 @@ show_status() {
         log "Checking Docker containers..."
         docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
     fi
-    
+
     echo ""
     success "🎉 Homelab deployment completed!"
     echo ""
@@ -242,7 +242,7 @@ main() {
     SKIP_DEPS=false
     DOWNLOAD_ONLY=false
     DEPLOY_ONLY=false
-    
+
     while [[ $# -gt 0 ]]; do
         case $1 in
             --help|-h)
@@ -268,17 +268,17 @@ main() {
                 ;;
         esac
     done
-    
+
     show_banner
     check_proxmox_environment
-    
+
     if [[ "$DEPLOY_ONLY" != true ]]; then
         if [[ "$SKIP_DEPS" != true ]]; then
             install_dependencies
         fi
         download_homelab
     fi
-    
+
     if [[ "$DOWNLOAD_ONLY" != true ]]; then
         deploy_homelab
         show_status
