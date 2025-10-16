@@ -3,11 +3,45 @@
 # Deploy all homelab services in correct order
 echo "🏠 Deploying Complete Homelab Stack..."
 
-# Check if .env exists
-if [ ! -f ../.env ]; then
-    echo "❌ .env file not found. Run ./prepare.sh first!"
-    exit 1
+# Enhanced compatibility for Proxmox web UI
+echo "🌐 Proxmox Web UI Compatible Deployment"
+
+# Check if we have Docker
+if ! command -v docker &> /dev/null; then
+    echo "❌ Docker not found. Installing Docker..."
+    curl -fsSL https://get.docker.com -o get-docker.sh
+    sh get-docker.sh
+    rm get-docker.sh
+    systemctl enable docker
+    systemctl start docker
+    echo "✅ Docker installed"
 fi
+
+# Check if we have Docker Compose
+if ! command -v docker-compose &> /dev/null; then
+    echo "❌ Docker Compose not found. Installing..."
+    curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    chmod +x /usr/local/bin/docker-compose
+    echo "✅ Docker Compose installed"
+fi
+
+# Check if .env exists, create if missing
+if [ ! -f ../.env ]; then
+    echo "⚠️ .env file not found. Creating default..."
+    cat > ../.env << 'EOF'
+# Homelab Environment Configuration
+PUID=1000
+PGID=1000
+TZ=America/New_York
+DATA_ROOT=/opt/homelab-data
+EOF
+    echo "✅ Default .env created"
+fi
+
+# Create data directories
+echo "📁 Creating data directories..."
+mkdir -p /opt/homelab-data/{downloads,media,config}
+chmod -R 777 /opt/homelab-data
 
 # Deploy core services first (VPN)
 echo "🔒 Starting core infrastructure..."
