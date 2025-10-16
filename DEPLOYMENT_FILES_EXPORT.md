@@ -1,13 +1,10 @@
 # 🚀 Homelab Deployment Files Export
-
 **Critical files for bug scanning and deployment validation**
 
 ---
 
 ## 1. MASTER DEPLOYMENT SCRIPT
-
 ### File: deploy_homelab_master.sh
-
 ```bash
 #!/usr/bin/env bash
 # =====================================================
@@ -249,14 +246,12 @@ trap 'error "Deployment interrupted"; exit 130' INT TERM
 
 # Execute main function
 main "$@"
-```
 
+```
 ---
 
 ## 2. COMMON FUNCTIONS LIBRARY
-
 ### File: lxc/common_functions.sh
-
 ```bash
 #!/bin/bash
 
@@ -456,14 +451,12 @@ export -f log warn error success check_automated_mode handle_existing_container
 export -f wait_for_container_ready wait_for_network wait_for_service_port
 export -f wait_for_http_endpoint validate_systemd_service validate_docker_service
 export -f display_service_info check_root check_dependencies
-```
 
+```
 ---
 
 ## 3. CRITICAL LXC SETUP SCRIPTS
-
 ### File: lxc/pihole/setup_pihole_lxc.sh
-
 ```bash
 #!/bin/bash
 
@@ -574,10 +567,9 @@ Config path:  ${GREEN}/etc/pihole/${NC}
 Log files:    ${GREEN}/var/log/pihole.log${NC}"
 
 display_service_info "Pi-hole" "$CTID" "$IP" "80" "$additional_info"
+
 ```
-
 ### File: lxc/tailscale/setup_tailscale_lxc.sh
-
 ```bash
 #!/bin/bash
 
@@ -718,14 +710,12 @@ pct exec $CTID -- bash -c "
 "
 
 success "Tailscale LXC setup completed successfully!"
-```
 
+```
 ---
 
 ## 4. ENVIRONMENT CONFIGURATION
-
 ### File: .env
-
 ```bash
 # ==============================================
 # 🔐 Homelab Environment Configuration
@@ -758,10 +748,9 @@ PIHOLE_IP="192.168.1.204"
 VAULTWARDEN_IP="192.168.1.205"
 SAMBA_IP="192.168.1.206"
 DOCKER_HOST_IP="192.168.1.100"
+
 ```
-
 ### File: deployment/.env
-
 ```properties
 # =====================================================
 # 🔧 Homelab Environment Configuration
@@ -823,14 +812,12 @@ TUNARR_SERVER_PORT=8000
 # =================
 RESTIC_REPOSITORY=sftp:backup-server:/backups/homelab
 RESTIC_PASSWORD=gAQ%1$g2dM2YYhA13NPe
-```
 
+```
 ---
 
 ## 5. DOCKER COMPOSE CONFIGURATION
-
 ### File: deployment/docker-compose.yml
-
 ```yaml
 # =====================================================
 # 🐳 Homelab — Reorganized Docker Compose File
@@ -996,14 +983,12 @@ services:
       homelab:
         ipv4_address: 172.20.0.23
     restart: unless-stopped
-```
 
+```
 ---
 
 ## 6. NETWORK AND SYSTEM SCRIPTS
-
 ### File: scripts/validate_deployment.sh
-
 ```bash
 #!/bin/bash
 
@@ -1067,14 +1052,12 @@ main() {
 }
 
 main "$@"
-```
 
+```
 ---
 
 ## 7. POTENTIAL BUG AREAS TO SCAN
-
 ### **Critical Issues to Check:**
-
 1. **Script Path Resolution**
    - Variable: `$SCRIPT_DIR` and `$HOMELAB_ROOT`
    - Issue: May fail if scripts moved or called from different directories
@@ -1116,6 +1099,7 @@ main "$@"
     - Issue: May mask critical failures in automation
 
 ### **Commands to Test Manually:**
+
 ```bash
 # Test script directory resolution
 echo "SCRIPT_DIR: $SCRIPT_DIR"
@@ -1132,10 +1116,11 @@ curl -I http://192.168.1.201:81
 # Test Docker operations
 pct exec 100 -- docker ps
 pct exec 100 -- docker-compose ps
-```
 
+```
 ---
 
 **END OF EXPORT**
 
 This export contains all critical deployment files for bug scanning and validation.
+

@@ -1,7 +1,5 @@
 # 🎬 Complete Servarr + Jellyfin Directory Tree
-
 ## 📁 Full Directory Structure
-
 ```
 /data/
 ├── docker/                           # Docker container configurations
@@ -107,35 +105,37 @@
     └── music/                        # Music downloads (optional)
         ├── Artist.Name.Album.FLAC/
         └── Various.Artists.Compilation/
+
 ```
-
 ## 🔄 Workflow Process
-
 ### **Download → Processing → Library Flow**
-
 1. **🔍 Search & Download**
+
    ```
    Overseerr Request → Sonarr/Radarr → Prowlarr → qBittorrent
    ```
 
 2. **📥 Download Staging**
+
    ```
    qBittorrent downloads to: /data/downloads/[movies|shows]/
    ```
 
 3. **🎯 Automated Processing**
+
    ```
    Sonarr/Radarr monitors downloads → Renames & organizes → Moves to /data/media/
    ```
 
 4. **📚 Library Integration**
+
    ```
    Jellyfin scans /data/media/ → Bazarr adds subtitles → Ready for streaming
    ```
 
 ## 🎛️ Service Integration
-
 ### **Core Stack**
+
 - **Jellyfin** (`172.20.0.10`): Media server & streaming
 - **Sonarr** (`172.20.0.5`): TV show automation
 - **Radarr** (`172.20.0.6`): Movie automation
@@ -144,6 +144,7 @@
 - **qBittorrent** (via Gluetun): Download client
 
 ### **Enhancement Stack**
+
 - **Overseerr** (`172.20.0.11`): Request management
 - **Tautulli** (`172.20.0.12`): Analytics & monitoring
 - **Recyclarr** (`172.20.0.15`): Quality profile sync
@@ -151,47 +152,51 @@
 - **Suggestarr** (`172.20.0.18`): Content suggestions
 
 ### **Utility Stack**
+
 - **Gluetun** (`172.20.0.2`): VPN gateway
 - **FlareSolverr** (`172.20.0.9`): Cloudflare bypass
 
 ## 📊 Volume Mappings
-
 ### **Jellyfin Media Access**
+
 ```yaml
 volumes:
   - /data/docker/jellyfin:/config          # Configuration
   - /data/media:/data/media                # Full media library
   - /dev/shm:/data/transcode              # RAM transcoding
-```
 
+```
 ### **Sonarr TV Management**
+
 ```yaml
 volumes:
   - /data/docker/sonarr:/config           # Configuration
   - /data/media:/data/media               # Full media access
   - /data/downloads:/downloads            # Download monitoring
   - /data/media/shows:/shows              # Direct TV access
-```
 
+```
 ### **Radarr Movie Management**
+
 ```yaml
 volumes:
   - /data/docker/radarr:/config           # Configuration
   - /data/media:/data/media               # Full media access
   - /data/downloads:/downloads            # Download monitoring
   - /data/media/movies:/movies            # Direct movie access
-```
 
+```
 ### **qBittorrent Downloads**
+
 ```yaml
 volumes:
   - /data/docker/qbittorrent:/config      # Configuration
   - /data/downloads:/downloads            # Download destination
+
 ```
-
 ## 🔧 Permissions & Ownership
-
 All media files should have consistent permissions:
+
 ```bash
 # User/Group IDs (set in .env)
 PUID=1000    # media user
@@ -200,10 +205,9 @@ PGID=1000    # media group
 # File permissions
 Files: 644 (rw-r--r--)
 Directories: 755 (rwxr-xr-x)
+
 ```
-
 ## 🎯 Key Benefits
-
 1. **Separation of Concerns**: Downloads and media library are separate
 2. **Automated Workflow**: Minimal manual intervention required
 3. **Quality Control**: Recyclarr maintains consistent quality profiles
@@ -214,3 +218,4 @@ Directories: 755 (rwxr-xr-x)
 ---
 *Generated on: $(date)*
 *Configuration: TechnoTim-aligned Servarr + Jellyfin Stack*
+

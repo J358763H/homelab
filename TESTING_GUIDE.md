@@ -1,8 +1,7 @@
 # Homelab Testing Guide
-
 ## No-VM Testing (Configuration Validation)
-
 ### 1. Docker Compose Validation
+
 ```bash
 # Syntax check
 docker compose -f deployment/docker-compose.yml config
@@ -12,9 +11,10 @@ docker compose -f deployment/docker-compose.yml config --services
 
 # Network validation
 docker compose -f deployment/docker-compose.yml config --volumes
-```
 
+```
 ### 2. Environment File Testing
+
 ```bash
 # Check for placeholders
 grep -n "changeme\|your_.*_here\|replace_me" deployment/.env
@@ -22,9 +22,10 @@ grep -n "changeme\|your_.*_here\|replace_me" deployment/.env
 
 # Validate required variables
 grep -E "^(PUID|PGID|TZ|DB_PASS|JWT_SECRET)=" deployment/.env
-```
 
+```
 ### 3. Script Syntax Validation
+
 ```bash
 # Check all shell scripts
 find . -name "*.sh" -exec bash -n {} \;
@@ -32,11 +33,11 @@ find . -name "*.sh" -exec bash -n {} \;
 # LXC script validation
 bash -n lxc/nginx-proxy-manager/setup_npm_lxc.sh
 bash -n lxc/tailscale/setup_tailscale_lxc.sh
+
 ```
-
 ## Minimal VM Testing (Basic Services)
-
 ### Test-Safe Services (No VPN Required)
+
 Create a minimal docker-compose-test.yml:
 
 ```yaml
@@ -74,9 +75,10 @@ services:
     networks:
       homelab-test:
     restart: no
-```
 
+```
 ### Test Commands
+
 ```bash
 # Deploy test stack
 docker compose -f docker-compose-test.yml up -d
@@ -89,11 +91,11 @@ curl http://localhost:8096
 
 # Cleanup
 docker compose -f docker-compose-test.yml down -v
+
 ```
-
 ## Full VM Testing Requirements
-
 ### VM Specifications
+
 - **OS**: Ubuntu 22.04 LTS Server
 - **RAM**: 8GB minimum (16GB for transcoding)
 - **CPU**: 4+ cores with VT-x/AMD-V
@@ -101,12 +103,14 @@ docker compose -f docker-compose-test.yml down -v
 - **Network**: Bridge/NAT with port forwarding
 
 ### Intel Quick Sync (i5-8400) VM Setup
+
 - **GPU Passthrough**: Enable iGPU passthrough to VM
 - **Video Memory**: 128MB+ allocated to VM
 - **Render Group**: Ensure user 1000 in render group (GID 105)
 - **Devices**: VM must access /dev/dri/renderD128
 
 ### VM Setup Commands
+
 ```bash
 # Update system
 sudo apt update && sudo apt upgrade -y
@@ -129,11 +133,11 @@ cp deployment/.env.example deployment/.env
 
 # Deploy full stack
 docker compose -f deployment/docker-compose.yml up -d
+
 ```
-
 ## Testing Checklist
-
 ### Configuration Testing (No VM)
+
 - [ ] docker-compose.yml syntax validates
 - [ ] .env.example has all required variables  
 - [ ] Shell scripts pass syntax check
@@ -141,6 +145,7 @@ docker compose -f deployment/docker-compose.yml up -d
 - [ ] Documentation links work
 
 ### Service Testing (Minimal VM)
+
 - [ ] Individual containers start
 - [ ] Database connections work
 - [ ] Web interfaces accessible
@@ -148,6 +153,7 @@ docker compose -f deployment/docker-compose.yml up -d
 - [ ] Logs show no critical errors
 
 ### Integration Testing (Full VM)  
+
 - [ ] VPN container connects successfully
 - [ ] Download client shows VPN IP
 - [ ] All services accessible
@@ -158,6 +164,7 @@ docker compose -f deployment/docker-compose.yml up -d
 - [ ] Backup scripts function
 
 ### LXC Testing (Proxmox Required)
+
 - [ ] NPM LXC deploys successfully
 - [ ] Tailscale LXC connects to tailnet
 - [ ] NPM can proxy to Docker services
@@ -165,8 +172,8 @@ docker compose -f deployment/docker-compose.yml up -d
 - [ ] SSL certificates generate properly
 
 ### Troubleshooting Test Issues
-
 ### Common VM Test Problems
+
 ```bash
 # Container won't start
 docker logs <container-name>
@@ -180,9 +187,10 @@ sudo chown -R 1000:1000 /data
 
 # VPN not working
 docker exec gluetun curl ifconfig.me
-```
 
+```
 ### Intel Quick Sync Validation
+
 ```bash
 # Check if GPU is accessible
 ls -la /dev/dri/
@@ -204,9 +212,10 @@ intel_gpu_top
 # Check Jellyfin hardware acceleration status
 # Go to Admin > Dashboard > Playback > Hardware Acceleration
 # Should show "Intel Quick Sync (QSV)" available
-```
 
+```
 ### Test Environment Cleanup
+
 ```bash
 # Remove test containers
 docker compose down -v
@@ -216,4 +225,5 @@ sudo rm -rf ./test-data
 
 # Remove unused images
 docker system prune -a
+
 ```

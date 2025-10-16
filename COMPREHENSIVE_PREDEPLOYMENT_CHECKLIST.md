@@ -30,7 +30,9 @@ PVE-Gamelab (192.168.100.50):
 On PVE-Homelab, create Docker VM (VMID 100):
 
 # Create Docker host VM
+
 qm create 100 \
+
   --name "docker-homelab-100" \
   --memory 16384 \
   --cores 8 \
@@ -62,7 +64,9 @@ Required Directories:
 On PVE-Gamelab, create Game Server VM (VMID 252):
 
 # Create Windows gaming VM or Ubuntu for CoinOps
+
 qm create 252 \
+
   --name "gamelab-moonlight-stream-252" \
   --memory 16384 \
   --cores 8 \
@@ -99,7 +103,7 @@ Required .env Variables:
 □ VPN_SERVICE_PROVIDER configured
 □ WIREGUARD keys set
 □ DB passwords set
-□ NTFY_SERVER=http://192.168.1.203  
+□ NTFY_SERVER=<http://192.168.1.203>  
 □ NTFY_TOPIC configured
 □ RESTIC backup settings
 □ JELLYFIN_PUBLISHED_SERVER_URL
@@ -109,6 +113,7 @@ Required .env Variables:
 ===============================================
 
 **Network Topology (FINAL):**
+
 □ **PVE-Homelab**: 192.168.1.50 (homelab infrastructure subnet)
 □ **PVE-Gamelab**: 192.168.100.50 (game server infrastructure subnet)
 □ Router/switch configured for dual-subnet topology
@@ -162,6 +167,7 @@ On Docker VM (192.168.1.100):
 □ Docker Compose plugin installed
 □ Git installed and configured
 □ Required system packages installed:
+
   - curl, wget, htop, nano, rsync
   - lm-sensors, smartmontools
   - zfsutils-linux (if using ZFS)
@@ -169,8 +175,11 @@ On Docker VM (192.168.1.100):
 On Proxmox Hosts:
 □ Latest Proxmox updates applied
 □ Container templates downloaded:
+
   - ubuntu-22.04-standard template
+
 □ ISO images available:
+
   - Ubuntu 22.04 LTS Server
   - Windows 11 (if needed)
 
@@ -214,6 +223,7 @@ Pre-deployment Commands:
 ===============================================
 
 Phase 1 - Homelab Infrastructure:
+
 1. Deploy Docker stack: ./deploy_homelab.sh
 2. Deploy NPM: ./lxc/nginx-proxy-manager/setup_npm_lxc.sh
 3. Deploy Tailscale: ./lxc/tailscale/setup_tailscale_lxc.sh  
@@ -223,6 +233,7 @@ Phase 1 - Homelab Infrastructure:
 7. Deploy Vaultwarden: ./lxc/vaultwarden/setup_vaultwarden_lxc.sh
 
 Phase 2 - Game Server (Separate Repository):
+
 1. Update game-server repository IP addresses (192.168.1.x → 192.168.100.x)
 2. Create gaming VM on PVE-Gamelab (VMID 252, IP 192.168.100.252)
 3. Install Moonlight/Sunshine for game streaming
@@ -230,6 +241,7 @@ Phase 2 - Game Server (Separate Repository):
 5. Configure independent monitoring and backup
 
 Phase 3 - Independent Operation:
+
 1. Verify homelab services (192.168.1.x) operate independently
 2. Verify game server services (192.168.100.x) operate independently  
 3. Test each subnet's functionality separately
@@ -249,3 +261,4 @@ Deployment Complete When:
 □ Documentation updated with final configuration
 
 ===============================================
+

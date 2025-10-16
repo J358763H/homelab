@@ -1,11 +1,11 @@
 # 🚀 HOMELAB SECURE DEPLOYMENT GUIDE
-## Updated: October 15, 2025
 
+## Updated: October 15, 2025
 Your homelab repository is now **FULLY UPDATED** with comprehensive security hardening implementations. All critical vulnerabilities from the professional security assessment have been systematically addressed.
 
 ## 📦 WHAT'S NEW IN THIS UPDATE
-
 ### 🛡️ Security Hardening Files Added:
+
 - **`deployment/docker-compose.hardened.yml`** - Security-first container orchestration
 - **`scripts/security_scan.sh`** - Automated Trivy vulnerability scanning
 - **`scripts/firewall_hardening.sh`** - Network security with deny-by-default rules
@@ -16,6 +16,7 @@ Your homelab repository is now **FULLY UPDATED** with comprehensive security har
 - **`homelab_deployment_bug_scan.txt`** - Security analysis reference document
 
 ### 🔒 Security Improvements Implemented:
+
 - ✅ **Container Security**: Non-root users, capability drops, read-only containers
 - ✅ **Network Protection**: iptables firewall rules with fail2ban intrusion detection
 - ✅ **DNS Security**: Secure upstream servers, DNSSEC validation, malware blocking
@@ -24,8 +25,8 @@ Your homelab repository is now **FULLY UPDATED** with comprehensive security har
 - ✅ **Vulnerability Management**: Automated Trivy scanning with threshold alerts
 
 ## 🚀 DEPLOYMENT EXECUTION PLAN
-
 ### Step 1: Prepare Proxmox Host
+
 ```bash
 # Clone/pull latest repository
 cd /opt
@@ -35,9 +36,10 @@ cd /opt/homelab && git pull
 
 # Make scripts executable
 chmod +x scripts/*.sh
-```
 
+```
 ### Step 2: Execute Security Hardening (In Order)
+
 ```bash
 # 1. Deploy encrypted secret management
 ./scripts/secret_management.sh deploy
@@ -53,9 +55,10 @@ chmod +x scripts/*.sh
 
 # 5. Run initial vulnerability scan
 ./scripts/security_scan.sh
-```
 
+```
 ### Step 3: Deploy Hardened Containers
+
 ```bash
 # Transfer hardened Docker Compose to Docker host (192.168.1.100)
 scp deployment/docker-compose.hardened.yml root@192.168.1.100:/opt/homelab/
@@ -64,20 +67,21 @@ scp deployment/docker-compose.hardened.yml root@192.168.1.100:/opt/homelab/
 ssh root@192.168.1.100
 cd /opt/homelab
 docker-compose -f docker-compose.hardened.yml up -d
-```
 
+```
 ### Step 4: Final Validation
+
 ```bash
 # Back on Proxmox host, run comprehensive validation
 ./scripts/security_validation.sh validate
 
 # Check deployment readiness report
 cat /opt/homelab/security_validation_report.txt
+
 ```
-
 ## 🔍 WHAT THIS DEPLOYMENT PROVIDES
-
 ### 🛡️ Enterprise-Grade Security:
+
 - **Zero Hardcoded Credentials**: All secrets encrypted with AES256
 - **Container Isolation**: Non-root users, dropped capabilities, read-only filesystems
 - **Network Security**: Deny-by-default firewall with intrusion detection
@@ -85,6 +89,7 @@ cat /opt/homelab/security_validation_report.txt
 - **Continuous Monitoring**: Automated vulnerability scanning and security alerts
 
 ### 📊 Operational Excellence:
+
 - **Centralized Logging**: All services log to secured central location
 - **Automated Monitoring**: Real-time dashboards and health checks
 - **Security Scanning**: Daily vulnerability assessments with alerting
@@ -92,13 +97,13 @@ cat /opt/homelab/security_validation_report.txt
 - **Rotation Policies**: Automated credential rotation for enhanced security
 
 ### 🎯 Compliance & Audit:
+
 - **Security Validation**: Comprehensive testing against original vulnerabilities
 - **Deployment Checklist**: Step-by-step verification process
 - **Audit Trails**: Complete logging of all security events
 - **Documentation**: Full security architecture and procedures
 
 ## ⚡ QUICK START COMMANDS
-
 For immediate deployment on your Proxmox host:
 
 ```bash
@@ -109,10 +114,9 @@ curl -sSL https://raw.githubusercontent.com/J358763H/homelab/main/deploy_homelab
 cd /opt && git clone https://github.com/J358763H/homelab.git
 cd homelab && chmod +x scripts/*.sh
 ./scripts/security_validation.sh validate
+
 ```
-
 ## 🎉 DEPLOYMENT STATUS
-
 - **Repository**: ✅ Fully Updated (Commit: b7a9233)
 - **Security Files**: ✅ All 8 hardening scripts committed
 - **Vulnerabilities**: ✅ All critical issues addressed
@@ -121,8 +125,8 @@ cd homelab && chmod +x scripts/*.sh
 - **Automation**: ✅ Monitoring and maintenance scripts
 
 ## 📞 POST-DEPLOYMENT
-
 After successful deployment:
+
 1. **Monitor Dashboard**: Access monitoring at `/opt/homelab/monitoring/scripts/dashboard.sh`
 2. **Security Reports**: Daily vulnerability scans automatically generated
 3. **Maintenance**: Automated log rotation, secret rotation, and backups
@@ -137,3 +141,4 @@ All security vulnerabilities have been systematically addressed with enterprise-
 **Total Security Improvements**: 7 major categories, 40+ specific fixes
 **Deployment Time**: ~30 minutes for complete secure setup
 **Maintenance**: Fully automated with security monitoring
+
