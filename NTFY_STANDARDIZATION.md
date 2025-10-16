@@ -9,10 +9,7 @@ Standard Ntfy topic naming scheme for homelab infrastructure.
 - `homelab-summary` - Weekly summaries and health reports
 - `homelab-maintenance` - Maintenance notifications
 
-### **Game Server (Gamelab)**
-- `gamelab-alerts` - Game server alerts and backup failures
-- `gamelab-summary` - Game server health reports
-- `gamelab-maintenance` - Game server maintenance
+
 
 ### **Backup Node Infrastructure**  
 - `homelab-backup-alerts` - Backup node alerts and failures
@@ -28,14 +25,6 @@ export NTFY_SERVER="https://ntfy.sh"
 NTFY_TOPIC_ALERTS="homelab-alerts"
 NTFY_TOPIC_SUMMARY="homelab-summary" 
 NTFY_TOPIC_MAINTENANCE="homelab-maintenance"
-```
-
-### Gamelab
-```bash
-export NTFY_SERVER="https://ntfy.sh"
-NTFY_TOPIC_ALERTS="gamelab-alerts"
-NTFY_TOPIC_SUMMARY="gamelab-summary"
-NTFY_TOPIC_MAINTENANCE="gamelab-maintenance"
 ```
 
 This ensures consistent monitoring across all homelab infrastructure.

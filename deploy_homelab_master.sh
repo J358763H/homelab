@@ -49,6 +49,78 @@ step() {
     echo -e "${PURPLE}[STEP]${NC} $1" | tee -a "$LOG_FILE"
 }
 
+# Health check functions
+wait_for_container_ready() {
+    local ctid=$1
+    local max_attempts=${2:-30}
+    local attempt=1
+    
+    log "Waiting for container $ctid to be ready..."
+    
+    while [ $attempt -le $max_attempts ]; do
+        if pct exec $ctid -- systemctl is-system-running --wait >/dev/null 2>&1; then
+            success "Container $ctid is ready (attempt $attempt)"
+            return 0
+        fi
+        
+        log "Container $ctid not ready, attempt $attempt/$max_attempts"
+        sleep 2
+        ((attempt++))
+    done
+    
+    error "Container $ctid failed to become ready after $max_attempts attempts"
+    return 1
+}
+
+wait_for_service_ready() {
+    local ctid=$1
+    local service_name=$2
+    local port=$3
+    local max_attempts=${4:-60}
+    local attempt=1
+    
+    log "Waiting for $service_name on container $ctid:$port to be ready..."
+    
+    while [ $attempt -le $max_attempts ]; do
+        if pct exec $ctid -- netstat -tln 2>/dev/null | grep -q ":$port "; then
+            success "$service_name is ready on port $port (attempt $attempt)"
+            return 0
+        fi
+        
+        log "$service_name not ready, attempt $attempt/$max_attempts"
+        sleep 2
+        ((attempt++))
+    done
+    
+    error "$service_name failed to start after $max_attempts attempts"
+    return 1
+}
+
+validate_docker_service() {
+    local container_name=$1
+    local max_attempts=${2:-30}
+    local attempt=1
+    
+    log "Validating Docker service: $container_name"
+    
+    while [ $attempt -le $max_attempts ]; do
+        if pct exec 100 -- docker ps --format "table {{.Names}}" | grep -q "^$container_name$"; then
+            local status=$(pct exec 100 -- docker inspect --format='{{.State.Status}}' "$container_name" 2>/dev/null)
+            if [ "$status" = "running" ]; then
+                success "Docker service $container_name is running"
+                return 0
+            fi
+        fi
+        
+        log "Docker service $container_name not ready, attempt $attempt/$max_attempts"
+        sleep 3
+        ((attempt++))
+    done
+    
+    error "Docker service $container_name failed to start properly"
+    return 1
+}
+
 # Check prerequisites
 check_prerequisites() {
     step "Checking deployment prerequisites..."
@@ -106,21 +178,48 @@ show_deployment_plan() {
 
 # ZFS Mirror Setup (Optional)
 setup_zfs_mirror() {
-    echo ""
-    read -p "🗄️  Do you want to setup ZFS mirror for aging drives? (y/n): " SETUP_ZFS
+    # Check environment variable or use default
+    local setup_zfs=${SETUP_ZFS:-"auto"}
     
-    if [[ "$SETUP_ZFS" =~ ^[Yy]$ ]]; then
+    if [[ "$setup_zfs" == "auto" ]]; then
+        # Auto-detect if ZFS setup is needed
+        if ! zpool list >/dev/null 2>&1; then
+            log "No ZFS pools detected, will set up ZFS mirror"
+            setup_zfs="yes"
+        else
+            log "ZFS pools already exist, skipping ZFS setup"
+            setup_zfs="no"
+        fi
+    fi
+    
+    if [[ "$setup_zfs" =~ ^[Yy]|yes|YES$ ]]; then
         step "Setting up ZFS mirror..."
         
-        if [[ -f "$SCRIPT_DIR/setup_zfs_mirror.sh" ]]; then
-            chmod +x "$SCRIPT_DIR/setup_zfs_mirror.sh"
-            "$SCRIPT_DIR/setup_zfs_mirror.sh"
-        else
-            error "ZFS setup script not found at $SCRIPT_DIR/setup_zfs_mirror.sh"
-            exit 1
+        # Check multiple possible locations for the ZFS setup script
+        ZFS_SCRIPT=""
+        if [[ -f "$SCRIPT_DIR/scripts/setup_zfs_mirror.sh" ]]; then
+            ZFS_SCRIPT="$SCRIPT_DIR/scripts/setup_zfs_mirror.sh"
+        elif [[ -f "$SCRIPT_DIR/setup_zfs_mirror.sh" ]]; then
+            ZFS_SCRIPT="$SCRIPT_DIR/setup_zfs_mirror.sh"
+        elif [[ -f "/opt/homelab/setup_zfs_mirror.sh" ]]; then
+            ZFS_SCRIPT="/opt/homelab/setup_zfs_mirror.sh"
         fi
         
-        success "ZFS mirror setup completed"
+        if [[ -n "$ZFS_SCRIPT" ]]; then
+            chmod +x "$ZFS_SCRIPT"
+            if "$ZFS_SCRIPT"; then
+                success "ZFS mirror setup completed"
+            else
+                error "ZFS mirror setup failed"
+                return 1
+            fi
+        else
+            warning "ZFS setup script not found at any expected location, skipping ZFS configuration"
+            log "Searched locations:"
+            log "  - $SCRIPT_DIR/scripts/setup_zfs_mirror.sh"
+            log "  - $SCRIPT_DIR/setup_zfs_mirror.sh"  
+            log "  - /opt/homelab/setup_zfs_mirror.sh"
+        fi
     else
         log "Skipping ZFS mirror setup"
     fi
@@ -149,19 +248,32 @@ deploy_lxc_containers() {
         if [[ -f "$script_path" ]]; then
             chmod +x "$script_path"
             
-            # Run the setup script
-            if "$script_path"; then
-                success "LXC $vmid ($service) deployed successfully"
-                sleep 5  # Allow container to stabilize
+            # Run the setup script with automation flag
+            if "$script_path" --automated; then
+                # Wait for container to be ready instead of sleep
+                if wait_for_container_ready "$vmid"; then
+                    success "LXC $vmid ($service) deployed and ready"
+                else
+                    error "LXC $vmid ($service) failed to become ready"
+                    if [[ "${CONTINUE_ON_ERROR:-false}" == "true" ]]; then
+                        warning "Continuing deployment due to CONTINUE_ON_ERROR=true"
+                    else
+                        return 1
+                    fi
+                fi
             else
                 error "Failed to deploy LXC $vmid ($service)"
-                read -p "Continue with deployment? (y/n): " CONTINUE
-                if [[ ! "$CONTINUE" =~ ^[Yy]$ ]]; then
-                    exit 1
+                if [[ "${CONTINUE_ON_ERROR:-false}" == "true" ]]; then
+                    warning "Continuing deployment due to CONTINUE_ON_ERROR=true"
+                else
+                    return 1
                 fi
             fi
         else
             warning "Setup script not found for $service at $script_path"
+            if [[ "${CONTINUE_ON_ERROR:-false}" != "true" ]]; then
+                return 1
+            fi
         fi
     done
     
@@ -189,24 +301,53 @@ prepare_docker_environment() {
         
         # Start the container
         pct start 100
-        sleep 10
+        
+        # Wait for container to be ready instead of sleep
+        if ! wait_for_container_ready 100; then
+            error "Docker host container failed to start properly"
+            return 1
+        fi
         
         # Install Docker in the container
         pct exec 100 -- bash -c "
+            # Update system
             apt update && apt upgrade -y
-            apt install -y curl wget git
+            apt install -y curl wget git netstat-nat
+            
+            # Install Docker
             curl -fsSL https://get.docker.com -o get-docker.sh
             sh get-docker.sh
             systemctl enable docker
             systemctl start docker
             
+            # Wait for Docker to be ready
+            timeout=30
+            while [ \$timeout -gt 0 ] && ! docker info >/dev/null 2>&1; do
+                echo 'Waiting for Docker to start...'
+                sleep 2
+                timeout=\$((timeout-2))
+            done
+            
+            if ! docker info >/dev/null 2>&1; then
+                echo 'Docker failed to start properly'
+                exit 1
+            fi
+            
             # Install Docker Compose
-            curl -L 'https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)' -o /usr/local/bin/docker-compose
+            curl -L 'https://github.com/docker/compose/releases/latest/download/docker-compose-\$(uname -s)-\$(uname -m)' -o /usr/local/bin/docker-compose
             chmod +x /usr/local/bin/docker-compose
+            
+            # Verify Docker Compose installation
+            if ! docker-compose version >/dev/null 2>&1; then
+                echo 'Docker Compose installation failed'
+                exit 1
+            fi
             
             # Create directories
             mkdir -p /data/{docker,media,backups,logs}
             mkdir -p /data/media/{movies,shows,music,youtube,downloads}
+            
+            echo 'Docker installation completed successfully'
         "
         
         success "Docker host VM created and configured"
@@ -222,6 +363,13 @@ deploy_docker_stack() {
     # Copy deployment files to Docker host
     log "Copying deployment files..."
     pct push 100 "$HOMELAB_ROOT/deployment/" /opt/homelab/ --recursive
+    
+    # Copy ZFS script to container if it exists (for compatibility)
+    if [[ -f "$HOMELAB_ROOT/setup_zfs_mirror.sh" ]]; then
+        pct push 100 "$HOMELAB_ROOT/setup_zfs_mirror.sh" /opt/homelab/setup_zfs_mirror.sh
+    elif [[ -f "$HOMELAB_ROOT/scripts/setup_zfs_mirror.sh" ]]; then
+        pct push 100 "$HOMELAB_ROOT/scripts/setup_zfs_mirror.sh" /opt/homelab/setup_zfs_mirror.sh
+    fi
     
     # Ensure .env file exists
     if [[ ! -f "$HOMELAB_ROOT/deployment/.env" ]]; then
@@ -243,17 +391,34 @@ deploy_docker_stack() {
         chmod +x bootstrap.sh
         
         # Run bootstrap
-        ./bootstrap.sh
+        if ! ./bootstrap.sh; then
+            echo 'Bootstrap script failed'
+            exit 1
+        fi
         
         # Start the stack
-        docker-compose up -d
+        if ! docker-compose up -d; then
+            echo 'Docker compose deployment failed'
+            exit 1
+        fi
         
-        # Wait for services to start
-        sleep 30
-        
-        # Show status
-        docker-compose ps
+        echo 'Docker stack deployment initiated successfully'
     "
+    
+    # Validate core services are starting
+    log "Validating core Docker services..."
+    
+    # Wait for and validate essential services
+    local essential_services=("jellyfin" "sonarr" "radarr" "prowlarr" "qbittorrent" "gluetun")
+    
+    for service in "${essential_services[@]}"; do
+        if validate_docker_service "$service"; then
+            success "Essential service $service is running"
+        else
+            error "Essential service $service failed to start"
+            return 1
+        fi
+    done
     
     success "Docker stack deployed"
 }
@@ -261,36 +426,64 @@ deploy_docker_stack() {
 # Validate deployment
 validate_deployment() {
     step "Validating deployment..."
+    local validation_failed=false
     
     # Check LXC containers
     log "Checking LXC container status..."
-    for vmid in 201 202 203 204 205 206; do
-        if pct status "$vmid" | grep -q "running"; then
-            success "LXC $vmid is running"
+    declare -A LXC_SERVICES=(
+        ["201"]="nginx-proxy-manager"
+        ["202"]="tailscale"
+        ["203"]="ntfy"
+        ["204"]="samba"
+        ["205"]="pihole"
+        ["206"]="vaultwarden"
+    )
+    
+    for vmid in "${!LXC_SERVICES[@]}"; do
+        local service="${LXC_SERVICES[$vmid]}"
+        if pct status "$vmid" 2>/dev/null | grep -q "running"; then
+            success "LXC $vmid ($service) is running"
         else
-            error "LXC $vmid is not running"
+            error "LXC $vmid ($service) is not running"
+            validation_failed=true
         fi
     done
     
-    # Check Docker services
-    log "Checking Docker services..."
-    pct exec 100 -- bash -c "
-        cd /opt/homelab
-        docker-compose ps --format 'table {{.Service}}\t{{.Status}}'
-    "
-    
-    # Network connectivity tests
-    log "Testing network connectivity..."
-    
-    # Test Docker host
-    if ping -c 1 192.168.1.100 >/dev/null 2>&1; then
+    # Check Docker host connectivity
+    log "Testing Docker host connectivity..."
+    if ping -c 3 -W 2 192.168.1.100 >/dev/null 2>&1; then
         success "Docker host (192.168.1.100) is reachable"
     else
         error "Docker host is not reachable"
+        validation_failed=true
+        return 1
     fi
     
-    # Test key services
-    declare -A SERVICE_PORTS=(
+    # Check Docker services status
+    log "Checking Docker services status..."
+    local docker_status=$(pct exec 100 -- bash -c "cd /opt/homelab && docker-compose ps --format json" 2>/dev/null)
+    
+    if [[ -n "$docker_status" ]]; then
+        # Count running vs total services
+        local total_services=$(echo "$docker_status" | wc -l)
+        local running_services=$(echo "$docker_status" | grep -c '"State":"running"' || echo "0")
+        
+        log "Docker services: $running_services/$total_services running"
+        
+        if [[ $running_services -gt 0 ]]; then
+            success "Docker stack is operational"
+        else
+            error "No Docker services are running"
+            validation_failed=true
+        fi
+    else
+        error "Unable to get Docker services status"
+        validation_failed=true
+    fi
+    
+    # Test key service endpoints
+    log "Testing key service endpoints..."
+    declare -A SERVICE_TESTS=(
         ["192.168.1.201"]="81"    # Nginx Proxy Manager
         ["192.168.1.205"]="80"    # Pi-hole
         ["192.168.1.100"]="8096"  # Jellyfin

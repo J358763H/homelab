@@ -9,22 +9,22 @@ Comprehensive hardware specifications and architecture for the homelab infrastru
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    HOMELAB INFRASTRUCTURE                    │
+│                    HOMELAB INFRASTRUCTURE                       │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────┐ │
-│  │   PRIMARY HOST  │    │   GAME SERVER   │    │ BACKUP NODE │ │
-│  │   (i5-8400)     │────│   (i5-6500)     │────│  (Laptop)   │ │
-│  │   Proxmox VE    │    │   Dedicated     │    │ Cold Backup │ │
-│  │   24GB RAM      │    │   8GB RAM       │    │ External    │ │
-│  └─────────────────┘    └─────────────────┘    └─────────────┘ │
-│           │                       │                      │     │
-│           ▼                       ▼                      ▼     │
-│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────┐ │
-│  │ Docker Stack    │    │ Game Streaming  │    │ Restic      │ │
-│  │ LXC Services    │    │ Emulation       │    │ Archive     │ │
-│  │ Media Server    │    │ Game Servers    │    │ Storage     │ │
-│  └─────────────────┘    └─────────────────┘    └─────────────┘ │
+│  ┌─────────────────┐                        ┌─────────────────┐ │
+│  │   PRIMARY HOST  │                        │   BACKUP NODE   │ │
+│  │   (i5-8400)     │────────────────────────│   (Laptop)      │ │
+│  │   Proxmox VE    │                        │   Cold Backup   │ │
+│  │   24GB RAM      │                        │   External      │ │
+│  └─────────────────┘                        └─────────────────┘ │
+│           │                                            │        │
+│           ▼                                            ▼        │
+│  ┌─────────────────┐                        ┌─────────────────┐ │
+│  │ Docker Stack    │                        │ Restic Archive  │ │
+│  │ LXC Services    │                        │ Storage         │ │
+│  │ Media Server    │                        │                 │ │
+│  └─────────────────┘                        └─────────────────┘ │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -93,34 +93,9 @@ Comprehensive hardware specifications and architecture for the homelab infrastru
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-## 🎮 Game Server (Dedicated)
 
-### **Hardware Specifications**
-- **CPU**: Intel Core i5-6500 (4 cores, 4 threads, 3.2-3.6 GHz)
-- **RAM**: 4GB → **Upgrading to 8GB**
-- **Storage**: 512GB NVMe SSD (**More storage planned**)
-- **Network**: Standard Gigabit Ethernet
-- **GPU**: Intel HD Graphics 530 (Basic encoding capability)
 
-### **Role & Services**
-- **Primary Function**: Dedicated gaming and emulation server
-- **OS**: Ubuntu 22.04 LTS (bare metal)
-- **Workloads**:
-  - Moonlight/Sunshine game streaming server
-  - CoinOps retro gaming emulation platform
-  - Docker game servers (Minecraft, Valheim, Factorio)
-  - CPU-optimized encoding (no dedicated GPU)
 
-### **Performance Characteristics**
-- **Game Streaming**: 1080p @ 30-60fps via CPU encoding
-- **Emulation**: PSX, N64, GameBoy, SNES, NES, Arcade systems
-- **Game Servers**: 2-3 concurrent lightweight game servers
-- **Encoding**: Intel HD 530 provides basic hardware acceleration
-
-### **Planned Upgrades**
-- **RAM**: 4GB → 8GB (immediate priority)
-- **Storage**: Additional storage for game libraries and save data
-- **Network**: Potential 2.5Gb upgrade for better streaming quality
 
 ## 💾 Cold Backup Node (Laptop)
 
@@ -147,7 +122,7 @@ Router/Modem
     │
 Switch (Gigabit/2.5Gb)
   ├── homelab (192.168.1.100) [2.5Gb]
-    ├── Game Server (192.168.1.106) [1Gb]
+
     ├── Backup Node (WiFi/Ethernet as needed)
     └── Client Devices
 ```
@@ -156,7 +131,6 @@ Switch (Gigabit/2.5Gb)
 ```bash
 # Primary Infrastructure
 192.168.1.100    # Docker Host VM (Primary)
-192.168.1.106    # Game Server (Dedicated)
 
 # LXC Infrastructure Services (200-219)
 192.168.1.201    # Nginx Proxy Manager
@@ -567,20 +541,7 @@ Estimated size: 500GB-2TB
 Monthly cost: $3-12
 ```
 
-#### **Game Server (i5-6500)**
-```bash
-# Game data backup (weekly)
-/backup-scripts/game-backup.sh:
-- Game saves and configurations
-- CoinOPS ROM configurations (not ROMs)
-- Sunshine/Moonlight settings
-- Docker game server configs
 
-# Target: Backblaze B2 (same account)
-Repository: b2:homelab-game-backup  
-Estimated size: 50-200GB
-Monthly cost: $0.30-1.20
-```
 
 #### **Backup Node (Laptop)**
 ```bash
@@ -651,7 +612,7 @@ Photos: 1TB × $6 = $6/month
 Configs/DBs: 100GB × $6 = $0.60/month
 Subtotal: $6.60/month
 
-# Tier 2: Game Server Data  
+
 Game saves/configs: 50GB × $6 = $0.30/month
 Subtotal: $0.30/month
 
@@ -716,7 +677,7 @@ Cons:
 **Initial Setup Priority:**
 1. **Week 1**: Photos and personal documents (highest value)
 2. **Week 2**: Docker configurations and databases
-3. **Week 3**: Game server saves and settings
+3. **Week 3**: System configuration backups
 4. **Week 4**: Automated monitoring and alerting
 
 **Budget**: Start with $10/month budget, should cover all critical data with room to grow.
@@ -744,10 +705,10 @@ The peace of mind knowing your irreplaceable photos and configurations are safel
 ├── LXC containers                ~6GB
 └── Host cache/buffer             ~4GB
 
-# Game Server (8GB planned)
+
 ├── Ubuntu OS                     ~1GB
 ├── Game streaming services       ~2GB
-├── Game servers                  ~3GB
+
 └── System cache                  ~2GB
 ```
 
@@ -765,7 +726,7 @@ Sonarr/Radarr/Prowlarr:
   RAM: 1GB each
   Storage: Fast SSD for databases
 
-Game Streaming Server:
+
   CPU: i5-6500 minimum (4 cores)
   RAM: 6GB for encoding + games
   Network: 100Mbps minimum, 1Gb recommended
@@ -785,8 +746,8 @@ LXC Services (each):
 - **LXC Containers**: 6+ infrastructure services
 
 #### **Upgrade Priorities**
-1. **Game Server RAM**: 4GB → 8GB (immediate)
-2. **Game Server Storage**: Add 1-2TB for game libraries
+1. **Primary Storage**: Evaluate additional storage needs
+2. **Memory**: Consider additional RAM for containerized workloads
 3. **Backup Storage**: External enclosure for laptop backup node
 4. **Network**: Consider 2.5Gb switch for full bandwidth utilization
 
@@ -818,9 +779,9 @@ LXC Services (each):
 ## 🚀 Future Expansion Plans
 
 ### **Short Term (6 months)**
-- [ ] Game server RAM upgrade (4GB → 8GB)
+
 - [ ] External storage enclosure for backup node
-- [ ] Additional game server storage (1-2TB)
+
 
 ### **Medium Term (1 year)**
 - [ ] Network upgrade to 2.5Gb throughout
@@ -843,7 +804,7 @@ LXC Services (each):
 - **Storage Performance**: NVMe provides excellent I/O for databases
 
 ### **Known Limitations**
-- **Game Server**: Limited by 4GB RAM (upgrade planned)
+
 - **Backup Speed**: Limited by network speed to laptop
 - **Transcoding**: Single stream limited by Quick Sync capabilities
 

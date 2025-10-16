@@ -57,7 +57,7 @@ subscriptions:
   # Admin/Parent content
   admin_content:
     preset: "channel_preset"
-    config_file: "admin_creators.yaml" 
+    config_file: "admin_creators.yaml"
     output_directory: "/data/youtube/admin"
     
   # Family shared content
@@ -68,7 +68,7 @@ subscriptions:
     
   # Kids content
   kids_content:
-    preset: "channel_preset" 
+    preset: "channel_preset"
     config_file: "kids_creators.yaml"
     output_directory: "/data/youtube/kids"
     

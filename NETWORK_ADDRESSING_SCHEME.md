@@ -10,18 +10,18 @@ This document defines the standardized IP addressing and naming scheme for the e
 ### **Single-Subnet Architecture**
 - **Unified Network**: `192.168.1.x` 
 - **PVE-Homelab**: 192.168.1.50 (Homelab infrastructure services)
-- **PVE-Gamelab**: 192.168.1.51 (Game server infrastructure)
+
 
 ### **Core Principle:** `192.168.1.XXX = VMID XXX`
 - **Benefit**: Instant visual correlation between IP and container/VM ID
-- **Example**: Container 205 → IP 192.168.1.205, Game VM 106 → IP 192.168.1.106
+- **Example**: Container 205 → IP 192.168.1.205, VM 100 → IP 192.168.1.100
 - **Range**: 192.168.1.100-254 for all infrastructure
 
 ### **Network Segmentation**
 - **100-149**: Physical VMs and core infrastructure
 - **200-219**: Essential homelab LXC services
 - **220-249**: Media and application services  
-- **250-254**: Game servers and entertainment infrastructure
+- **250-254**: Extended application services
 
 ---
 
@@ -52,14 +52,7 @@ This document defines the standardized IP addressing and naming scheme for the e
 192.168.1.206    # VMID 206 - homelab-vaultwarden-pass-206 (Password Manager)
 ```
 
-### **🎮 Game Server Infrastructure (100-109)**
-```bash
-# Game Server Infrastructure Services (PVE-Gamelab 192.168.1.51)
-192.168.1.106    # VMID 106 - gamelab-moonlight-stream-106 (GameStream Server)
-192.168.1.107    # VMID 107 - gamelab-coinops-emu-107 (CoinOps Emulation) 
-192.168.1.108    # VMID 108 - gamelab-game-mgmt-108 (Game Management)
-192.168.1.109    # VMID 109 - gamelab-monitoring-109 (Game Server Monitoring)
-```
+
 
 ### **🔧 Extended Services LXC (220-249)**
 ```bash
@@ -94,31 +87,23 @@ This document defines the standardized IP addressing and naming scheme for the e
 ```
 Simplified Single-Switch Configuration:
 Router Port 1 → Unmanaged Gigabit Switch
-├── PVE-Homelab (192.168.1.50)
-│   ├── Docker VM (192.168.1.100)
-│   ├── LXC Services (192.168.1.201-249)
-│   └── Application VMs (192.168.1.250-254)
-│
-└── PVE-Gamelab (192.168.1.51)
-    ├── Moonlight GameStream (192.168.1.106) 
-    ├── CoinOps Emulation (192.168.1.107)
-    └── Game Management (192.168.1.108)
+└── PVE-Homelab (192.168.1.50)
+    ├── Docker VM (192.168.1.100)
+    ├── LXC Services (192.168.1.201-249)
+    └── Application VMs (192.168.1.250-254)
 
 Benefits: Single subnet, simplified routing, cost-effective
 ```
 
 ### **Access Points**
 ```bash
-# Proxmox Web Interfaces
+# Proxmox Web Interface
 PVE-Homelab:  https://192.168.1.50:8006
-PVE-Gamelab:  https://192.168.1.51:8006
 
 # Service Access (after deployment)
 Jellyfin:     http://192.168.1.100:8096
 NPM:          http://192.168.1.201:81
 Pi-hole:      http://192.168.1.205/admin
-Game Server:  https://192.168.1.106:47990
-Moonlight:    http://192.168.1.106:47989
 ```
 
 ---
@@ -149,11 +134,7 @@ homelab-vaultwarden-pass-206 # Password manager
 homelab-uptime-monitor-220  # Service monitoring
 homelab-portainer-mgmt-221  # Container management
 
-# Game Server Network (192.168.1.x)
-gamelab-moonlight-stream-106 # Moonlight GameStream
-gamelab-coinops-emu-107     # CoinOps emulation platform
-gamelab-game-mgmt-108       # Game server management
-gamelab-monitoring-109      # Game server monitoring
+
 ```
 
 ### **🌐 DNS Names (via Pi-hole)**

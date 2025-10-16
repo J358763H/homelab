@@ -263,8 +263,8 @@ check_network_config() {
     local pihole_script="$LXC_DIR/pihole/setup_pihole_lxc.sh"
     
     if [ -f "$pihole_script" ]; then
-        if grep -q 'WEBPASSWORD="X#zunVV!kDWdYUt0zAAg"' "$pihole_script"; then
-            print_check "PASS" "Pi-hole admin password is configured"
+        if grep -q 'WEBPASSWORD="\${PIHOLE_WEBPASSWORD:-' "$pihole_script"; then
+            print_check "PASS" "Pi-hole password uses secure environment variable"
         elif grep -q 'WEBPASSWORD="admin123"' "$pihole_script"; then
             print_check "WARN" "Pi-hole still has default password" "Consider changing from 'admin123'"
         else
@@ -316,7 +316,7 @@ check_documentation() {
 # 🔍 Check for sensitive information
 check_sensitive_info() {
     local sensitive_patterns=(
-        "password.*=.*[^_here]$"
+        "password.*=.*[^[:space:]]+$"
         "key.*=.*[A-Za-z0-9]{20,}"
         "token.*=.*[A-Za-z0-9]{20,}"
         "secret.*=.*[A-Za-z0-9]{20,}"

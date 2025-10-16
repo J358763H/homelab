@@ -23,7 +23,8 @@ CONTAINER_IP="192.168.1.205"
 GATEWAY_IP="192.168.1.1"
 DNS_UPSTREAM_1="1.1.1.1"
 DNS_UPSTREAM_2="8.8.8.8"
-WEBPASSWORD="X#zunVV!kDWdYUt0zAAg"  # Change this to a secure password
+# Set PIHOLE_WEBPASSWORD environment variable or a secure password will be auto-generated
+WEBPASSWORD="${PIHOLE_WEBPASSWORD:-$(openssl rand -base64 32)}"
 TIMEZONE="America/Phoenix"  # Change to your timezone
 STORAGE_POOL="local-lvm"
 MEMORY="1024"

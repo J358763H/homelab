@@ -1,4 +1,3 @@
-
 # =====================================================
 # 🐳 Homelab — Reorganized Docker Compose File
 # =====================================================
@@ -323,27 +322,6 @@ services:
       - jellyfin
     restart: unless-stopped
 
-  # Content suggestions and recommendations
-  suggestarr:
-    image: ghcr.io/l3uddz/suggestarr:latest
-    container_name: suggestarr
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-    volumes:
-      - /data/docker/suggestarr:/config
-    ports:
-      - "${SUGGESTARR_PORT:-5000}:5000"
-    networks:
-      homelab:
-        ipv4_address: 172.20.0.32
-    depends_on:
-      - sonarr
-      - radarr
-      - jellyfin
-    restart: unless-stopped
-
   # =====================================================
   # 🔄 AUTOMATION & ENHANCEMENT LAYER
   # =====================================================
@@ -397,5 +375,26 @@ services:
       homelab:
         ipv4_address: 172.20.0.37
     depends_on:
+      - jellyfin
+    restart: unless-stopped
+
+  # Content suggestions and recommendations
+  suggestarr:
+    image: ghcr.io/l3uddz/suggestarr:latest
+    container_name: suggestarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /data/docker/suggestarr:/config
+    ports:
+      - "${SUGGESTARR_PORT:-5000}:5000"
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.32
+    depends_on:
+      - sonarr
+      - radarr
       - jellyfin
     restart: unless-stopped
