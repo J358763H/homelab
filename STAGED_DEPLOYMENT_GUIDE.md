@@ -65,7 +65,7 @@ sudo ./deploy_homelab_staged.sh
 # Run each stage manually with control
 ./deploy_stage1_core.sh      # 5-10 minutes
 # Wait and verify services are running
-./deploy_stage2_servarr.sh   # 5-10 minutes  
+./deploy_stage2_servarr.sh   # 5-10 minutes
 # Wait and verify services are running
 ./deploy_stage3_frontend.sh  # 5 minutes
 ```
@@ -123,7 +123,7 @@ pct exec [CTID] -- journalctl -f
 - **Jellyfin won't start**: Verify media directories exist
 - **Database issues**: Check disk space and permissions
 
-### Stage 2 Issues (Servarr Stack)  
+### Stage 2 Issues (Servarr Stack)
 - **Download clients fail**: VPN must be working from Stage 1
 - **Sonarr/Radarr API errors**: Wait for services to fully initialize
 - **Prowlarr not accessible**: Check network configuration
