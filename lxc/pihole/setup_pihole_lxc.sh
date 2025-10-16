@@ -31,6 +31,12 @@ MEMORY="1024"
 SWAP="512"
 DISK_SIZE="8"
 
+# 🤖 Check for automated mode
+AUTOMATED_MODE=false
+if [[ "${1:-}" == "--automated" ]] || [[ "${AUTOMATED_MODE:-false}" == "true" ]]; then
+    AUTOMATED_MODE=true
+fi
+
 # 🎯 Function to print colored status messages
 print_status() {
     echo -e "${BLUE}[INFO]${NC} $1"
@@ -73,19 +79,34 @@ check_proxmox() {
 cleanup_existing() {
     if pct list | grep -q "^$CONTAINER_ID"; then
         print_warning "Container $CONTAINER_ID already exists"
-        read -p "Do you want to destroy and recreate it? (y/N): " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            print_status "Stopping existing container..."
-            pct stop $CONTAINER_ID || true
-            
-            print_status "Destroying existing container..."
-            pct destroy $CONTAINER_ID
-            
-            print_success "Existing container removed"
+        
+        if [[ "$AUTOMATED_MODE" == "true" ]]; then
+            # In automated mode, check if container is running
+            local container_status=$(pct status "$CONTAINER_ID" 2>/dev/null | awk '{print $2}' || echo "unknown")
+            if [[ "$container_status" == "running" ]]; then
+                print_success "Container $CONTAINER_ID is already running, skipping recreation"
+                exit 0
+            else
+                print_status "Container exists but not running, recreating in automated mode..."
+                pct stop $CONTAINER_ID 2>/dev/null || true
+                pct destroy $CONTAINER_ID
+                print_success "Existing container removed"
+            fi
         else
-            print_error "Aborting setup"
-            exit 1
+            read -p "Do you want to destroy and recreate it? (y/N): " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                print_status "Stopping existing container..."
+                pct stop $CONTAINER_ID || true
+                
+                print_status "Destroying existing container..."
+                pct destroy $CONTAINER_ID
+                
+                print_success "Existing container removed"
+            else
+                print_error "Aborting setup"
+                exit 1
+            fi
         fi
     fi
 }
