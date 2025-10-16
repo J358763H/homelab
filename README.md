@@ -2,11 +2,11 @@
 
 
 
-**Maintainer:** J35867U  
+**Maintainer:** J35867U
 
 **Last Updated:** 2025-10-16
 
-**Maintainer:** J35867U  
+**Maintainer:** J35867U
 
 Clean, organized Docker homelab with manual control over service groups.
 
