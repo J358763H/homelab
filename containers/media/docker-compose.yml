@@ -2,10 +2,7 @@
 
 networks:
   homelab:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
+    external: true
 
 services:
   # =====================================================
@@ -35,6 +32,8 @@ services:
     networks:
       homelab:
         ipv4_address: 172.20.0.20
+    env_file:
+      - ../../.env
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8096/health"]
       interval: 30s

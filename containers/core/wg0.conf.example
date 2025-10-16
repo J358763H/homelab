@@ -1,0 +1,40 @@
+# Example WireGuard Configuration for Gluetun
+# Copy this to wg0.conf and configure with your VPN provider details
+
+[Interface]
+# Your WireGuard private key from VPN provider
+PrivateKey=YOUR_PRIVATE_KEY_HERE
+
+# Your assigned IP address from VPN provider  
+Address=10.x.x.x/32
+
+# DNS servers (optional - Gluetun can handle this)
+DNS=1.1.1.1,1.0.0.1
+
+[Peer]
+# VPN provider's public key
+PublicKey=YOUR_VPN_PROVIDERS_PUBLIC_KEY
+
+# Allowed IPs - route all traffic through VPN
+AllowedIPs=0.0.0.0/0
+
+# VPN server endpoint
+Endpoint=YOUR_VPN_SERVER:51820
+
+# Keep connection alive
+PersistentKeepalive=25
+
+# =====================================================
+# CONFIGURATION INSTRUCTIONS:
+# =====================================================
+# 1. Get WireGuard config from your VPN provider
+# 2. Copy this file to containers/core/wg0.conf  
+# 3. Replace all YOUR_* values with actual credentials
+# 4. Make sure file permissions are secure: chmod 600 wg0.conf
+# 
+# Popular VPN providers with WireGuard support:
+# - Mullvad, NordVPN, Surfshark, ExpressVPN, etc.
+# 
+# Note: Some providers give you a full config file
+# that you can use directly instead of this template
+# =====================================================
