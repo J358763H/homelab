@@ -88,7 +88,25 @@ setup_repository() {
     if [[ -d "$HOMELAB_DIR" ]]; then
         log "Updating existing repository..."
         cd "$HOMELAB_DIR"
-        git pull origin main
+        
+        # Stash any local changes to avoid conflicts
+        if ! git diff-index --quiet HEAD --; then
+            log "Stashing local changes to avoid merge conflicts..."
+            git stash push -m "Auto-stash before deployment $(date)"
+        fi
+        
+        # Pull latest changes
+        if git pull origin main; then
+            log "Repository updated successfully"
+        else
+            warn "Git pull failed, continuing with existing files"
+        fi
+        
+        # Try to restore stashed changes if they exist
+        if git stash list | grep -q "Auto-stash before deployment"; then
+            log "Attempting to restore local changes..."
+            git stash pop || log "Could not restore stashed changes (conflicts may exist)"
+        fi
     else
         log "Cloning repository..."
         git clone "$REPO_URL" "$HOMELAB_DIR"
