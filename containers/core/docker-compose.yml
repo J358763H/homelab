@@ -22,7 +22,7 @@ services:
       - "6881:6881/udp"
       - "6789:6789"   # NZBGet WebUI
     volumes:
-      - ./wg0.conf:/gluetun/wireguard/wg0.conf:ro
+      - ./wg0.conf:/gluetun/wireguard/wg0.conf:ro  # Copy wg0.conf.example to wg0.conf first
     env_file:
       - ../../.env
     networks:

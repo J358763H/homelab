@@ -10,7 +10,7 @@ wget -O deploy.sh https://raw.githubusercontent.com/J358763H/homelab/main/proxmo
 
 This will:
 - Install Docker
-- Download homelab repository  
+- Download homelab repository
 - Deploy all services
 - Show access URLs
 

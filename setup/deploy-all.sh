@@ -44,6 +44,14 @@ mkdir -p /data/media/{downloads,movies,shows,music}
 echo "🔒 Starting core infrastructure..."
 cd ../containers/core || exit
 
+# Check if VPN config exists
+if [ ! -f "wg0.conf" ]; then
+    echo "⚠️ VPN config missing. Please copy wg0.conf.example to wg0.conf and configure your VPN"
+    echo "Skipping VPN deployment..."
+    cd ../../setup || exit
+    exit 1
+fi
+
 docker-compose up -d
 echo "Waiting for VPN..."
 sleep 30
