@@ -186,11 +186,30 @@ if ! wait_for_http_endpoint "$CTID" "http://localhost:81" "NPM Web UI"; then
     warn "NPM Web UI not responding immediately (may need more time)"
 fi
 
+# Configure admin credentials if environment variables are available
+if [[ -n "${NPM_ADMIN_EMAIL:-}" ]] && [[ -n "${NPM_ADMIN_PASSWORD:-}" ]]; then
+    log "Configuring NPM admin credentials..."
+    if "$SCRIPT_DIR/configure_npm_admin.sh" "$CTID"; then
+        success "NPM admin credentials configured successfully"
+    else
+        warn "Failed to configure NPM admin credentials - manual setup required"
+    fi
+else
+    warn "NPM_ADMIN_EMAIL and NPM_ADMIN_PASSWORD not set - using default credentials"
+fi
+
 # Display service information
-additional_info="${YELLOW}Default Login:${NC}
+if [[ -n "${NPM_ADMIN_EMAIL:-}" ]] && [[ -n "${NPM_ADMIN_PASSWORD:-}" ]]; then
+    additional_info="${GREEN}Configured Admin Login:${NC}
+Email:    ${GREEN}$NPM_ADMIN_EMAIL${NC}
+Password: ${GREEN}[configured from environment]${NC}
+${GREEN}✅ Admin credentials automatically configured!${NC}"
+else
+    additional_info="${YELLOW}Default Login:${NC}
 Email:    ${GREEN}admin@example.com${NC}
 Password: ${GREEN}changeme${NC}
-${RED}⚠️  Change these credentials immediately!${NC}
+${RED}⚠️  Change these credentials immediately!${NC}"
+fi
 
 ${BLUE}Additional Ports:${NC}
 HTTP Proxy:  ${GREEN}http://$IP:80${NC}

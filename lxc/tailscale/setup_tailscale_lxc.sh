@@ -65,14 +65,22 @@ if pct status $CTID >/dev/null 2>&1; then
     fi
 fi
 
-# Prompt for Tailscale auth key
-echo -e "${BLUE}================================${NC}"
-echo -e "${BLUE}  Tailscale Auth Key Required${NC}"
-echo -e "${BLUE}================================${NC}"
-echo -e "Visit: ${GREEN}https://login.tailscale.com/admin/settings/keys${NC}"
-echo -e "Create a reusable, preauthorized key with tag: ${GREEN}homelab-router${NC}"
-echo
-read -p "Enter your Tailscale auth key: " -r AUTH_KEY
+# Get Tailscale auth key (from environment or prompt)
+if [[ -n "${TAILSCALE_AUTH_KEY:-}" ]]; then
+    AUTH_KEY="$TAILSCALE_AUTH_KEY"
+    log "Using Tailscale auth key from environment"
+elif [[ "${AUTOMATED_MODE:-false}" == "true" ]]; then
+    error "TAILSCALE_AUTH_KEY environment variable required in automated mode"
+else
+    # Interactive mode - prompt for auth key
+    echo -e "${BLUE}================================${NC}"
+    echo -e "${BLUE}  Tailscale Auth Key Required${NC}"
+    echo -e "${BLUE}================================${NC}"
+    echo -e "Visit: ${GREEN}https://login.tailscale.com/admin/settings/keys${NC}"
+    echo -e "Create a reusable, preauthorized key with tag: ${GREEN}homelab-router${NC}"
+    echo
+    read -p "Enter your Tailscale auth key: " -r AUTH_KEY
+fi
 
 if [[ -z "$AUTH_KEY" ]]; then
     error "Auth key is required!"
