@@ -209,6 +209,13 @@ fix_docker_compatibility() {
     
     # Create Docker daemon configuration for kernel compatibility
     mkdir -p /etc/docker
+    
+    # Backup existing configuration if it exists
+    if [[ -f /etc/docker/daemon.json ]]; then
+        cp /etc/docker/daemon.json /etc/docker/daemon.json.backup.$(date +%s)
+        log "Backed up existing Docker configuration"
+    fi
+    
     cat > /etc/docker/daemon.json << 'EOF'
 {
     "storage-driver": "overlay2",
@@ -222,22 +229,54 @@ fix_docker_compatibility() {
     },
     "live-restore": true,
     "userland-proxy": false,
-    "no-new-privileges": true,
-    "icc": false,
-    "userns-remap": "default"
+    "default-ulimits": {
+        "nofile": {
+            "Name": "nofile",
+            "Hard": 64000,
+            "Soft": 64000
+        }
+    }
 }
 EOF
 
     # Restart Docker if it's running
     if systemctl is-active docker >/dev/null 2>&1; then
         log "Restarting Docker with new configuration..."
-        systemctl restart docker
-        sleep 5
         
-        if systemctl is-active docker >/dev/null 2>&1; then
-            success "Docker restarted successfully"
+        if systemctl restart docker; then
+            sleep 5
+            if systemctl is-active docker >/dev/null 2>&1; then
+                success "Docker restarted successfully"
+            else
+                warn "Docker service started but may not be fully ready"
+            fi
         else
-            error "Docker failed to restart - check configuration"
+            warn "Docker restart failed, trying to recover..."
+            
+            # Try to restore backup configuration
+            if [[ -f /etc/docker/daemon.json.backup.* ]]; then
+                local backup_file=$(ls -t /etc/docker/daemon.json.backup.* | head -1)
+                log "Restoring backup configuration: $backup_file"
+                cp "$backup_file" /etc/docker/daemon.json
+                
+                # Try to start Docker with backup config
+                if systemctl restart docker; then
+                    warn "Docker started with backup configuration"
+                else
+                    # Create minimal configuration
+                    log "Creating minimal Docker configuration..."
+                    cat > /etc/docker/daemon.json << 'EOF'
+{
+    "log-driver": "json-file",
+    "log-opts": {
+        "max-size": "10m",
+        "max-file": "5"
+    }
+}
+EOF
+                    systemctl restart docker || warn "Docker failed to start with minimal config"
+                fi
+            fi
         fi
     else
         log "Docker not running - configuration will apply on next start"
