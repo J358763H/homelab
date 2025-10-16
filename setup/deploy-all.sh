@@ -47,3 +47,24 @@ echo "2. Setup Jellyfin media library"
 echo "3. Configure Prowlarr with indexers"
 echo "4. Add download clients to Prowlarr"
 echo "5. Configure Sonarr/Radarr with Prowlarr"
+
+# Optional LXC deployment
+echo ""
+echo "📦 Optional: Deploy LXC Infrastructure Services"
+echo "These run on Proxmox and provide additional functionality:"
+echo "  - Nginx Proxy Manager (reverse proxy)"
+echo "  - Pi-hole (network DNS & ad blocking)"
+echo "  - Tailscale (VPN & remote access)"
+echo ""
+read -p "Deploy LXC services? (requires Proxmox) (y/n): " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    echo "🚀 Starting LXC deployment..."
+    if bash "./deploy-lxc.sh"; then
+        echo "✅ LXC services deployed successfully"
+    else
+        echo "⚠️  LXC deployment completed with some issues"
+    fi
+else
+    echo "⏭️  Skipping LXC deployment"
+fi

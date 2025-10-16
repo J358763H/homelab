@@ -1,47 +1,65 @@
-# =====================================================
+# 📦 LXC Container Services
 
-# 📦 LXC Container Configurations
+Self-hosted infrastructure services running in dedicated LXC containers on Proxmox. These complement the Docker-based homelab stack with dedicated environments for critical networking and infrastructure services.
 
-# =====================================================
+**Updated:** October 16, 2025
+**Integration:** Works alongside `containers/` Docker services
 
-# Maintainer: J35867U
+## Quick Start
 
-# Email: mrnash404@protonmail.com
+### Prerequisites
+- Proxmox VE host
+- Ubuntu 22.04 LTS template downloaded
+- Static IP addresses available (192.168.1.201-206)
 
-# Last Updated: 2025-10-11
+### Simple Deployment
+```bash
+# Deploy individual service
+cd lxc/nginx-proxy-manager
+./setup_npm_lxc.sh
 
-# =====================================================
-## Overview
-This directory contains LXC container configurations and setup scripts for self-hosted services that complement your Docker-based homelab stack. These containers provide dedicated, lightweight environments for critical infrastructure services.
+# Or deploy with homelab stack
+cd setup
+./deploy-all.sh --include-lxc
+```
 
-## Available Containers
-### 🌐 Nginx Proxy Manager (`nginx-proxy-manager/`)
+## Available Services
 
+### 🌐 **Nginx Proxy Manager** (CT 201)
 - **Purpose**: Reverse proxy and SSL certificate management
-- **Resources**: 1GB RAM, 4GB storage, 1 CPU core
-- **Integration**: Proxies to Docker services and other LXC containers
-- **Features**: Web UI, Let's Encrypt SSL, access control, custom certificates
+- **IP**: 192.168.1.201:81
+- **Integration**: Proxies to Docker services
+- **Resources**: 1GB RAM, 4GB storage
 
-### 🔒 Tailscale Subnet Router (`tailscale/`)
+### 🔒 **Tailscale VPN** (CT 202)
+- **Purpose**: Secure mesh networking and remote access
+- **IP**: 192.168.1.202
+- **Integration**: Routes entire homelab subnet
+- **Resources**: 512MB RAM, 2GB storage
 
-- **Purpose**: Secure mesh networking and remote access gateway
-- **Resources**: 512MB RAM, 2GB storage, 1 CPU core
-- **Integration**: Routes entire homelab network (192.168.1.0/24) via Tailscale
-- **Features**: Subnet routing, SSH access, MagicDNS, exit node capability
-
-### 📢 Ntfy Notification Server (`ntfy/`)
-
+### 📢 **Ntfy Notifications** (CT 203)
 - **Purpose**: Self-hosted push notification service
-- **Resources**: 512MB RAM, 2GB storage, 1 CPU core
-- **Integration**: Replaces public ntfy.sh for privacy and reliability
-- **Features**: Web UI, authentication, rate limiting, API access
+- **IP**: 192.168.1.203:80
+- **Integration**: Replaces public ntfy.sh for privacy
+- **Resources**: 512MB RAM, 2GB storage
 
-### 📁 Media File Share Server (`samba/`)
-
+### 📁 **Samba File Share** (CT 204)
 - **Purpose**: Network file sharing for media collection
-- **Resources**: 1GB RAM, 8GB storage, 2 CPU cores
-- **Integration**: Direct access to Docker media stack storage
-- **Features**: SMB/CIFS shares, user management, performance optimized
+- **IP**: 192.168.1.204
+- **Integration**: Direct access to Docker media storage
+- **Resources**: 1GB RAM, 8GB storage
+
+### 🚫 **Pi-hole DNS** (CT 205)
+- **Purpose**: Network-wide ad blocking and DNS
+- **IP**: 192.168.1.205:80
+- **Integration**: DNS for entire homelab network
+- **Resources**: 512MB RAM, 2GB storage
+
+### 🔐 **Vaultwarden** (CT 206)
+- **Purpose**: Self-hosted password manager
+- **IP**: 192.168.1.206:80
+- **Integration**: Secure credential storage
+- **Resources**: 512MB RAM, 2GB storage
 
 ## Directory Structure
 ```
@@ -56,7 +74,7 @@ lxc/
 ├── ntfy/                             # Ntfy notification server
 │   ├── setup_ntfy_lxc.sh            # Automated setup script
 │   ├── server.yml.example           # Configuration template
-│   ├── configure_homelab.sh         # Homelab integration script  
+│   ├── configure_homelab.sh         # Homelab integration script
 │   └── README.md                     # Ntfy-specific documentation
 └── samba/                            # Media File Share server
     ├── setup_samba_lxc.sh           # Automated setup script
@@ -118,7 +136,7 @@ lxc/
 
 # Current Infrastructure Services (200-219)
 192.168.1.201    # VMID 201 - Nginx Proxy Manager
-192.168.1.202    # VMID 202 - Tailscale VPN Router  
+192.168.1.202    # VMID 202 - Tailscale VPN Router
 192.168.1.203    # VMID 203 - Ntfy Notifications
 192.168.1.204    # VMID 204 - Media File Share
 192.168.1.205    # VMID 205 - Pi-hole DNS
@@ -270,4 +288,3 @@ Planned container additions:
 - [Proxmox LXC Documentation](https://pve.proxmox.com/wiki/Linux_Container)
 - [Container Best Practices](https://pve.proxmox.com/wiki/Linux_Container#_best_practices)
 - [Homelab Main Documentation](../README.md)
-

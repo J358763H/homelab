@@ -25,8 +25,21 @@ This LXC container provides a dedicated Nginx Proxy Manager instance for reverse
 - Domain name (optional, for SSL)
 
 ## Quick Setup
+
+### **Option 1: From Homelab Setup (Recommended)**
+```bash
+# Deploy with main homelab
+cd setup
+./deploy-all.sh
+
+# Or deploy LXC services only
+./deploy-lxc.sh
+```
+
+### **Option 2: Individual Deployment**
 ```bash
 # Run the automated setup script
+cd lxc/nginx-proxy-manager
 chmod +x setup_npm_lxc.sh
 ./setup_npm_lxc.sh
 
@@ -86,7 +99,7 @@ services:
       - ./letsencrypt:/etc/letsencrypt
     ports:
       - "80:80"     # HTTP
-      - "443:443"   # HTTPS  
+      - "443:443"   # HTTPS
       - "81:81"     # Admin Web UI
     restart: unless-stopped
     healthcheck:
@@ -129,7 +142,7 @@ systemctl start nginx-proxy-manager.service
 ```
 ## Access Information
 - **Web UI**: `http://192.168.1.201:81`
-- **Default Login**: 
+- **Default Login**:
   - Email: `admin@example.com`
   - Password: `changeme`
   - **⚠️ Change immediately after first login!**
@@ -142,7 +155,7 @@ systemctl start nginx-proxy-manager.service
 Domain: jellyfin.yourdomain.com
 Forward to: 192.168.1.100:8096  # Docker host IP
 
-# Jellyseerr  
+# Jellyseerr
 Domain: requests.yourdomain.com
 Forward to: 192.168.1.100:5055
 
@@ -155,7 +168,7 @@ Domain: notifications.yourdomain.com
 Forward to: 192.168.1.203:80  # Ntfy LXC IP
 
 # Samba Web UI (if enabled)
-Domain: files.yourdomain.com  
+Domain: files.yourdomain.com
 Forward to: 192.168.1.202:445
 
 ```
@@ -214,4 +227,3 @@ This NPM instance can proxy to:
 - **Tailscale services** (via Tailscale IPs)
 
 Perfect for creating a unified access point with SSL for your entire homelab!
-

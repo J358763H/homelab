@@ -50,6 +50,46 @@ cd setup
 
 Once deployed, access your services at:
 
+### 🎬 **Media Services**
+- **Jellyfin**: http://localhost:8096 - Media server
+- **Sonarr**: http://localhost:8989 - TV show automation
+- **Radarr**: http://localhost:7878 - Movie automation
+- **Bazarr**: http://localhost:6767 - Subtitles
+- **Prowlarr**: http://localhost:9696 - Indexer management
+- **JellyStat**: http://localhost:3000 - Analytics
+
+### 📥 **Download Services**
+- **qBittorrent**: http://localhost:8080 - Torrent client
+- **NZBGet**: http://localhost:6789 - Usenet client
+
+### 🔧 **Optional: LXC Infrastructure** (Proxmox only)
+- **Nginx Proxy Manager**: http://192.168.1.201:81 - Reverse proxy
+- **Pi-hole**: http://192.168.1.205:80 - DNS & ad blocking
+- **Ntfy**: http://192.168.1.203:80 - Push notifications
+- **Vaultwarden**: http://192.168.1.206:80 - Password manager
+
+## Management
+
+```bash
+# Check status
+docker ps
+
+# View logs
+docker logs [container_name]
+
+# Restart service group
+cd containers/[group]
+docker-compose restart
+
+# Deploy LXC services (Proxmox)
+cd setup
+./deploy-lxc.sh
+
+# Stop everything
+cd setup
+./stop-all.sh
+```
+
 - **Jellyfin** (Media Server): `http://your-server-ip:8096`
 - **Sonarr** (TV Shows): `http://your-server-ip:8989`
 - **Radarr** (Movies): `http://your-server-ip:7878`
