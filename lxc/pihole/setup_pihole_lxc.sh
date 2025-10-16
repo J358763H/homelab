@@ -24,7 +24,6 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 PURPLE='\033[0;35m'
-CYAN='\033[0;36m'
 WHITE='\033[1;37m'
 NC='\033[0m' # No Color
 
@@ -94,7 +93,8 @@ cleanup_existing() {
 
         if [[ "$AUTOMATED_MODE" == "true" ]]; then
             # In automated mode, check if container is running
-            local container_status=$(pct status "$CONTAINER_ID" 2>/dev/null | awk '{print $2}' || echo "unknown")
+            local container_status
+            container_status=$(pct status "$CONTAINER_ID" 2>/dev/null | awk '{print $2}' || echo "unknown")
             if [[ "$container_status" == "running" ]]; then
                 print_success "Container $CONTAINER_ID is already running, skipping recreation"
                 exit 0

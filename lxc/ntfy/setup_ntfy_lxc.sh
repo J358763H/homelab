@@ -82,6 +82,7 @@ pct create $CONTAINER_ID /var/lib/vz/template/cache/$TEMPLATE \
     --swap $SWAP \
     --cores $CORES \
     --net0 name=eth0,bridge=$BRIDGE,ip=$IP_ADDRESS,gw=$GATEWAY \
+    --nameserver $NAMESERVER \
     --storage $STORAGE \
     --rootfs $STORAGE:$DISK_SIZE \
     --unprivileged 1 \

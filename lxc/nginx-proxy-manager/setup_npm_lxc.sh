@@ -208,8 +208,7 @@ else
     additional_info="${YELLOW}Default Login:${NC}
 Email:    ${GREEN}admin@example.com${NC}
 Password: ${GREEN}changeme${NC}
-${RED}⚠️  Change these credentials immediately!${NC}"
-fi
+${RED}⚠️  Change these credentials immediately!${NC}
 
 ${BLUE}Additional Ports:${NC}
 HTTP Proxy:  ${GREEN}http://$IP:80${NC}
@@ -219,5 +218,6 @@ ${BLUE}Configuration:${NC}
 Config path: ${GREEN}/opt/nginx-proxy-manager/${NC}
 Data backup: ${GREEN}/opt/nginx-proxy-manager/data${NC}
 Docker logs: ${GREEN}pct exec $CTID -- docker logs nginx-proxy-manager${NC}"
+fi
 
 display_service_info "Nginx Proxy Manager" "$CTID" "$IP" "81" "$additional_info"

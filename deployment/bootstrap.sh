@@ -41,7 +41,8 @@ echo "--> Installing scripts to /usr/local/bin..."
 # Function to safely copy script if it exists
 copy_script_if_exists() {
     local src="$1"
-    local filename=$(basename "$src")
+    local filename
+    filename=$(basename "$src")
 
     if [[ -f "$src" ]]; then
         cp "$src" "/usr/local/bin/"

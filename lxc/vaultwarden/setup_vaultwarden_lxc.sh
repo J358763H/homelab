@@ -35,14 +35,14 @@ CONTAINER_IP="192.168.1.206"
 GATEWAY_IP="192.168.1.1"
 ADMIN_TOKEN=""  # Will be generated automatically
 DOMAIN_NAME="homelab-vault.local"  # Change to your domain
-TIMEZONE="America/Phoenix"  # Change to your timezone
+export TIMEZONE="America/Phoenix"  # Change to your timezone
 STORAGE_POOL="local-lvm"
 MEMORY="2048"
 SWAP="1024"
 DISK_SIZE="20"
 
 # Database configuration
-DB_TYPE="sqlite"  # sqlite or postgresql
+export DB_TYPE="sqlite"  # sqlite or postgresql
 DB_PATH="/opt/vaultwarden/data/db.sqlite3"
 
 # Security settings
