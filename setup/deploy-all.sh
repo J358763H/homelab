@@ -11,21 +11,21 @@ fi
 
 # Deploy core services first (VPN)
 echo "🔒 Starting core infrastructure..."
-cd ../containers/core
+cd ../containers/core || exit
 docker-compose up -d
 echo "Waiting for VPN to establish..."
 sleep 30
 
 # Deploy downloads (depends on VPN)
 echo "📥 Starting download clients..."
-cd ../downloads
+cd ../downloads || exit
 docker-compose up -d
 echo "Waiting for download clients..."
 sleep 15
 
 # Deploy media services
 echo "🎬 Starting media services..."
-cd ../media
+cd ../media || exit
 docker-compose up -d
 
 echo ""

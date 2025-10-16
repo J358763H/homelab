@@ -2,7 +2,10 @@
 
 networks:
   homelab:
-    external: true  # Use the network from core
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
 
 services:
   # =====================================================
