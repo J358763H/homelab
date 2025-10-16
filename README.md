@@ -1,12 +1,6 @@
-# 🏠 Homelab - Complete Self-Hosted Stack# 🏠 Simple Homelab Setup
+# 🏠 Simple Homelab Setup
 
-
-
-**A production-ready, self-hosted media and download stack optimized for Proxmox deployment.**Clean, organized Docker homelab with manual control over service groups.
-
-
-
-## 🚀 Quick Start (Recommended)**Maintainer:** J35867U
+**Maintainer:** J35867U
 
 **Last Updated:** 2025-10-16
 
@@ -98,17 +92,28 @@ docker-compose up -d
 
 │                 │    │                 │    │                 │
 
-│  • Gluetun VPN │────┤  • qBittorrent  │────┤  • Jellyfin     │Once deployed, access your services at:
-
+```
+│  • Gluetun VPN │────┤  • qBittorrent  │────┤  • Jellyfin     │
 │  • FlareSolverr │    │  • NZBGet       │    │  • Sonarr       │
+└─────────────────┘    └─────────────────┘    │  • Radarr       │
+                                              │  • Prowlarr     │
+┌─────────────────┐                          │  • Bazarr       │
+│ LXC Services    │                          │  • JellyStat    │
+│ (Optional)      │                          └─────────────────┘
+│                 │
+│  • Nginx Proxy  │
+│  • Pi-hole      │
+│  • Tailscale    │
+│  • Vaultwarden  │
+└─────────────────┘
+```
 
-└─────────────────┘    └─────────────────┘    │  • Radarr       │### 🎬 **Media Services**
+Once deployed, access your services at:
 
-                                              │  • Prowlarr     │- **Jellyfin**: http://localhost:8096 - Media server
-
-┌─────────────────┐                          │  • Bazarr       │- **Sonarr**: http://localhost:8989 - TV show automation
-
-│ LXC Services    │                          │  • JellyStat    │- **Radarr**: http://localhost:7878 - Movie automation
+### 🎬 **Media Services**
+- **Jellyfin**: http://localhost:8096 - Media server
+- **Sonarr**: http://localhost:8989 - TV show automation
+- **Radarr**: http://localhost:7878 - Movie automation
 
 │ (Optional)      │                          └─────────────────┘- **Bazarr**: http://localhost:6767 - Subtitles
 
@@ -168,15 +173,18 @@ docker-compose restart
 
 cd setupcd setup
 
-./deploy-all.sh./deploy-lxc.sh
+./deploy-all.sh
 
-```
+# Deploy LXC services (Proxmox)
+cd setup
+./deploy-lxc.sh
 
 # Stop everything
-
-## 📊 Managementcd setup
-
+cd setup
 ./stop-all.sh
+```
+
+## 📊 Management
 
 ### **Check Status**```
 
