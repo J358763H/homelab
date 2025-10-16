@@ -28,14 +28,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HOMELAB_ROOT="$SCRIPT_DIR"
 LOG_FILE="/var/log/homelab_deployment_$(date +%Y%m%d_%H%M%S).log"
 
-# Load environment configuration
-if [[ -f "$HOMELAB_ROOT/.env" ]]; then
-    source "$HOMELAB_ROOT/.env"
-    log "Loaded environment configuration"
-else
-    warning "Environment file not found at $HOMELAB_ROOT/.env"
-fi
-
 # Functions
 log() {
     echo -e "${BLUE}[$(date '+%Y-%m-%d %H:%M:%S')]${NC} $1" | tee -a "$LOG_FILE"
@@ -52,6 +44,14 @@ error() {
 warning() {
     echo -e "${YELLOW}[WARNING]${NC} $1" | tee -a "$LOG_FILE"
 }
+
+# Load environment configuration
+if [[ -f "$HOMELAB_ROOT/.env" ]]; then
+    source "$HOMELAB_ROOT/.env"
+    log "Loaded environment configuration"
+else
+    warning "Environment file not found at $HOMELAB_ROOT/.env"
+fi
 
 step() {
     echo -e "${PURPLE}[STEP]${NC} $1" | tee -a "$LOG_FILE"
