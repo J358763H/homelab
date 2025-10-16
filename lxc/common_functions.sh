@@ -46,21 +46,27 @@ handle_existing_container() {
     local ctid=$1
     
     if pct status "$ctid" >/dev/null 2>&1; then
-        warn "Container $ctid already exists!"
+        local container_status=$(pct status "$ctid" 2>/dev/null | awk '{print $2}' || echo "unknown")
+        warn "Container $ctid already exists (status: $container_status)"
         
         if [[ "$AUTOMATED_MODE" == "true" ]]; then
-            log "Automated mode: Stopping and destroying existing container $ctid..."
-            pct stop "$ctid" 2>/dev/null || true
-            sleep 2
-            pct destroy "$ctid" 2>/dev/null || true
-            sleep 2
-            
-            # Verify container is gone
-            if pct status "$ctid" >/dev/null 2>&1; then
-                error "Failed to destroy existing container $ctid"
-                return 1
+            if [[ "$container_status" == "running" ]]; then
+                success "Container $ctid is already running, skipping recreation"
+                return 2  # Special return code to indicate skip
+            else
+                log "Automated mode: Container exists but not running, recreating..."
+                pct stop "$ctid" 2>/dev/null || true
+                sleep 2
+                pct destroy "$ctid" 2>/dev/null || true
+                sleep 2
+                
+                # Verify container is gone
+                if pct status "$ctid" >/dev/null 2>&1; then
+                    error "Failed to destroy existing container $ctid"
+                    return 1
+                fi
+                success "Existing container $ctid removed"
             fi
-            success "Existing container $ctid removed"
         else
             read -p "Do you want to destroy and recreate it? (y/N): " -n 1 -r
             echo
