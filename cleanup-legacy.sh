@@ -6,7 +6,7 @@ echo "🗂️ Moving legacy files to archive..."
 # Legacy documentation files
 LEGACY_DOCS=(
     "COMPREHENSIVE_PREDEPLOYMENT_CHECKLIST.md"
-    "CONTAINER_CLEANUP_SUMMARY.md" 
+    "CONTAINER_CLEANUP_SUMMARY.md"
     "CREDENTIALS_CONFIGURED.md"
     "DEPLOYMENT_FILES_EXPORT.md"
     "DEPLOYMENT_ISSUES_AND_FIXES.md"
@@ -78,7 +78,7 @@ for file in "${LEGACY_DOCS[@]}"; do
     fi
 done
 
-# Move legacy scripts  
+# Move legacy scripts
 echo "Moving legacy script files..."
 for file in "${LEGACY_SCRIPTS[@]}"; do
     if [ -f "$file" ]; then

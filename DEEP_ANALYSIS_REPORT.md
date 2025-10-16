@@ -1,7 +1,7 @@
 # 🔍 Deep Repository Analysis Report
 
-**Analysis Date:** October 16, 2025  
-**Repository:** homelab (J358763H/homelab)  
+**Analysis Date:** October 16, 2025
+**Repository:** homelab (J358763H/homelab)
 **Analysis Type:** Comprehensive inconsistency and cleanup audit
 
 ## 🚨 **CRITICAL FINDINGS**
@@ -9,7 +9,7 @@
 ### ❌ **Major Inconsistencies Identified**
 
 #### 1. **Multiple Conflicting Docker Compose Approaches**
-- **New Structure**: `containers/*/docker-compose.yml` (3 files) 
+- **New Structure**: `containers/*/docker-compose.yml` (3 files)
 - **Legacy Structure**: `deployment/docker-compose.yml` (4 variants)
 - **Missing File**: `containers/downloads/docker-compose.yml` has dependency issues
 
@@ -17,12 +17,12 @@
 ```
 ❌ CONFLICTING:
 deploy_homelab.sh              # Main Docker deployment
-deploy_homelab_master.sh       # Proxmox + LXC deployment  
+deploy_homelab_master.sh       # Proxmox + LXC deployment
 deploy_homelab_no_pihole.sh    # No Pi-hole variant
 deploy_homelab_staged.sh       # Staged deployment
 deploy_docker_testing.sh       # Testing deployment
 deploy_stage1_core.sh          # Stage 1 only
-deploy_stage2_servarr.sh       # Stage 2 only  
+deploy_stage2_servarr.sh       # Stage 2 only
 deploy_stage3_frontend.sh      # Stage 3 only
 + 7 more deployment scripts
 ```
@@ -42,13 +42,13 @@ networks:
   homelab:
     external: true  # ❌ BROKEN - network doesn't exist as external
 
-# containers/core/docker-compose.yml  
+# containers/core/docker-compose.yml
 networks:
   homelab:
     driver: bridge    # ✅ Creates network
-    
+
 # containers/media/docker-compose.yml
-networks:  
+networks:
   homelab:
     external: true    # ❌ BROKEN - assumes external network
 ```
@@ -58,7 +58,7 @@ networks:
 # downloads/docker-compose.yml
 depends_on:
   - gluetun          # ❌ BROKEN - gluetun not in same compose file
-  
+
 gluetun:
   external: true     # ❌ INVALID - not valid docker-compose syntax
   container_name: gluetun
@@ -75,7 +75,7 @@ COMPREHENSIVE_PREDEPLOYMENT_CHECKLIST.md
 CONTAINER_CLEANUP_SUMMARY.md
 CREDENTIALS_CONFIGURED.md
 DEPLOYMENT_FILES_EXPORT.md
-DEPLOYMENT_ISSUES_AND_FIXES.md  
+DEPLOYMENT_ISSUES_AND_FIXES.md
 DEPLOYMENT_READY.md
 DEPLOYMENT_READINESS_REPORT.md
 DEPLOYMENT_VALIDATION_REPORT.md
@@ -152,7 +152,7 @@ validate_env.sh
 ```
 ✅ KEEP but UPDATE:
 homelab.sh                    # Update to point to new structure
-reset_homelab.sh              # Update for new structure  
+reset_homelab.sh              # Update for new structure
 status_homelab.sh             # Update for new structure
 teardown_homelab.sh           # Update for new structure
 ```
@@ -171,7 +171,7 @@ deploy_homelab_no_pihole.sh   # No Pi-hole variant
 ```
 Current (INCONSISTENT):
 ├── containers/          # 🆕 NEW approach
-├── deployment/          # 🏚️ OLD approach  
+├── deployment/          # 🏚️ OLD approach
 ├── setup/              # 🆕 NEW scripts
 ├── 15+ deploy_*.sh     # 🏚️ OLD scripts (root level)
 ```
@@ -180,7 +180,7 @@ Current (INCONSISTENT):
 ```
 homelab/
 ├── containers/          # Service groups
-├── setup/              # Simple deployment scripts  
+├── setup/              # Simple deployment scripts
 ├── scripts/            # Keep utility scripts
 ├── lxc/               # Keep LXC configs (if needed)
 ├── docs/              # Consolidated documentation
@@ -230,7 +230,7 @@ homelab/
    - Update service dependencies
    - Test deployment actually works
 
-2. **Phase 2: File Cleanup** (20 min)  
+2. **Phase 2: File Cleanup** (20 min)
    - Move legacy files to archive/
    - Remove redundant scripts
    - Clean repository structure
@@ -244,13 +244,13 @@ homelab/
 
 ## ⚡ **Quick Summary**
 
-**Repository State: BROKEN** ❌  
+**Repository State: BROKEN** ❌
 - New structure incomplete/broken
 - Legacy structure conflicts with new
 - Multiple deployment approaches conflict
 - Documentation points to non-existent files
 
-**Recommendation: Complete the reorganization** ✅  
+**Recommendation: Complete the reorganization** ✅
 - Fix critical docker-compose issues
-- Archive legacy files  
+- Archive legacy files
 - Update documentation to match reality
