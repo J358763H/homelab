@@ -37,6 +37,32 @@ check_root() {
     fi
 }
 
+# Check kernel compatibility
+check_kernel_compatibility() {
+    step "Checking kernel compatibility..."
+    
+    local kernel_version=$(uname -r)
+    log "Current kernel: $kernel_version"
+    
+    if echo "$kernel_version" | grep -q "\.14"; then
+        warn "Detected kernel .14 - applying compatibility fixes"
+        
+        # Load essential modules
+        local modules=("bridge" "veth" "xt_nat" "ip_tables")
+        for module in "${modules[@]}"; do
+            modprobe "$module" 2>/dev/null || warn "Could not load $module"
+        done
+        
+        # Enable networking features
+        echo 1 > /proc/sys/net/ipv4/ip_forward 2>/dev/null || true
+        echo 1 > /proc/sys/net/bridge/bridge-nf-call-iptables 2>/dev/null || true
+        
+        success "Kernel .14 compatibility fixes applied"
+    else
+        log "Kernel $kernel_version appears compatible"
+    fi
+}
+
 # Install required packages
 install_dependencies() {
     step "Installing required packages..."
@@ -267,6 +293,7 @@ main() {
     
     # Execute deployment steps
     check_root
+    check_kernel_compatibility
     install_dependencies
     setup_repository
     deploy_security_hardening

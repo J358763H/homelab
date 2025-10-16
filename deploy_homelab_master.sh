@@ -80,6 +80,50 @@ wait_for_container_ready() {
     return 1
 }
 
+# Check kernel compatibility for Proxmox
+check_kernel_compatibility() {
+    log "Checking kernel compatibility..."
+    
+    local kernel_version=$(uname -r)
+    log "Current kernel: $kernel_version"
+    
+    # Check for known problematic kernel versions
+    if echo "$kernel_version" | grep -q "\.14"; then
+        warning "Detected kernel .14 - applying compatibility fixes"
+        
+        # Load required modules
+        local required_modules=("bridge" "veth" "xt_nat" "xt_conntrack" "ip_tables")
+        for module in "${required_modules[@]}"; do
+            if ! lsmod | grep -q "^$module"; then
+                if modprobe "$module" 2>/dev/null; then
+                    log "Loaded module: $module"
+                else
+                    warning "Could not load module: $module"
+                fi
+            fi
+        done
+        
+        # Fix networking parameters
+        echo 1 > /proc/sys/net/ipv4/ip_forward 2>/dev/null || true
+        echo 1 > /proc/sys/net/bridge/bridge-nf-call-iptables 2>/dev/null || true
+        
+        # Create kernel compatibility fix script for later use
+        if [[ -f "$HOMELAB_ROOT/fix_kernel_compatibility.sh" ]]; then
+            log "Running comprehensive kernel compatibility fixes..."
+            chmod +x "$HOMELAB_ROOT/fix_kernel_compatibility.sh"
+            "$HOMELAB_ROOT/fix_kernel_compatibility.sh" check >/dev/null 2>&1 || warning "Kernel compatibility script had issues"
+        fi
+        
+        success "Kernel .14 compatibility fixes applied"
+    elif echo "$kernel_version" | grep -q "\.11"; then
+        log "Kernel .11 detected - standard configuration"
+    else
+        log "Kernel version: $kernel_version (assuming compatible)"
+    fi
+}
+
+# Check prerequisites
+
 wait_for_service_ready() {
     local ctid=$1
     local service_name=$2
@@ -150,6 +194,9 @@ check_prerequisites() {
         error "No internet connectivity"
         exit 1
     fi
+    
+    # Check kernel compatibility
+    check_kernel_compatibility
     
     success "Prerequisites check passed"
 }
