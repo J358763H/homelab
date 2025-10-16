@@ -111,7 +111,7 @@ __pycache__/
 build/
 develop-eggs/
 dist/
-downloads/
+# downloads/ -- REMOVED: Allow containers/downloads/ directory
 eggs/
 .eggs/
 lib/
