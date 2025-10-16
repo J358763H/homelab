@@ -256,6 +256,17 @@ deploy_lxc_containers() {
         
         log "Deploying LXC $vmid: $service"
         
+        # Check if container already exists and is running
+        if pct status "$vmid" >/dev/null 2>&1; then
+            local container_status=$(pct status "$vmid" | awk '{print $2}')
+            if [[ "$container_status" == "running" ]]; then
+                success "LXC $vmid ($service) already running, skipping deployment"
+                continue
+            else
+                log "LXC $vmid exists but is $container_status, will attempt deployment"
+            fi
+        fi
+        
         if [[ -f "$script_path" ]]; then
             chmod +x "$script_path"
             
