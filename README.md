@@ -268,7 +268,7 @@ homelab/- **HDD health monitoring** with SMART
 
 │   ├── core/            # VPN and networking- **Ntfy notifications** for alerts and summaries
 
-│   ├── downloads/       # Download clients  
+│   ├── downloads/       # Download clients
 
 │   └── media/           # Media management## 🛡️ Security Features
 
