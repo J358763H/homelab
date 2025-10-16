@@ -231,8 +231,39 @@ EOF"
 configure_pihole() {
     print_status "Configuring Pi-hole settings..."
     
-    # Update gravity (blocklists)
-    pct exec $CONTAINER_ID -- pihole -g
+    # Wait for Pi-hole to be fully ready
+    print_status "Waiting for Pi-hole service to be ready..."
+    local retry_count=0
+    local max_retries=30
+    
+    while [ $retry_count -lt $max_retries ]; do
+        if pct exec $CONTAINER_ID -- test -f /usr/local/bin/pihole; then
+            print_success "Pi-hole binary found"
+            break
+        fi
+        sleep 2
+        retry_count=$((retry_count + 1))
+    done
+    
+    if [ $retry_count -eq $max_retries ]; then
+        print_warning "Pi-hole binary not found in expected location, trying alternative paths..."
+        # Try to find pihole binary and create symlink if needed
+        pct exec $CONTAINER_ID -- bash -c "
+            if [ -f /opt/pihole/pihole ]; then
+                ln -sf /opt/pihole/pihole /usr/local/bin/pihole
+            elif [ -f /usr/bin/pihole ]; then
+                ln -sf /usr/bin/pihole /usr/local/bin/pihole
+            fi
+        "
+    fi
+    
+    # Update gravity (blocklists) with error handling
+    print_status "Updating Pi-hole gravity database..."
+    if pct exec $CONTAINER_ID -- /usr/local/bin/pihole -g; then
+        print_success "Gravity database updated"
+    else
+        print_warning "Gravity update failed, but Pi-hole should still work"
+    fi
     
     # Add custom DNS records for homelab services
     pct exec $CONTAINER_ID -- bash -c "cat >> /etc/pihole/custom.list << 'EOF'
@@ -247,8 +278,14 @@ configure_pihole() {
 192.168.1.206 homelab-vault.local
 EOF"
     
-    # Restart DNS service to apply changes
-    pct exec $CONTAINER_ID -- pihole restartdns
+    # Restart DNS service to apply changes with error handling
+    print_status "Restarting Pi-hole DNS service..."
+    if pct exec $CONTAINER_ID -- /usr/local/bin/pihole restartdns; then
+        print_success "Pi-hole DNS service restarted"
+    else
+        print_warning "DNS restart failed, trying systemctl restart"
+        pct exec $CONTAINER_ID -- systemctl restart pihole-FTL || true
+    fi
     
     print_success "Pi-hole configuration completed"
 }
