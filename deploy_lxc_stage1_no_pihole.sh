@@ -44,25 +44,25 @@ warning() {
 # Check Proxmox prerequisites
 check_prerequisites() {
     log "🔍 Checking Proxmox prerequisites..."
-    
+
     # Check if running on Proxmox
     if ! command -v pct &> /dev/null; then
         error "This script must be run on a Proxmox host (pct command not found)"
         exit 1
     fi
-    
+
     # Check if running as root
     if [[ $EUID -ne 0 ]]; then
         error "This script must be run as root"
         exit 1
     fi
-    
+
     # Check if LXC scripts exist
     if [[ ! -d "$LXC_DIR" ]]; then
         error "LXC directory not found: $LXC_DIR"
         exit 1
     fi
-    
+
     success "Proxmox prerequisites satisfied"
 }
 
@@ -78,9 +78,9 @@ wait_for_container() {
     local service_name="$2"
     local max_attempts="${3:-20}"
     local attempt=1
-    
+
     log "⏳ Waiting for container $ctid ($service_name) to be ready..."
-    
+
     while [ $attempt -le $max_attempts ]; do
         if pct status "$ctid" | grep -q "running"; then
             # Additional check for service readiness
@@ -91,12 +91,12 @@ wait_for_container() {
                 return 0
             fi
         fi
-        
+
         warning "Container $ctid not ready, attempt $attempt/$max_attempts"
         sleep 15
         attempt=$((attempt + 1))
     done
-    
+
     error "Container $ctid ($service_name) failed to become ready"
     return 1
 }
@@ -104,20 +104,20 @@ wait_for_container() {
 # Deploy LXC Stage 1 services (SKIP PI-HOLE)
 deploy_lxc_stage1_no_pihole() {
     log "🚀 Starting LXC Stage 1: Core Services Deployment (SKIPPING PI-HOLE)"
-    
+
     warning "⚠️ SKIPPING PI-HOLE due to networking issues"
     warning "DNS will use system default or public DNS servers"
-    
+
     # Stage 1 LXC Services (ONLY NPM - skipping Pi-hole)
     local services=(
         "npm:201:Reverse Proxy & SSL"
     )
-    
+
     for service_info in "${services[@]}"; do
         IFS=':' read -r service ctid description <<< "$service_info"
-        
+
         log "📦 Deploying $service (CT$ctid) - $description..."
-        
+
         if container_exists "$ctid"; then
             warning "Container $ctid already exists, checking status..."
             if pct status "$ctid" | grep -q "running"; then
@@ -130,20 +130,20 @@ deploy_lxc_stage1_no_pihole() {
                 continue
             fi
         fi
-        
+
         # Deploy the LXC container
         local setup_script="$LXC_DIR/$service/setup_${service}_lxc.sh"
-        
+
         if [[ ! -f "$setup_script" ]]; then
             error "Setup script not found: $setup_script"
             continue
         fi
-        
+
         log "🔧 Running setup script for $service..."
         if bash "$setup_script"; then
             success "$service (CT$ctid) deployment completed"
             wait_for_container "$ctid" "$service" 30
-            
+
             # Additional service-specific wait time
             case "$service" in
                 "npm")
@@ -156,23 +156,23 @@ deploy_lxc_stage1_no_pihole() {
             return 1
         fi
     done
-    
+
     success "🎉 LXC Stage 1 deployment completed successfully! (Pi-hole skipped)"
 }
 
 # Verify LXC deployment
 verify_lxc_deployment() {
     log "🔍 Verifying LXC Stage 1 deployment..."
-    
+
     local services=("201:npm")
     local all_healthy=true
-    
+
     for service_info in "${services[@]}"; do
         IFS=':' read -r ctid service <<< "$service_info"
-        
+
         if container_exists "$ctid" && pct status "$ctid" | grep -q "running"; then
             success "✅ CT$ctid ($service) is running"
-            
+
             # Service-specific health checks
             case "$service" in
                 "npm")
@@ -186,7 +186,7 @@ verify_lxc_deployment() {
             all_healthy=false
         fi
     done
-    
+
     if $all_healthy; then
         success "🎯 LXC Stage 1 services are running correctly!"
         warning "⚠️ Pi-hole was SKIPPED - using system/public DNS"
@@ -206,7 +206,7 @@ verify_lxc_deployment() {
 # Cleanup on failure
 cleanup_on_failure() {
     warning "🧹 Cleaning up failed LXC Stage 1 deployment..."
-    
+
     local containers=("201")  # Only NPM
     for ctid in "${containers[@]}"; do
         if container_exists "$ctid"; then
@@ -223,14 +223,14 @@ main() {
 ====================================="
     warning "Services: Nginx Proxy Manager (Reverse Proxy) - SKIPPING PI-HOLE"
     log ""
-    
+
     # Trap cleanup on failure
     trap cleanup_on_failure ERR
-    
+
     check_prerequisites
     deploy_lxc_stage1_no_pihole
     verify_lxc_deployment
-    
+
     success "🚀 LXC Stage 1 deployment completed! Ready for Stage 2."
 }
 

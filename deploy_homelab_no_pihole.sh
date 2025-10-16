@@ -58,30 +58,30 @@ show_banner() {
 # Check prerequisites
 check_deployment_prerequisites() {
     log "🔍 Checking deployment prerequisites..."
-    
+
     local missing_prereqs=false
-    
+
     # Check if deployment files exist
     if [[ ! -d "$SCRIPT_DIR/deployment" ]]; then
         error "Deployment directory not found"
         missing_prereqs=true
     fi
-    
+
     if [[ ! -f "$SCRIPT_DIR/deployment/.env" ]]; then
         error "Environment configuration not found (.env file)"
         missing_prereqs=true
     fi
-    
+
     if [[ ! -f "$SCRIPT_DIR/deployment/docker-compose.yml" ]]; then
         error "Docker Compose file not found"
         missing_prereqs=true
     fi
-    
+
     if $missing_prereqs; then
         error "Prerequisites not met. Please ensure all required files are present."
         exit 1
     fi
-    
+
     success "Deployment prerequisites satisfied"
 }
 
@@ -89,7 +89,7 @@ check_deployment_prerequisites() {
 deploy_lxc_staged_no_pihole() {
     header "🏗️ DEPLOYING LXC CONTAINERS IN STAGES (NO PI-HOLE)"
     echo ""
-    
+
     # Stage 1: Core LXC Services (NO PI-HOLE)
     log "Starting LXC Stage 1: Core Services (NO PI-HOLE)..."
     if [[ -f "$SCRIPT_DIR/deploy_lxc_stage1_no_pihole.sh" ]]; then
@@ -102,11 +102,11 @@ deploy_lxc_staged_no_pihole() {
     else
         warning "LXC Stage 1 (no Pi-hole) script not found, skipping..."
     fi
-    
+
     echo ""
     log "⏳ Waiting 30 seconds before Stage 2..."
     sleep 30
-    
+
     # Stage 2: Support LXC Services
     log "Starting LXC Stage 2: Support Services..."
     if [[ -f "$SCRIPT_DIR/deploy_lxc_stage2_support.sh" ]]; then
@@ -118,7 +118,7 @@ deploy_lxc_staged_no_pihole() {
     else
         warning "LXC Stage 2 script not found, skipping..."
     fi
-    
+
     success "🎉 LXC staged deployment completed (Pi-hole skipped)!"
 }
 
@@ -126,7 +126,7 @@ deploy_lxc_staged_no_pihole() {
 deploy_docker_staged() {
     header "🐳 DEPLOYING DOCKER SERVICES IN STAGES"
     echo ""
-    
+
     # Stage 1: Core Infrastructure
     log "Starting Docker Stage 1: Core Infrastructure..."
     if bash "$SCRIPT_DIR/deploy_stage1_core.sh"; then
@@ -135,11 +135,11 @@ deploy_docker_staged() {
         error "❌ Docker Stage 1 failed"
         return 1
     fi
-    
+
     echo ""
     log "⏳ Waiting 60 seconds for services to stabilize..."
     sleep 60
-    
+
     # Stage 2: Servarr Stack
     log "Starting Docker Stage 2: Servarr Stack..."
     if bash "$SCRIPT_DIR/deploy_stage2_servarr.sh"; then
@@ -148,11 +148,11 @@ deploy_docker_staged() {
         error "❌ Docker Stage 2 failed"
         return 1
     fi
-    
+
     echo ""
     log "⏳ Waiting 45 seconds for media services to initialize..."
     sleep 45
-    
+
     # Stage 3: Frontend & Automation
     log "Starting Docker Stage 3: Frontend & Automation..."
     if bash "$SCRIPT_DIR/deploy_stage3_frontend.sh"; then
@@ -160,7 +160,7 @@ deploy_docker_staged() {
     else
         warning "⚠️ Docker Stage 3 had issues, but core services should be working..."
     fi
-    
+
     success "🎉 Docker staged deployment completed!"
 }
 
@@ -168,23 +168,23 @@ deploy_docker_staged() {
 deploy_complete_no_pihole() {
     header "🚀 STARTING COMPLETE HOMELAB DEPLOYMENT (NO PI-HOLE)"
     echo ""
-    
+
     warning "This will deploy LXC containers and Docker services."
     warning "Pi-hole will be SKIPPED due to networking issues."
     warning "Total estimated time: 15-25 minutes"
     echo ""
-    
+
     read -p "Continue with deployment (no Pi-hole)? (y/N): " -n 1 -r
     echo ""
-    
+
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         log "Deployment cancelled by user"
         return 0
     fi
-    
+
     local start_time
     start_time=$(date +%s)
-    
+
     # Check if on Proxmox for LXC deployment
     if command -v pct &> /dev/null && [[ $EUID -eq 0 ]]; then
         log "🏗️ Proxmox detected, deploying LXC containers (SKIPPING PI-HOLE)..."
@@ -193,14 +193,14 @@ deploy_complete_no_pihole() {
         else
             warning "LXC deployment had issues, continuing with Docker..."
         fi
-        
+
         echo ""
         log "⏳ Waiting 2 minutes for LXC services to fully initialize..."
         sleep 120
     else
         warning "Not running on Proxmox as root, skipping LXC deployment"
     fi
-    
+
     # Deploy Docker services
     log "🐳 Starting Docker services deployment..."
     if deploy_docker_staged; then
@@ -209,13 +209,13 @@ deploy_complete_no_pihole() {
         error "Docker deployment failed"
         return 1
     fi
-    
+
     local end_time
     end_time=$(date +%s)
     local duration=$((end_time - start_time))
     local minutes=$((duration / 60))
     local seconds=$((duration % 60))
-    
+
     success "🎉 COMPLETE HOMELAB DEPLOYMENT FINISHED (NO PI-HOLE)!"
     success "⏱️ Total deployment time: ${minutes}m ${seconds}s"
     echo ""
@@ -231,7 +231,7 @@ main() {
     show_banner
     check_deployment_prerequisites
     deploy_complete_no_pihole
-    
+
     success "🚀 Deployment completed without Pi-hole!"
 }
 
