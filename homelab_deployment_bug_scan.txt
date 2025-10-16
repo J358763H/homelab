@@ -1,0 +1,1604 @@
+HOMELAB DEPLOYMENT FILES - BUG SCANNING EXPORT
+=====================================================
+Critical files for bug scanning and deployment validation
+Generated: 2025-10-15
+
+=====================================================
+1. MASTER DEPLOYMENT SCRIPT - deploy_homelab_master.sh
+=====================================================
+
+#!/usr/bin/env bash
+# =====================================================
+# 🚀 Homelab Master Deployment Script
+# =====================================================
+# Maintainer: J35867U
+# Email: mrnash404@protonmail.com
+# Created: 2025-10-14
+# 
+# Orchestrates complete homelab deployment:
+# 1. ZFS mirror setup (optional)
+# 2. LXC container creation
+# 3. Docker stack deployment
+# 4. Service validation
+# =====================================================
+
+set -e
+
+# Color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
+NC='\033[0m'
+
+# Configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+HOMELAB_ROOT="$SCRIPT_DIR"
+LOG_FILE="/var/log/homelab_deployment_$(date +%Y%m%d_%H%M%S).log"
+
+# Load environment configuration
+if [[ -f "$HOMELAB_ROOT/.env" ]]; then
+    source "$HOMELAB_ROOT/.env"
+    log "Loaded environment configuration"
+else
+    warning "Environment file not found at $HOMELAB_ROOT/.env"
+fi
+
+# Functions
+log() {
+    echo -e "${BLUE}[$(date '+%Y-%m-%d %H:%M:%S')]${NC} $1" | tee -a "$LOG_FILE"
+}
+
+success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1" | tee -a "$LOG_FILE"
+}
+
+error() {
+    echo -e "${RED}[ERROR]${NC} $1" | tee -a "$LOG_FILE"
+}
+
+warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1" | tee -a "$LOG_FILE"
+}
+
+step() {
+    echo -e "${PURPLE}[STEP]${NC} $1" | tee -a "$LOG_FILE"
+}
+
+# Health check functions
+wait_for_container_ready() {
+    local ctid=$1
+    local max_attempts=${2:-30}
+    local attempt=1
+    
+    log "Waiting for container $ctid to be ready..."
+    
+    while [ $attempt -le $max_attempts ]; do
+        if pct exec $ctid -- systemctl is-system-running --wait >/dev/null 2>&1; then
+            success "Container $ctid is ready (attempt $attempt)"
+            return 0
+        fi
+        
+        log "Container $ctid not ready, attempt $attempt/$max_attempts"
+        sleep 2
+        ((attempt++))
+    done
+    
+    error "Container $ctid failed to become ready after $max_attempts attempts"
+    return 1
+}
+
+wait_for_service_ready() {
+    local ctid=$1
+    local service_name=$2
+    local port=$3
+    local max_attempts=${4:-60}
+    local attempt=1
+    
+    log "Waiting for $service_name on container $ctid:$port to be ready..."
+    
+    while [ $attempt -le $max_attempts ]; do
+        if pct exec $ctid -- netstat -tln 2>/dev/null | grep -q ":$port "; then
+            success "$service_name is ready on port $port (attempt $attempt)"
+            return 0
+        fi
+        
+        log "$service_name not ready, attempt $attempt/$max_attempts"
+        sleep 2
+        ((attempt++))
+    done
+    
+    error "$service_name failed to start after $max_attempts attempts"
+    return 1
+}
+
+validate_docker_service() {
+    local container_name=$1
+    local max_attempts=${2:-30}
+    local attempt=1
+    
+    log "Validating Docker service: $container_name"
+    
+    while [ $attempt -le $max_attempts ]; do
+        if pct exec 100 -- docker ps --format "table {{.Names}}" | grep -q "^$container_name$"; then
+            local status=$(pct exec 100 -- docker inspect --format='{{.State.Status}}' "$container_name" 2>/dev/null)
+            if [ "$status" = "running" ]; then
+                success "Docker service $container_name is running"
+                return 0
+            fi
+        fi
+        
+        log "Docker service $container_name not ready, attempt $attempt/$max_attempts"
+        sleep 3
+        ((attempt++))
+    done
+    
+    error "Docker service $container_name failed to start properly"
+    return 1
+}
+
+# Check prerequisites
+check_prerequisites() {
+    step "Checking deployment prerequisites..."
+    
+    # Check if running on Proxmox
+    if ! command -v pct >/dev/null 2>&1; then
+        error "This script must be run on Proxmox VE"
+        exit 1
+    fi
+    
+    # Check if running as root
+    if [[ $EUID -ne 0 ]]; then
+        error "This script must be run as root"
+        exit 1
+    fi
+    
+    # Check network connectivity
+    if ! ping -c 1 8.8.8.8 >/dev/null 2>&1; then
+        error "No internet connectivity"
+        exit 1
+    fi
+    
+    success "Prerequisites check passed"
+}
+
+# Deploy LXC containers
+deploy_lxc_containers() {
+    step "Deploying LXC containers..."
+    
+    # Array of LXC services to deploy
+    declare -A LXC_SERVICES=(
+        ["201"]="nginx-proxy-manager"
+        ["202"]="tailscale"
+        ["203"]="ntfy"
+        ["204"]="samba"
+        ["205"]="pihole"
+        ["206"]="vaultwarden"
+    )
+    
+    # Map service names to their actual script names
+    declare -A SCRIPT_NAMES=(
+        ["nginx-proxy-manager"]="setup_npm_lxc.sh"
+        ["tailscale"]="setup_tailscale_lxc.sh"
+        ["ntfy"]="setup_ntfy_lxc.sh"
+        ["samba"]="setup_samba_lxc.sh"
+        ["pihole"]="setup_pihole_lxc.sh"
+        ["vaultwarden"]="setup_vaultwarden_lxc.sh"
+    )
+    
+    for vmid in "${!LXC_SERVICES[@]}"; do
+        service="${LXC_SERVICES[$vmid]}"
+        script_name="${SCRIPT_NAMES[$service]}"
+        script_path="$HOMELAB_ROOT/lxc/$service/$script_name"
+        
+        log "Deploying LXC $vmid: $service"
+        
+        # Check if container already exists and is running
+        if pct status "$vmid" >/dev/null 2>&1; then
+            local container_status=$(pct status "$vmid" | awk '{print $2}')
+            if [[ "$container_status" == "running" ]]; then
+                success "LXC $vmid ($service) already running, skipping deployment"
+                continue
+            else
+                log "LXC $vmid exists but is $container_status, will attempt deployment"
+            fi
+        fi
+        
+        if [[ -f "$script_path" ]]; then
+            chmod +x "$script_path"
+            
+            # Set environment variable for automation
+            export HOMELAB_DEPLOYMENT=true
+            export AUTOMATED_MODE=true
+            
+            # Run the setup script with automation flag
+            if "$script_path" --automated; then
+                # Wait for container to be ready instead of sleep
+                if wait_for_container_ready "$vmid"; then
+                    success "LXC $vmid ($service) deployed and ready"
+                else
+                    error "LXC $vmid ($service) failed to become ready"
+                    if [[ "${CONTINUE_ON_ERROR:-false}" == "true" ]] || [[ "${AUTOMATED_MODE:-false}" == "true" ]]; then
+                        warning "Continuing deployment despite error (CONTINUE_ON_ERROR=true or AUTOMATED_MODE=true)"
+                    else
+                        return 1
+                    fi
+                fi
+            else
+                error "Failed to deploy LXC $vmid ($service)"
+                if [[ "${CONTINUE_ON_ERROR:-false}" == "true" ]] || [[ "${AUTOMATED_MODE:-false}" == "true" ]]; then
+                    warning "Continuing deployment despite error (CONTINUE_ON_ERROR=true or AUTOMATED_MODE=true)"
+                else
+                    return 1
+                fi
+            fi
+        else
+            warning "Setup script not found for $service at $script_path"
+            if [[ "${CONTINUE_ON_ERROR:-false}" != "true" ]]; then
+                return 1
+            fi
+        fi
+    done
+    
+    success "All LXC containers deployed"
+}
+
+# Prepare Docker environment
+prepare_docker_environment() {
+    step "Preparing Docker environment..."
+    
+    # Create Docker host VM if it doesn't exist
+    if ! pct status 100 >/dev/null 2>&1; then
+        log "Creating Docker host VM (VMID 100)..."
+        
+        # Download Ubuntu template if not exists
+        if [[ ! -f /var/lib/vz/template/cache/ubuntu-22.04-standard_22.04-1_amd64.tar.zst ]]; then
+            log "Downloading Ubuntu 22.04 LXC template..."
+            pveam update
+            pveam download local ubuntu-22.04-standard_22.04-1_amd64.tar.zst
+        fi
+        
+        # Create Ubuntu LXC for Docker
+        pct create 100 local:vztmpl/ubuntu-22.04-standard_22.04-1_amd64.tar.zst \
+            --hostname docker-host \
+            --cores 4 \
+            --memory 8192 \
+            --rootfs local-lvm:32 \
+            --net0 name=eth0,bridge=vmbr0,ip=192.168.1.100/24,gw=192.168.1.1 \
+            --features nesting=1,keyctl=1 \
+            --unprivileged 1 \
+            --onboot 1
+        
+        # Start the container
+        pct start 100
+        
+        # Wait for container to be ready instead of sleep
+        if ! wait_for_container_ready 100; then
+            error "Docker host container failed to start properly"
+            return 1
+        fi
+        
+        # Install Docker in the container
+        pct exec 100 -- bash -c "
+            # Update system
+            apt update && apt upgrade -y
+            apt install -y curl wget git netstat-nat
+            
+            # Install Docker
+            curl -fsSL https://get.docker.com -o get-docker.sh
+            sh get-docker.sh
+            systemctl enable docker
+            systemctl start docker
+            
+            # Wait for Docker to be ready
+            timeout=30
+            while [ \$timeout -gt 0 ] && ! docker info >/dev/null 2>&1; do
+                echo 'Waiting for Docker to start...'
+                sleep 2
+                timeout=\$((timeout-2))
+            done
+            
+            if ! docker info >/dev/null 2>&1; then
+                echo 'Docker failed to start properly'
+                exit 1
+            fi
+            
+            # Install Docker Compose
+            curl -L 'https://github.com/docker/compose/releases/latest/download/docker-compose-\$(uname -s)-\$(uname -m)' -o /usr/local/bin/docker-compose
+            chmod +x /usr/local/bin/docker-compose
+            
+            # Verify Docker Compose installation
+            if ! docker-compose version >/dev/null 2>&1; then
+                echo 'Docker Compose installation failed'
+                exit 1
+            fi
+            
+            # Create directories
+            mkdir -p /data/{docker,media,backups,logs}
+            mkdir -p /data/media/{movies,shows,music,youtube,downloads}
+            
+            echo 'Docker installation completed successfully'
+        "
+        
+        success "Docker host VM created and configured"
+    else
+        log "Docker host VM already exists, skipping creation"
+    fi
+}
+
+# Deploy Docker stack
+deploy_docker_stack() {
+    step "Deploying Docker stack..."
+    
+    # Copy deployment files to Docker host
+    log "Copying deployment files..."
+    
+    # Create directory in container first
+    pct exec 100 -- mkdir -p /opt/homelab
+    
+    # Copy files individually (pct push doesn't support --recursive)
+    for file in "$HOMELAB_ROOT/deployment"/*; do
+        if [[ -f "$file" ]]; then
+            local filename=$(basename "$file")
+            log "Copying $filename..."
+            pct push 100 "$file" "/opt/homelab/$filename"
+        fi
+    done
+    
+    # Ensure .env file exists
+    if [[ ! -f "$HOMELAB_ROOT/deployment/.env" ]]; then
+        warning ".env file not found, creating from template..."
+        if [[ -f "$HOMELAB_ROOT/deployment/.env.example" ]]; then
+            cp "$HOMELAB_ROOT/deployment/.env.example" "$HOMELAB_ROOT/deployment/.env"
+            pct push 100 "$HOMELAB_ROOT/deployment/.env" /opt/homelab/.env
+        else
+            error ".env file and template not found"
+            exit 1
+        fi
+    fi
+    
+    # Deploy the stack
+    pct exec 100 -- bash -c "
+        cd /opt/homelab
+        
+        # Make scripts executable
+        chmod +x bootstrap.sh
+        
+        # Run bootstrap
+        if ! ./bootstrap.sh; then
+            echo 'Bootstrap script failed'
+            exit 1
+        fi
+        
+        # Start the stack
+        if ! docker-compose up -d; then
+            echo 'Docker compose deployment failed'
+            exit 1
+        fi
+        
+        echo 'Docker stack deployment initiated successfully'
+    "
+    
+    # Validate core services are starting
+    log "Validating core Docker services..."
+    
+    # Wait for and validate essential services
+    local essential_services=("jellyfin" "sonarr" "radarr" "prowlarr" "qbittorrent" "gluetun")
+    
+    for service in "${essential_services[@]}"; do
+        if validate_docker_service "$service"; then
+            success "Essential service $service is running"
+        else
+            error "Essential service $service failed to start"
+            return 1
+        fi
+    done
+    
+    success "Docker stack deployed"
+}
+
+# Main execution
+main() {
+    log "Starting Homelab Master Deployment"
+    
+    check_prerequisites
+    
+    read -p "🚀 Proceed with deployment? (y/n): " PROCEED
+    if [[ ! "$PROCEED" =~ ^[Yy]$ ]]; then
+        log "Deployment cancelled by user"
+        exit 0
+    fi
+    
+    deploy_lxc_containers
+    prepare_docker_environment
+    deploy_docker_stack
+    
+    success "Homelab deployment completed successfully!"
+}
+
+# Trap for cleanup
+trap 'error "Deployment interrupted"; exit 130' INT TERM
+
+# Execute main function
+main "$@"
+
+=====================================================
+2. COMMON FUNCTIONS LIBRARY - lxc/common_functions.sh
+=====================================================
+
+#!/bin/bash
+
+# =====================================================
+# 🔧 Common LXC Setup Functions
+# =====================================================
+# Shared functions for all LXC setup scripts
+# Source this file in your LXC setup scripts
+# =====================================================
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Enhanced logging functions
+log() {
+    echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')] $1${NC}"
+}
+
+warn() {
+    echo -e "${YELLOW}[$(date +'%Y-%m-%d %H:%M:%S')] WARNING: $1${NC}"
+}
+
+error() {
+    echo -e "${RED}[$(date +'%Y-%m-%d %H:%M:%S')] ERROR: $1${NC}"
+}
+
+success() {
+    echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')] SUCCESS: $1${NC}"
+}
+
+# Check if running in automated mode
+check_automated_mode() {
+    AUTOMATED_MODE=false
+    
+    # Check command line argument
+    if [[ "$1" == "--automated" ]]; then
+        AUTOMATED_MODE=true
+    fi
+    
+    # Check environment variable
+    if [[ "${AUTOMATED_MODE:-false}" == "true" ]]; then
+        AUTOMATED_MODE=true
+    fi
+    
+    # Check if called from deployment script
+    if [[ -n "${HOMELAB_DEPLOYMENT:-}" ]]; then
+        AUTOMATED_MODE=true
+    fi
+    
+    if [[ "$AUTOMATED_MODE" == "true" ]]; then
+        log "Running in automated mode"
+    fi
+    
+    export AUTOMATED_MODE
+}
+
+# Enhanced container existence check
+handle_existing_container() {
+    local ctid=$1
+    
+    if pct status "$ctid" >/dev/null 2>&1; then
+        local container_status=$(pct status "$ctid" 2>/dev/null | awk '{print $2}' || echo "unknown")
+        warn "Container $ctid already exists (status: $container_status)"
+        
+        if [[ "$AUTOMATED_MODE" == "true" ]]; then
+            if [[ "$container_status" == "running" ]]; then
+                success "Container $ctid is already running, skipping recreation"
+                return 2  # Special return code to indicate skip
+            else
+                log "Automated mode: Container exists but not running, recreating..."
+                pct stop "$ctid" 2>/dev/null || true
+                sleep 2
+                pct destroy "$ctid" 2>/dev/null || true
+                sleep 2
+                
+                # Verify container is gone
+                if pct status "$ctid" >/dev/null 2>&1; then
+                    error "Failed to destroy existing container $ctid"
+                    return 1
+                fi
+                success "Existing container $ctid removed"
+            fi
+        else
+            read -p "Do you want to destroy and recreate it? (y/N): " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                log "Stopping and destroying container $ctid..."
+                pct stop "$ctid" 2>/dev/null || true
+                sleep 2
+                pct destroy "$ctid" 2>/dev/null || true
+                sleep 2
+            else
+                error "Aborted. Choose a different container ID or use --automated flag."
+                return 1
+            fi
+        fi
+    fi
+    return 0
+}
+
+# Wait for container to be ready with proper health check
+wait_for_container_ready() {
+    local ctid=$1
+    local max_attempts=${2:-30}
+    local attempt=1
+    
+    log "Waiting for container $ctid to be ready..."
+    
+    while [ $attempt -le $max_attempts ]; do
+        # Check if container is running
+        if ! pct status "$ctid" 2>/dev/null | grep -q "running"; then
+            log "Container $ctid is not running, attempt $attempt/$max_attempts"
+            sleep 3
+            ((attempt++))
+            continue
+        fi
+        
+        # Check if system is ready
+        if pct exec "$ctid" -- systemctl is-system-running --wait >/dev/null 2>&1; then
+            success "Container $ctid is ready (attempt $attempt)"
+            return 0
+        fi
+        
+        log "Container $ctid system not ready, attempt $attempt/$max_attempts"
+        sleep 3
+        ((attempt++))
+    done
+    
+    error "Container $ctid failed to become ready after $max_attempts attempts"
+    return 1
+}
+
+# Wait for network connectivity in container
+wait_for_network() {
+    local ctid=$1
+    local max_attempts=${2:-20}
+    local attempt=1
+    
+    log "Waiting for network connectivity in container $ctid..."
+    
+    while [ $attempt -le $max_attempts ]; do
+        if pct exec "$ctid" -- ping -c 1 8.8.8.8 >/dev/null 2>&1; then
+            success "Network connectivity established (attempt $attempt)"
+            return 0
+        fi
+        
+        log "Network not ready, attempt $attempt/$max_attempts"
+        sleep 2
+        ((attempt++))
+    done
+    
+    error "Network connectivity failed after $max_attempts attempts"
+    return 1
+}
+
+# Wait for service to be ready on specific port
+wait_for_service_port() {
+    local ctid=$1
+    local port=$2
+    local service_name=${3:-"service"}
+    local max_attempts=${4:-60}
+    local attempt=1
+    
+    log "Waiting for $service_name on port $port in container $ctid..."
+    
+    while [ $attempt -le $max_attempts ]; do
+        if pct exec "$ctid" -- netstat -tln 2>/dev/null | grep -q ":$port "; then
+            success "$service_name is ready on port $port (attempt $attempt)"
+            return 0
+        fi
+        
+        log "$service_name not ready on port $port, attempt $attempt/$max_attempts"
+        sleep 2
+        ((attempt++))
+    done
+    
+    error "$service_name failed to start on port $port after $max_attempts attempts"
+    return 1
+}
+
+# Wait for HTTP endpoint to be ready
+wait_for_http_endpoint() {
+    local ctid=$1
+    local endpoint=$2
+    local service_name=${3:-"service"}
+    local max_attempts=${4:-60}
+    local attempt=1
+    
+    log "Waiting for $service_name HTTP endpoint: $endpoint..."
+    
+    while [ $attempt -le $max_attempts ]; do
+        local http_code=$(pct exec "$ctid" -- curl -s -o /dev/null -w '%{http_code}' "$endpoint" 2>/dev/null || echo "000")
+        
+        # Accept any HTTP response (not connection refused)
+        if [[ "$http_code" != "000" && "$http_code" != "7" ]]; then
+            success "$service_name HTTP endpoint is responding (HTTP $http_code, attempt $attempt)"
+            return 0
+        fi
+        
+        log "$service_name endpoint not ready (HTTP $http_code), attempt $attempt/$max_attempts"
+        sleep 3
+        ((attempt++))
+    done
+    
+    error "$service_name HTTP endpoint failed to respond after $max_attempts attempts"
+    return 1
+}
+
+# Display final status and access information
+display_service_info() {
+    local service_name=$1
+    local ctid=$2
+    local ip=$3
+    local port=$4
+    local additional_info=${5:-""}
+    
+    success "$service_name setup completed successfully!"
+    echo
+    echo -e "${BLUE}================================${NC}"
+    echo -e "${BLUE}  $service_name Access Information${NC}"
+    echo -e "${BLUE}================================${NC}"
+    echo -e "Container ID: ${GREEN}$ctid${NC}"
+    echo -e "IP Address:   ${GREEN}$ip${NC}"
+    echo -e "Service URL:  ${GREEN}http://$ip:$port${NC}"
+    
+    if [[ -n "$additional_info" ]]; then
+        echo -e "$additional_info"
+    fi
+    
+    echo
+    echo -e "${BLUE}Container Management:${NC}"
+    echo -e "Enter container: ${GREEN}pct enter $ctid${NC}"
+    echo -e "Stop container:  ${GREEN}pct stop $ctid${NC}"
+    echo -e "Start container: ${GREEN}pct start $ctid${NC}"
+    echo -e "Container logs:  ${GREEN}pct exec $ctid -- journalctl -f${NC}"
+    echo -e "${BLUE}================================${NC}"
+}
+
+# Check if running as root
+check_root() {
+    if [[ $EUID -ne 0 ]]; then
+       error "This script must be run as root (on Proxmox host)"
+       exit 1
+    fi
+}
+
+# Validate required tools
+check_dependencies() {
+    local required_tools=("pct" "curl" "wget")
+    local missing_tools=()
+    
+    for tool in "${required_tools[@]}"; do
+        if ! command -v "$tool" >/dev/null 2>&1; then
+            missing_tools+=("$tool")
+        fi
+    done
+    
+    if [[ ${#missing_tools[@]} -gt 0 ]]; then
+        error "Missing required tools: ${missing_tools[*]}"
+        error "Please install missing dependencies"
+        return 1
+    fi
+    
+    return 0
+}
+
+# Export all functions for use in other scripts
+export -f log warn error success check_automated_mode handle_existing_container
+export -f wait_for_container_ready wait_for_network wait_for_service_port
+export -f wait_for_http_endpoint validate_systemd_service validate_docker_service
+export -f display_service_info check_root check_dependencies
+
+=====================================================
+3. PI-HOLE LXC SETUP - lxc/pihole/setup_pihole_lxc.sh
+=====================================================
+
+#!/bin/bash
+
+# =====================================================
+# 🚫 Pi-hole LXC Setup Script
+# =====================================================
+# Creates and configures Pi-hole in an LXC container
+# Usage: ./setup_pihole_lxc.sh [--automated] [ctid]
+# =====================================================
+
+set -euo pipefail
+
+# Get script directory and source common functions
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../common_functions.sh"
+
+# Check dependencies and root access
+check_root
+check_dependencies
+
+# Parse arguments
+check_automated_mode "$@"
+CTID="${2:-205}"
+
+# Configuration
+HOSTNAME="homelab-pihole-205"
+MEMORY="512"
+SWAP="256"
+CORES="1"
+STORAGE="2"
+TEMPLATE="local:vztmpl/ubuntu-22.04-standard_22.04-1_amd64.tar.zst"
+
+# Network configuration (homelab subnet)
+BRIDGE="vmbr0"
+IP="192.168.1.205"
+NETMASK="24"
+GATEWAY="192.168.1.1"
+NAMESERVER="8.8.8.8"
+
+# Handle existing container
+handle_result=$(handle_existing_container "$CTID")
+if [[ $? -eq 1 ]]; then
+    exit 1
+elif [[ $? -eq 2 ]]; then
+    log "Pi-hole container $CTID already running, skipping setup"
+    exit 0
+fi
+
+log "Creating Pi-hole LXC container..."
+
+# Create LXC container
+pct create $CTID $TEMPLATE \
+    --hostname $HOSTNAME \
+    --memory $MEMORY \
+    --swap $SWAP \
+    --cores $CORES \
+    --rootfs local-lvm:$STORAGE \
+    --net0 name=eth0,bridge=$BRIDGE,ip=$IP/$NETMASK,gw=$GATEWAY \
+    --nameserver $NAMESERVER \
+    --features nesting=1 \
+    --unprivileged 1 \
+    --onboot 1
+
+log "Starting container..."
+pct start $CTID
+
+# Wait for container to be ready
+if ! wait_for_container_ready "$CTID"; then
+    error "Container setup failed"
+    exit 1
+fi
+
+# Configure container
+log "Configuring Pi-hole..."
+pct exec $CTID -- bash -c "
+    # Update system
+    apt update && apt upgrade -y
+    
+    # Install required packages
+    apt install -y curl wget git nano htop
+
+    # Download and install Pi-hole
+    curl -sSL https://install.pi-hole.net | bash /dev/stdin --unattended
+    
+    # Configure Pi-hole
+    pihole -a -p 'X#zunVV!kDWdYUt0zAAg'
+    
+    # Enable Pi-hole service
+    systemctl enable pihole-FTL
+    systemctl start pihole-FTL
+"
+
+# Wait for Pi-hole to be ready
+if ! wait_for_service_port "$CTID" "80" "Pi-hole Web Interface"; then
+    error "Pi-hole failed to start properly"
+    exit 1
+fi
+
+# Display final information
+additional_info="${YELLOW}Admin Password:${NC}
+Password: ${GREEN}X#zunVV!kDWdYUt0zAAg${NC}
+${RED}⚠️  Save this password securely!${NC}
+
+${BLUE}Configuration:${NC}
+Admin URL:    ${GREEN}http://$IP/admin${NC}
+DNS Server:   ${GREEN}$IP${NC}
+Config path:  ${GREEN}/etc/pihole/${NC}
+Log files:    ${GREEN}/var/log/pihole.log${NC}"
+
+display_service_info "Pi-hole" "$CTID" "$IP" "80" "$additional_info"
+
+=====================================================
+4. TAILSCALE LXC SETUP - lxc/tailscale/setup_tailscale_lxc.sh
+=====================================================
+
+#!/bin/bash
+
+# =====================================================
+# 🔒 Tailscale LXC Setup Script
+# =====================================================
+# Creates and configures Tailscale subnet router
+# Usage: ./setup_tailscale_lxc.sh [--automated] [ctid]
+# =====================================================
+
+set -euo pipefail
+
+# Get script directory and source common functions
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../common_functions.sh"
+
+# Check dependencies and root access
+check_root
+check_dependencies
+
+# Parse arguments
+check_automated_mode "$@"
+CTID="${2:-202}"
+
+# Configuration
+HOSTNAME="homelab-tailscale-vpn-202"
+MEMORY="512"
+SWAP="256"
+CORES="1" 
+STORAGE="2"
+TEMPLATE="local:vztmpl/ubuntu-22.04-standard_22.04-1_amd64.tar.zst"
+
+# Network configuration (homelab subnet)
+BRIDGE="vmbr0"
+IP="192.168.1.202"
+NETMASK="24"
+GATEWAY="192.168.1.1"
+NAMESERVER="192.168.1.1"
+SUBNET_ROUTE="192.168.1.0/24"
+
+# Get Tailscale auth key (from environment or prompt)
+if [[ -n "${TAILSCALE_AUTH_KEY:-}" ]]; then
+    AUTH_KEY="$TAILSCALE_AUTH_KEY"
+    log "Using Tailscale auth key from environment"
+elif [[ "${AUTOMATED_MODE:-false}" == "true" ]]; then
+    error "TAILSCALE_AUTH_KEY environment variable required in automated mode"
+else
+    # Interactive mode - prompt for auth key
+    echo -e "${BLUE}================================${NC}"
+    echo -e "${BLUE}  Tailscale Auth Key Required${NC}"
+    echo -e "${BLUE}================================${NC}"
+    echo -e "Visit: ${GREEN}https://login.tailscale.com/admin/settings/keys${NC}"
+    echo -e "Create a reusable, preauthorized key with tag: ${GREEN}homelab-router${NC}"
+    echo
+    read -p "Enter your Tailscale auth key: " -r AUTH_KEY
+fi
+
+if [[ -z "$AUTH_KEY" ]]; then
+    error "Auth key is required!"
+fi
+
+# Handle existing container
+handle_result=$(handle_existing_container "$CTID")
+if [[ $? -eq 1 ]]; then
+    exit 1
+elif [[ $? -eq 2 ]]; then
+    log "Tailscale container $CTID already running, skipping setup"
+    exit 0
+fi
+
+log "Creating Tailscale LXC container..."
+
+# Create LXC container (privileged for routing)
+pct create $CTID $TEMPLATE \
+    --hostname $HOSTNAME \
+    --memory $MEMORY \
+    --swap $SWAP \
+    --cores $CORES \
+    --rootfs local-lvm:$STORAGE \
+    --net0 name=eth0,bridge=$BRIDGE,ip=$IP/$NETMASK,gw=$GATEWAY \
+    --nameserver $NAMESERVER \
+    --features nesting=1 \
+    --unprivileged 0 \
+    --onboot 1
+
+log "Starting container..."
+pct start $CTID
+
+# Wait for container to be ready
+if ! wait_for_container_ready "$CTID"; then
+    error "Container setup failed"
+    exit 1
+fi
+
+# Configure container
+log "Configuring container..."
+pct exec $CTID -- bash -c "
+    # Update system
+    apt update && apt upgrade -y
+    
+    # Install required packages
+    apt install -y curl wget git nano htop iptables-persistent
+
+    # Install Tailscale
+    curl -fsSL https://tailscale.com/install.sh | sh
+    
+    # Enable IP forwarding
+    echo 'net.ipv4.ip_forward = 1' >> /etc/sysctl.conf
+    echo 'net.ipv6.conf.all.forwarding = 1' >> /etc/sysctl.conf
+    sysctl -p
+    
+    # Configure iptables for forwarding
+    iptables -A FORWARD -i tailscale0 -j ACCEPT
+    iptables -A FORWARD -o tailscale0 -j ACCEPT
+    iptables-save > /etc/iptables/rules.v4
+    
+    # Start and authenticate Tailscale
+    systemctl enable tailscaled
+    systemctl start tailscaled
+    
+    # Connect to Tailscale with enhanced privacy settings
+    tailscale up --authkey=$AUTH_KEY \
+        --advertise-routes=$SUBNET_ROUTE \
+        --ssh \
+        --accept-dns=false \
+        --accept-routes=false \
+        --shields-up \
+        --netfilter-mode=on \
+        --hostname=$HOSTNAME
+    
+    # Additional privacy configurations
+    sleep 5
+    tailscale set --accept-dns=false
+    tailscale set --shields-up=true
+        
+    # Wait for connection
+    sleep 10
+"
+
+success "Tailscale LXC setup completed successfully!"
+
+=====================================================
+5. NGINX PROXY MANAGER LXC SETUP - lxc/nginx-proxy-manager/setup_npm_lxc.sh
+=====================================================
+
+#!/bin/bash
+
+# =====================================================
+# 🌐 Nginx Proxy Manager LXC Setup Script
+# =====================================================
+# Creates and configures NPM in an LXC container
+# Usage: ./setup_npm_lxc.sh [--automated] [ctid]
+# =====================================================
+
+set -euo pipefail
+
+# Get script directory and source common functions
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../common_functions.sh"
+
+# Check dependencies and root access
+check_root
+check_dependencies
+
+# Parse arguments
+check_automated_mode "$@"
+CTID="${2:-201}"
+
+# Configuration
+HOSTNAME="homelab-nginx-proxy-201"
+MEMORY="1024"
+SWAP="512"
+CORES="1"
+STORAGE="4"
+TEMPLATE="local:vztmpl/ubuntu-22.04-standard_22.04-1_amd64.tar.zst"
+
+# Network configuration (homelab subnet)
+BRIDGE="vmbr0"
+IP="192.168.1.201"
+NETMASK="24"
+GATEWAY="192.168.1.1"
+NAMESERVER="192.168.1.1"
+
+# Handle existing container
+if ! handle_existing_container "$CTID"; then
+    exit 1
+fi
+
+log "Creating Nginx Proxy Manager LXC container..."
+
+# Create LXC container
+pct create $CTID $TEMPLATE \
+    --hostname $HOSTNAME \
+    --memory $MEMORY \
+    --swap $SWAP \
+    --cores $CORES \
+    --rootfs local-lvm:$STORAGE \
+    --net0 name=eth0,bridge=$BRIDGE,ip=$IP/$NETMASK,gw=$GATEWAY \
+    --nameserver $NAMESERVER \
+    --features nesting=1 \
+    --unprivileged 1 \
+    --onboot 1
+
+log "Starting container..."
+pct start $CTID
+
+# Wait for container to be ready
+if ! wait_for_container_ready "$CTID"; then
+    error "Container setup failed"
+    exit 1
+fi
+
+# Wait for network connectivity
+if ! wait_for_network "$CTID"; then
+    error "Network setup failed"
+    exit 1
+fi
+
+# Configure container
+log "Configuring container..."
+pct exec $CTID -- bash -c "
+    # Update system
+    apt update && apt upgrade -y
+    
+    # Install required packages
+    apt install -y curl wget git nano htop
+
+    # Install Docker
+    curl -fsSL https://get.docker.com | sh
+    systemctl enable docker
+    systemctl start docker
+    
+    # Create NPM directory structure
+    mkdir -p /opt/nginx-proxy-manager/{data,letsencrypt}
+    
+    # Create docker-compose.yml
+    cat > /opt/nginx-proxy-manager/docker-compose.yml << 'EOF'
+version: '3.8'
+
+services:
+  nginx-proxy-manager:
+    image: jc21/nginx-proxy-manager:latest
+    container_name: nginx-proxy-manager
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Phoenix
+    volumes:
+      - ./data:/data
+      - ./letsencrypt:/etc/letsencrypt
+    ports:
+      - \"80:80\"     # HTTP
+      - \"443:443\"   # HTTPS  
+      - \"81:81\"     # Admin Web UI
+    restart: unless-stopped
+    healthcheck:
+      test: [\"CMD\", \"curl\", \"-f\", \"http://localhost:81/api/nginx/health\"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+EOF
+
+    # Create systemd service
+    cat > /etc/systemd/system/nginx-proxy-manager.service << 'EOF'
+[Unit]
+Description=Nginx Proxy Manager
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/nginx-proxy-manager
+ExecStart=/usr/bin/docker compose up -d
+ExecStop=/usr/bin/docker compose down
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    # Enable and start service
+    systemctl daemon-reload
+    systemctl enable nginx-proxy-manager.service
+    
+    # Start NPM
+    cd /opt/nginx-proxy-manager
+    if ! docker compose up -d; then
+        echo 'Failed to start NPM with docker compose'
+        exit 1
+    fi
+"
+
+# Configure admin credentials if environment variables are available
+if [[ -n "${NPM_ADMIN_EMAIL:-}" ]] && [[ -n "${NPM_ADMIN_PASSWORD:-}" ]]; then
+    log "Configuring NPM admin credentials..."
+    if "$SCRIPT_DIR/configure_npm_admin.sh" "$CTID"; then
+        success "NPM admin credentials configured successfully"
+    else
+        warn "Failed to configure NPM admin credentials - manual setup required"
+    fi
+else
+    warn "NPM_ADMIN_EMAIL and NPM_ADMIN_PASSWORD not set - using default credentials"
+fi
+
+# Display service information
+if [[ -n "${NPM_ADMIN_EMAIL:-}" ]] && [[ -n "${NPM_ADMIN_PASSWORD:-}" ]]; then
+    additional_info="${GREEN}Configured Admin Login:${NC}
+Email:    ${GREEN}$NPM_ADMIN_EMAIL${NC}
+Password: ${GREEN}[configured from environment]${NC}
+${GREEN}✅ Admin credentials automatically configured!${NC}"
+else
+    additional_info="${YELLOW}Default Login:${NC}
+Email:    ${GREEN}admin@example.com${NC}
+Password: ${GREEN}changeme${NC}
+${RED}⚠️  Change these credentials immediately!${NC}"
+fi
+
+additional_info="$additional_info
+
+${BLUE}Additional Ports:${NC}
+HTTP Proxy:  ${GREEN}http://$IP:80${NC}
+HTTPS Proxy: ${GREEN}https://$IP:443${NC}
+
+${BLUE}Configuration:${NC}
+Config path: ${GREEN}/opt/nginx-proxy-manager/${NC}
+Data backup: ${GREEN}/opt/nginx-proxy-manager/data${NC}
+Docker logs: ${GREEN}pct exec $CTID -- docker logs nginx-proxy-manager${NC}"
+
+display_service_info "Nginx Proxy Manager" "$CTID" "$IP" "81" "$additional_info"
+
+=====================================================
+6. DOCKER COMPOSE CONFIGURATION - deployment/docker-compose.yml
+=====================================================
+
+# =====================================================
+# 🐳 Homelab — Reorganized Docker Compose File
+# =====================================================
+# Based on TechHut's Proxmox Homelab Series Structure
+# Maintainer: J35867U
+# Last Updated: 2025-10-15
+# 
+# Organized Servarr + Jellyfin + Automation Stack
+# Following best practices for media server deployment
+# =====================================================
+
+networks:
+  homelab:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+services:
+  # =====================================================
+  # 🔒 VPN & NETWORKING LAYER
+  # =====================================================
+  # VPN Gateway - All download traffic routes through this
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - "8080:8080"   # qBittorrent WebUI
+      - "6881:6881"   # qBittorrent P2P
+      - "6881:6881/udp"
+      - "6789:6789"   # NZBGet WebUI
+    volumes:
+      - ./wg0.conf:/gluetun/wireguard/wg0.conf:ro
+    env_file:
+      - .env
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.5
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000/v1/openvpn/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # FlareSolverr - Cloudflare bypass utility
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=info
+      - TZ=America/Phoenix
+    ports:
+      - "8191:8191"
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.9
+    restart: unless-stopped
+
+  # =====================================================
+  # 📥 DOWNLOAD CLIENTS LAYER
+  # =====================================================
+  # Torrent client - Routes through VPN
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Phoenix
+      - WEBUI_PORT=8080
+    volumes:
+      - /data/docker/qbittorrent:/config
+      - /data/media/downloads:/downloads
+    network_mode: "service:gluetun"  # Routes through VPN
+    depends_on:
+      - gluetun
+    restart: unless-stopped
+
+  # Usenet client - Routes through VPN
+  nzbget:
+    image: lscr.io/linuxserver/nzbget:latest
+    container_name: nzbget
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Phoenix
+    volumes:
+      - /data/docker/nzbget:/config
+      - /data/media/downloads:/downloads
+    network_mode: "service:gluetun"  # Routes through VPN
+    depends_on:
+      - gluetun
+    restart: unless-stopped
+
+  # =====================================================
+  # 🎬 MEDIA SERVER LAYER
+  # =====================================================
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Phoenix
+    volumes:
+      - /data/docker/jellyfin:/config
+      - /data/media/movies:/data/movies
+      - /data/media/shows:/data/tvshows
+      - /data/media/music:/data/music
+    ports:
+      - "8096:8096"
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.10
+    restart: unless-stopped
+
+  # =====================================================
+  # 🎯 SERVARR AUTOMATION LAYER
+  # =====================================================  
+  # Indexer manager
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Phoenix
+    volumes:
+      - /data/docker/prowlarr:/config
+    ports:
+      - "9696:9696"
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.20
+    restart: unless-stopped
+
+  # TV Shows automation
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Phoenix
+    volumes:
+      - /data/docker/sonarr:/config
+      - /data/media/shows:/tv
+      - /data/media/downloads:/downloads
+    ports:
+      - "8989:8989"
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.21
+    restart: unless-stopped
+
+  # Movies automation
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Phoenix
+    volumes:
+      - /data/docker/radarr:/config
+      - /data/media/movies:/movies
+      - /data/media/downloads:/downloads
+    ports:
+      - "7878:7878"
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.22
+    restart: unless-stopped
+
+  # Subtitles automation
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Phoenix
+    volumes:
+      - /data/docker/bazarr:/config
+      - /data/media/movies:/movies
+      - /data/media/shows:/tv
+    ports:
+      - "6767:6767"
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.23
+    restart: unless-stopped
+
+  # Music automation
+  lidarr:
+    image: lscr.io/linuxserver/lidarr:latest
+    container_name: lidarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Phoenix
+    volumes:
+      - /data/docker/lidarr:/config
+      - /data/media/music:/music
+      - /data/media/downloads:/downloads
+    ports:
+      - "8686:8686"
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.24
+    restart: unless-stopped
+
+  # Book automation
+  readarr:
+    image: lscr.io/linuxserver/readarr:develop
+    container_name: readarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Phoenix
+    volumes:
+      - /data/docker/readarr:/config
+      - /data/media/books:/books
+      - /data/media/downloads:/downloads
+    ports:
+      - "8787:8787"
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.25
+    restart: unless-stopped
+
+  # =====================================================
+  # 📊 ANALYTICS & MONITORING LAYER
+  # =====================================================
+  # Jellyfin usage analytics
+  tautulli:
+    image: lscr.io/linuxserver/tautulli:latest
+    container_name: tautulli
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Phoenix
+    volumes:
+      - /data/docker/tautulli:/config
+    ports:
+      - "8181:8181"
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.30
+    restart: unless-stopped
+
+  # Request management
+  overseerr:
+    image: lscr.io/linuxserver/overseerr:latest
+    container_name: overseerr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Phoenix
+    volumes:
+      - /data/docker/overseerr:/config
+    ports:
+      - "5055:5055"
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.31
+    restart: unless-stopped
+
+  # Dashboard and homepage
+  organizr:
+    image: organizr/organizr:latest
+    container_name: organizr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Phoenix
+    volumes:
+      - /data/docker/organizr:/config
+    ports:
+      - "80:80"
+    networks:
+      homelab:
+        ipv4_address: 172.20.0.32
+    restart: unless-stopped
+
+=====================================================
+7. ENVIRONMENT CONFIGURATION FILES
+=====================================================
+
+### Main Environment File - .env ###
+
+# ==============================================
+# 🔐 Homelab Environment Configuration
+# ==============================================
+# Secure storage for deployment credentials
+# ==============================================
+
+# Tailscale Configuration
+TAILSCALE_AUTH_KEY="kJh982WgWy11CNTRL"
+
+# Nginx Proxy Manager Configuration  
+NPM_ADMIN_EMAIL="nginx.detail266@passmail.net"
+NPM_ADMIN_PASSWORD="rBgn%WkpyK#nZKYkMw6N"
+
+# Deployment Configuration
+HOMELAB_TIMEZONE="America/Phoenix"
+HOMELAB_PUID="1000"
+HOMELAB_PGID="1000"
+
+# Network Configuration
+HOMELAB_SUBNET="192.168.1.0/24"
+HOMELAB_GATEWAY="192.168.1.1"
+HOMELAB_DNS="192.168.1.1"
+
+# Container IP Assignments
+NPM_IP="192.168.1.201"
+TAILSCALE_IP="192.168.1.202"
+NTFY_IP="192.168.1.203"
+PIHOLE_IP="192.168.1.204"
+VAULTWARDEN_IP="192.168.1.205"
+SAMBA_IP="192.168.1.206"
+DOCKER_HOST_IP="192.168.1.100"
+
+### Docker Deployment Environment File - deployment/.env ###
+
+# =====================================================
+# 🔧 Homelab Environment Configuration
+# =====================================================
+# Copy this file to .env and fill in your actual values
+# NEVER commit the actual .env file to version control
+# =====================================================
+
+# =================
+# General Settings
+# =================
+TZ=America/Phoenix
+PUID=1000
+PGID=1000
+
+# =================
+# VPN Configuration
+# =================
+VPN_SERVICE_PROVIDER=protonvpn
+VPN_TYPE=wireguard
+WIREGUARD_PUBLIC_KEY=bPm9LS4EuRi+cXob6bCu1PnRS/VXzHlJl/1jULep1Xw=
+WIREGUARD_PRIVATE_KEY=6NrVLnzYF/38b60euj9LLpTLWIDITqBArDgbClO5vEY=
+WIREGUARD_ADDRESSES=10.2.0.2/32
+SERVER_COUNTRIES=Japan
+SERVER_CITIES=Tokyo
+HEALTH_VPN_DURATION_INITIAL=120s
+
+# =================
+# Database Settings
+# =================
+DB_USER=J857638T
+DB_PASS=w4ypyPmJfYSn0Pq&!sja
+JWT_SECRET=U#FbkEP6z*8YQk5HUET7
+
+# =================
+# API Keys
+# =================
+RADARR_API_KEY=your_radarr_api_key_here
+SONARR_API_KEY=your_sonarr_api_key_here
+
+# =================
+# Admin Credentials
+# =================
+# Nginx Proxy Manager
+NPM_ADMIN_EMAIL=nginx.detail266@passmail.net
+NPM_ADMIN_PASSWORD=rBgn%WkpyK#nZKYkMw6N
+
+# Tailscale Configuration
+TAILSCALE_AUTH_KEY=kJh982WgWy11CNTRL
+
+# =================
+# Service Ports
+# =================
+SUGGESTARR_PORT=5000
+TUNARR_SERVER_PORT=8000
+
+# =================
+# Backup Configuration
+# =================
+RESTIC_REPOSITORY=sftp:backup-server:/backups/homelab
+RESTIC_PASSWORD=gAQ%1$g2dM2YYhA13NPe
+
+=====================================================
+8. CRITICAL BUG AREAS TO SCAN
+=====================================================
+
+1. SCRIPT PATH RESOLUTION
+   - Variable: $SCRIPT_DIR and $HOMELAB_ROOT
+   - Issue: May fail if scripts moved or called from different directories
+   - Code Location: Line 28-29 in deploy_homelab_master.sh
+
+2. CONTAINER ID CONFLICTS
+   - Function: handle_existing_container()
+   - Issue: Race conditions when destroying/recreating containers
+   - Code Location: common_functions.sh lines 69-106
+
+3. NETWORK CONNECTIVITY WAITS
+   - Functions: wait_for_container_ready(), wait_for_network()
+   - Issue: Timeout values may be too short for slow systems
+   - Code Location: common_functions.sh lines 108-158
+
+4. ENVIRONMENT VARIABLE LOADING
+   - Files: .env loading in deployment script
+   - Issue: Variables may not be exported to child processes
+   - Code Location: deploy_homelab_master.sh lines 31-37
+
+5. DOCKER SERVICE VALIDATION
+   - Function: validate_docker_service()
+   - Issue: Container name matching and status checking logic
+   - Code Location: deploy_homelab_master.sh lines 112-135
+
+6. AUTOMATED MODE DETECTION
+   - Function: check_automated_mode()
+   - Issue: Multiple detection methods may conflict
+   - Code Location: common_functions.sh lines 44-67
+
+7. FILE COPY OPERATIONS
+   - Command: pct push operations in deployment
+   - Issue: Source files may not exist or have wrong permissions
+   - Code Location: deploy_homelab_master.sh lines 351-358
+
+8. VPN CONFIGURATION
+   - File: wg0.conf referenced in docker-compose
+   - Issue: WireGuard config file may not exist
+   - Code Location: docker-compose.yml line 29
+
+9. PORT CONFLICTS
+   - Services: Multiple services binding to same ports
+   - Issue: Docker Compose port mapping conflicts
+   - Code Location: docker-compose.yml ports sections
+
+10. ERROR HANDLING
+    - Pattern: CONTINUE_ON_ERROR logic
+    - Issue: May mask critical failures in automation
+    - Code Location: deploy_homelab_master.sh lines 221-229
+
+=====================================================
+END OF EXPORT - READY FOR BUG SCANNING
+=====================================================
