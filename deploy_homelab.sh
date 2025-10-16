@@ -58,7 +58,7 @@ fi
 # Add Tailscale repository
 if [ ! -f /usr/share/keyrings/tailscale-archive-keyring.gpg ]; then
     curl -fsSL "https://pkgs.tailscale.com/stable/debian/$(lsb_release -cs).noarmor.gpg" | tee /usr/share/keyrings/tailscale-archive-keyring.gpg >/dev/null
-    echo "deb [signed-by=/usr/share/keyrings/tailscale-archive-keyring.gpg] https://pkgs.tailscale.com/stable/debian $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/tailscale.list
+    echo "deb [signed-by=/usr/share/keyrings/tailscale-archive-keyring.gpg] https://pkgs.tailscale.com/stable/debian \"$(lsb_release -cs)\" main" | tee /etc/apt/sources.list.d/tailscale.list
 fi
 
 # Update and install packages
