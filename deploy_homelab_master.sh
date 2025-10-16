@@ -235,7 +235,7 @@ deploy_lxc_containers() {
         ["202"]="tailscale"
         ["203"]="ntfy"
         ["204"]="samba"
-        # ["205"]="pihole"  # Temporarily disabled due to setup issues
+        ["205"]="pihole"
         ["206"]="vaultwarden"
     )
     
